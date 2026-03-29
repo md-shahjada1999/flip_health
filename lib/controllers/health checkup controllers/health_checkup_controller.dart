@@ -4,10 +4,10 @@ import 'package:flip_health/core/helpers/app_toasts.dart';
 import 'package:flip_health/core/utils/payment_success_screen.dart';
 import 'package:flip_health/model/heath%20checkup%20models/family_member_data_model.dart';
 import 'package:flip_health/routes/app_routes.dart';
-import 'package:flip_health/views/health%20checkup/explore_health_packages_page.dart';
-import 'package:flip_health/views/health%20checkup/health_checkup_overview_page.dart';
-import 'package:flip_health/views/health%20checkup/health_selection_slot_page.dart';
-import 'package:flip_health/views/health%20checkup/select_plan_page.dart';
+import 'package:flip_health/views/daignostics/health_checkup/explore_health_packages_page.dart';
+import 'package:flip_health/views/daignostics/health_checkup/health_checkup_overview_page.dart';
+import 'package:flip_health/views/daignostics/health_checkup/health_selection_slot_page.dart';
+import 'package:flip_health/views/daignostics/health_checkup/select_plan_page.dart';
 
 class HealthCheckupsController extends GetxController {
   // Observable variables
@@ -118,16 +118,6 @@ final List<Map<String, dynamic>> afternoonSlots = [
       return;
     }
 
-    // Navigate to next screen or process selection
-    final selectedMember = familyMembers.firstWhere(
-      (m) => m.id == selectedUserId.value,
-    );
-// AppToast.success(
-//   title: 'Success',
-//   message: 'Continue with ${selectedMember.name}',
-// );
-
-    // Navigate to next screen
     Get.to(() => SelectPlanPage());
   }
 
@@ -151,6 +141,12 @@ final List<Map<String, dynamic>> afternoonSlots = [
   // Get non-sponsored members
   List<FamilyMember> get nonSponsoredMembers =>
       familyMembers.where((m) => !m.isSponsored).toList();
+
+  // Get selected member
+  FamilyMember? get selectedMember {
+    final idx = familyMembers.indexWhere((m) => m.id == selectedUserId.value);
+    return idx != -1 ? familyMembers[idx] : null;
+  }
 
   // Check if user is selected
   bool isUserSelected(String userId) => selectedUserId.value == userId;

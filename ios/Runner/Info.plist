@@ -45,5 +45,15 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>FlipHealth needs your location to help you add and select nearby addresses.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>FlipHealth needs your location to help you add and select nearby addresses.</string>
+	<key>MAPS_API_KEY</key>
+	<string>$(MAPS_API_KEY)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>FlipHealth needs camera access to capture prescriptions and medical documents.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>FlipHealth needs photo library access to upload prescriptions and medical documents.</string>
 </dict>
 </plist>

@@ -32,10 +32,10 @@ class UserCard extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 10.rh),
         padding: EdgeInsets.all(10.rs),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.04) : AppColors.surface,
           border: Border.all(
-            color: AppColors.border,
-            width: 1,
+            color: isSelected ? AppColors.primary : AppColors.border,
+            width: isSelected ? 1.5 : 1,
           ),
           borderRadius: BorderRadius.circular(12.rs),
         ),
@@ -82,8 +82,33 @@ class UserCard extends StatelessWidget {
               ),
             ),
 
-            // Action button
-            if (showAddButton)
+            if (showAddButton && isSelected)
+              GestureDetector(
+                onTap: onAddTap,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.rw,
+                    vertical: 4.rh,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(8.rs),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.check, size: 14.rs, color: Colors.white),
+                      SizedBox(width: 4.rw),
+                      CommonText(
+                        AppString.kAdded,
+                        fontSize: 14.rf,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else if (showAddButton)
               GestureDetector(
                 onTap: onAddTap,
                 child: Container(
@@ -110,8 +135,9 @@ class UserCard extends StatelessWidget {
                 value: true,
                 onChanged: (v) {},
                 shape: CircleBorder(),
-                fillColor: MaterialStateProperty.all(AppColors.primary),
-                activeColor: AppColors.primary,splashRadius: 23,
+                fillColor: WidgetStateProperty.all(AppColors.primary),
+                activeColor: AppColors.primary,
+                splashRadius: 23,
               )
             // Container(
             //   width: 27.rw,

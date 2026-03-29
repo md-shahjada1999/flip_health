@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart' hide ResponsiveScreen;
+import 'package:flip_health/controllers/dashboard%20controllers/dashboard_controller.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
@@ -70,7 +72,7 @@ class ServicesGrid extends StatelessWidget {
                       ],
                     ),
                   ],
-                  onPressed: () => print('Consultation tapped'),
+                  onPressed: () => Get.find<DashboardController>().onTapConsultationCard(context),
                 ),
               ),
               SizedBox(
@@ -82,7 +84,7 @@ class ServicesGrid extends StatelessWidget {
                   badgeText: AppString.kUpTo30Off,
                   imagePath: AppString.kDashboardDental,
                   // borderColor: Colors.blue,
-                  onPressed: () => print('Dental tapped'),
+                  onPressed: () => Get.find<DashboardController>().onTapDentalCard(),
                   isImageSvg: false,
                 ),
               ),
@@ -103,7 +105,7 @@ class ServicesGrid extends StatelessWidget {
                   badgeText: AppString.kUpTo20Off,
                   imagePath: AppString.kDashboardGlasses,
                   // borderColor: Colors.purple,
-                  onPressed: () => print('Vision tapped'),
+                  onPressed: () => Get.find<DashboardController>().onTapVisionCard(),
                 ),
               ),
               SizedBox(
@@ -114,7 +116,7 @@ class ServicesGrid extends StatelessWidget {
                   badgeText: AppString.kUpTo20Off,
                   imagePath: AppString.kDashboardPharmacy,
                   // borderColor: Colors.green,
-                  onPressed: () => print('Pharmacy tapped'),
+                  onPressed: () => Get.find<DashboardController>().onTapPharmacyCard(),
                 ),
               ),
             ],

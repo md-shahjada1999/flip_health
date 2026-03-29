@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flip_health/controllers/address%20controllers/address_controller.dart';
 import 'package:flip_health/controllers/dashboard%20controllers/dashboard_controller.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
+import 'package:flip_health/core/utils/address_selection_sheet.dart';
 import 'package:flip_health/routes/app_routes.dart';
 import 'package:flip_health/views/dashboard/widgets/dash_board_searchbar.dart';
 import 'package:flip_health/views/dashboard/widgets/dashboard_banner.dart';
@@ -10,16 +12,12 @@ import 'package:flip_health/views/dashboard/widgets/dashboard_header.dart';
 import 'package:flip_health/views/dashboard/widgets/service_grid.dart';
 import 'package:flip_health/views/dashboard/widgets/view_more_button.dart';
 
-class DashboardHomeScreen extends StatefulWidget {
-  @override
-  _DashboardHomeScreenState createState() => _DashboardHomeScreenState();
-}
+class DashboardHomeScreen extends StatelessWidget {
+  DashboardHomeScreen({super.key});
 
-class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
-
-  
-
-final DashboardController _dashboardController = Get.find<DashboardController>();
+  final DashboardController _dashboardController =
+      Get.find<DashboardController>();
+  final AddressController _addressController = Get.find<AddressController>();
 
   @override
   Widget build(BuildContext context) {
@@ -29,61 +27,35 @@ final DashboardController _dashboardController = Get.find<DashboardController>()
           backgroundColor: AppColors.background,
           body: Column(
             children: [
-              // Header
-              DashboardHeader(
-                address: "Ishrout, 7th floor, Plot No. 25, ...",
-                onAddressPressed: () {
-                  // Handle address selection
-                },
-                onCalendarPressed: () {
-                  // Handle calendar tap
-                },
-                onProfilePressed: () {
-                  // Handle profile tap
-                },
-              ),
-              
+              Obx(() => DashboardHeader(
+                    address: _addressController.displayAddress,
+                    onAddressPressed: () {
+                      AddressSelectionSheet.show(context);
+                    },
+                    onCalendarPressed: () {},
+                    onProfilePressed: () {},
+                  )),
               RSizedBox.vertical(20),
-              
-              // Search Bar
               DashboardSearchBar(
                 controller: _dashboardController.searchController,
-                onChanged: (value) {
-                  // Handle search
-                },
-                onVoicePressed: () {
-                  // Handle voice search
-                },
+                onChanged: (value) {},
+                onVoicePressed: () {},
               ),
-              
               RSizedBox.vertical(12),
-              
-              // Content
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Services Grid
-                      ServicesGrid(services: _dashboardController.services),
-                      
+                      ServicesGrid(
+                          services: _dashboardController.services),
                       RSizedBox.vertical(16),
-                      
-                      // View More Button
                       ViewMoreButton(
                         onPressed: () {
                           Get.toNamed(AppRoutes.allServices);
                         },
                       ),
-                      
                       RSizedBox.vertical(24),
-                      
-                      // Nutrition Banner
-                      NutritionBanner(
-                        onJoinPressed: () {
-                          // Handle join webinar
-                        },
-                      ),
-                      
+                      NutritionBanner(onJoinPressed: () {}),
                       RSizedBox.vertical(24),
                     ],
                   ),
@@ -94,11 +66,5 @@ final DashboardController _dashboardController = Get.find<DashboardController>()
         );
       },
     );
-  }
-
-  @override
-  void dispose() {
-   _dashboardController.searchController.dispose();
-    super.dispose();
   }
 }

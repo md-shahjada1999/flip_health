@@ -1,222 +1,214 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:flip_health/controllers/health%20checkup%20controllers/health_checkup_controller.dart';
+import 'package:flip_health/controllers/health%20checkup%20controllers/lab_test_controller.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/font_style.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
-import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
 
-class HealthCheckupOverviewScreen extends StatelessWidget {
-  const HealthCheckupOverviewScreen({Key? key}) : super(key: key);
+class LabTestOverviewScreen extends GetView<LabTestController> {
+  const LabTestOverviewScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<HealthCheckupsController>();
+    final lab = controller.selectedLab;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CommonAppBar.build(
-        title: AppString.kHealthCheckupsTitle,
+        title: 'Cart Overview',
         showBackButton: true,
-        actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 16.rw),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.rw, vertical: 6.rh),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.borderDark, width: 0.7),
-                borderRadius: BorderRadius.circular(20.rs),
-              ),
-              child: Row(
-                children: [
-                  SvgPicture.asset(AppString.kShoppingBagIcon, width: 12.rs),
-                  SizedBox(width: 4.rw),
-                  CommonText(
-                    AppString.kMyOrders,
-                    fontSize: 10.rf,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                    height: 1.3,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [
-          // Location Header
-          _buildLocationHeader(),
-
-          // Scrollable Content
+          const LocationHeaderBar(),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: 10.rh),
-
-                  // Added Items Section
-                  _buildAddedItemsSection(controller),
-
+                  _buildAddedItemsSection(lab),
                   SizedBox(height: 24.rh),
-
-                  // Phone Number Section
-                  _buildPhoneNumberSection(controller),
-
+                  _buildPhoneNumberSection(),
                   SizedBox(height: 20.rh),
-
-                  // Alternate Phone Number Section
-                  _buildAlternatePhoneSection(controller),
-
+                  _buildAlternatePhoneSection(),
                   SizedBox(height: 20.rh),
-
-                  // Date and Time Section
-                  _buildDateTimeSection(controller),
-
+                  _buildDateTimeSection(),
                   SizedBox(height: 24.rh),
-
-                  // Price Breakdown Section
-                  _buildPriceBreakdown(controller),
-
+                  _buildPriceBreakdown(lab),
                   SizedBox(height: 16.rh),
-
-                  // Flip Coins Section
-                  _buildFlipCoinsSection(controller),
-
+                  _buildFlipCoinsSection(),
                   SizedBox(height: 16.rh),
-
-                  // Remarks Section
                   _buildRemarksSection(),
-
                   SizedBox(height: 100.rh),
                 ],
               ),
             ),
           ),
-
-          // Bottom Confirm Button
-          _buildBottomButton(controller),
+          _buildBottomButton(),
         ],
       ),
     );
   }
 
-  Widget _buildLocationHeader() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.rw, vertical: 12.rh),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.borderLight,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.location_on,
-            color: AppColors.primary,
-            size: 20.rs,
-          ),
-          SizedBox(width: 8.rw),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CommonText(
-                  AppString.kHome,
-                  fontSize: 14.rf,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                  height: 1.3,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: CommonText(
-                        'Isprout, 7th floor, Plot No: 25, Divyasree trinity,',
-                        fontSize: 12.rf,
-                        color: AppColors.textSecondary,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 16.rs,
-                      color: AppColors.textSecondary,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAddedItemsSection(HealthCheckupsController controller) {
+  Widget _buildAddedItemsSection(dynamic lab) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.rw),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CommonText(
-            '${AppString.kAddedItems}(1)',
-            fontSize: 14.rf,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
-            height: 1.3,
-          ),
-          SizedBox(height: 10.rh),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CommonText(
-                      AppString.kEmployeeAnnualHealthCheckup,
-                      fontSize: 14.rf,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      height: 1.3,
-                    ),
-                    SizedBox(height: 4.rh),
-                    CommonText(
-                      AppString.kForPatient('Kalyan'),
-                      fontSize: 11.rf,
-                      color: AppColors.textSecondary,
-                    ),
-                  ],
-                ),
-              ),
-              CommonText(
-                '₹ 4,000',
-                fontSize: 16.rf,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+          Obx(() => CommonText(
+                'Added Items(${controller.cartTests.length})',
+                fontSize: 14.rf,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
                 height: 1.3,
+              )),
+          SizedBox(height: 4.rh),
+          Obx(() => CommonText(
+                'For ${controller.selectedMember?.name ?? ''}',
+                fontSize: 12.rf,
+                color: AppColors.textSecondary,
+              )),
+          SizedBox(height: 10.rh),
+          if (lab != null)
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12.rs),
+                border: Border.all(color: AppColors.borderLight),
               ),
-            ],
-          ),
+              child: Column(
+                children: [
+                  // Lab header
+                  Padding(
+                    padding: EdgeInsets.all(12.rs),
+                    child: Row(
+                      children: [
+                        Image.asset(
+                          lab.logoPath,
+                          width: 80.rw,
+                          height: 35.rh,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => CommonText(
+                            lab.name,
+                            fontSize: 12.rf,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(width: 8.rw),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.rw,
+                            vertical: 2.rh,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: AppColors.warning),
+                            borderRadius: BorderRadius.circular(12.rs),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.star,
+                                  size: 10.rs, color: AppColors.warning),
+                              SizedBox(width: 2.rw),
+                              CommonText(
+                                lab.rating,
+                                fontSize: 10.rf,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(height: 1, color: AppColors.borderLight),
+
+                  // Test prices
+                  ...lab.testPrices.map((tp) => Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 14.rs, vertical: 8.rs),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: CommonText(
+                                tp.testName,
+                                fontSize: 12.rf,
+                                color: AppColors.textPrimary,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            CommonText(
+                              '₹ ${tp.price.toInt()}',
+                              fontSize: 12.rf,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ],
+                        ),
+                      )),
+
+                  // Collection charges
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 14.rs, vertical: 8.rs),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CommonText(
+                          'Home Collection Charges',
+                          fontSize: 12.rf,
+                          color: AppColors.textPrimary,
+                        ),
+                        CommonText(
+                          '₹ ${lab.homeCollectionCharge.toInt()}',
+                          fontSize: 12.rf,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Total
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: 14.rs, vertical: 8.rs),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CommonText(
+                          'To Pay',
+                          fontSize: 13.rf,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        CommonText(
+                          '₹ ${lab.totalPayable.toInt()}',
+                          fontSize: 13.rf,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildPhoneNumberSection(HealthCheckupsController controller) {
+  Widget _buildPhoneNumberSection() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.rw),
       child: Column(
@@ -250,7 +242,7 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAlternatePhoneSection(HealthCheckupsController controller) {
+  Widget _buildAlternatePhoneSection() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.rw),
       child: Column(
@@ -295,7 +287,7 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
                       hintText: AppString.kAlternatePhoneHint,
                       hintStyle: TextStyleCustom.normalStyle(
                         fontSize: 14.rf,
-                        color: AppColors.textSecondary.withOpacity(0.5),
+                        color: AppColors.textSecondary.withValues(alpha: 0.5),
                       ),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(
@@ -317,7 +309,7 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDateTimeSection(HealthCheckupsController controller) {
+  Widget _buildDateTimeSection() {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20.rw),
       child: Column(
@@ -344,16 +336,12 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                CommonText(
-                  'April 10, 2024 | 2PM-3PM',
-                  fontSize: 12.rf,
-                  color: AppColors.textPrimary,
-                ),
-                Icon(
-                  Icons.edit,
-                  size: 20.rs,
-                  color: AppColors.accent,
-                ),
+                Obx(() => CommonText(
+                      '${controller.getFormattedSelectedDate()} | ${controller.selectedTimeSlot.value}',
+                      fontSize: 12.rf,
+                      color: AppColors.textPrimary,
+                    )),
+                Icon(Icons.edit, size: 20.rs, color: AppColors.accent),
               ],
             ),
           ),
@@ -362,7 +350,9 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceBreakdown(HealthCheckupsController controller) {
+  Widget _buildPriceBreakdown(dynamic lab) {
+    if (lab == null) return const SizedBox.shrink();
+
     return Container(
       padding: EdgeInsets.all(20.rs),
       decoration: BoxDecoration(
@@ -374,7 +364,6 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Total MRP
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -386,7 +375,7 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
                 height: 1.3,
               ),
               CommonText(
-                '₹ 4,000',
+                '₹ ${lab.totalPayable.toInt()}',
                 fontSize: 14.rf,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -394,27 +383,7 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 10.rh),
-
-          // Home Collection Charges
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              CommonText(
-                AppString.kHomeCollectionCharges,
-                fontSize: 12.rf,
-                color: AppColors.textPrimary,
-              ),
-              CommonText(
-                '₹ 80',
-                fontSize: 12.rf,
-                color: AppColors.textPrimary,
-              ),
-            ],
-          ),
-          SizedBox(height: 10.rh),
-
-          // From Wallet
+          SizedBox(height: 14.rh),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -437,7 +406,7 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
                 ],
               ),
               CommonText(
-                '₹ 4,000',
+                '₹ ${lab.totalPayable.toInt()}',
                 fontSize: 13.rf,
                 fontWeight: FontWeight.w600,
                 color: AppColors.primary,
@@ -446,11 +415,8 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
             ],
           ),
           SizedBox(height: 14.rh),
-
           Divider(height: 1, color: AppColors.borderLight),
           SizedBox(height: 14.rh),
-
-          // Net Pay
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -461,23 +427,12 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
                 color: AppColors.textPrimary,
                 height: 1.3,
               ),
-              Row(
-                children: [
-                  CommonText(
-                    '₹ 4,080',
-                    fontSize: 12.rf,
-                    color: AppColors.textSecondary,
-                    decoration: TextDecoration.lineThrough,
-                  ),
-                  SizedBox(width: 8.rw),
-                  CommonText(
-                    '₹ 0',
-                    fontSize: 16.rf,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    height: 1.3,
-                  ),
-                ],
+              CommonText(
+                '₹ 0',
+                fontSize: 16.rf,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+                height: 1.3,
               ),
             ],
           ),
@@ -486,12 +441,12 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFlipCoinsSection(HealthCheckupsController controller) {
+  Widget _buildFlipCoinsSection() {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.rw),
       padding: EdgeInsets.all(14.rs),
       decoration: BoxDecoration(
-        color: AppColors.warningLight.withOpacity(0.3),
+        color: AppColors.warningLight.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8.rs),
       ),
       child: Column(
@@ -505,20 +460,14 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
                 color: AppColors.textPrimary,
               ),
               SizedBox(width: 4.rh),
-              Container(
-                width: 20.rs,
-                height: 20.rs,
-                child: Center(
-                  child: SvgPicture.asset(
-                    AppString.kFlipCoinIcon,
-                    width: 18.rs,
-                    height: 18.rs,
-                  ),
-                ),
+              SvgPicture.asset(
+                AppString.kFlipCoinIcon,
+                width: 18.rs,
+                height: 18.rs,
               ),
               SizedBox(width: 4.rw),
               CommonText(
-                '400',
+                '59',
                 fontSize: 16.rf,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -526,7 +475,7 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
               ),
               SizedBox(width: 4.rw),
               CommonText(
-                AppString.kFlipCoinsWorth('40'),
+                AppString.kFlipCoinsWorth('6'),
                 fontSize: 12.rf,
                 color: AppColors.success,
                 fontWeight: FontWeight.w600,
@@ -547,11 +496,11 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
 
   Widget _buildRemarksSection() {
     return Container(
-      width: double.infinity ,
+      width: double.infinity,
       margin: EdgeInsets.symmetric(horizontal: 20.rw),
       padding: EdgeInsets.all(16.rs),
       decoration: BoxDecoration(
-        color: AppColors.errorLight.withOpacity(0.5),
+        color: AppColors.errorLight.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8.rs),
       ),
       child: Column(
@@ -573,7 +522,7 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomButton(HealthCheckupsController controller) {
+  Widget _buildBottomButton() {
     return Container(
       padding: EdgeInsets.all(16.rs),
       decoration: BoxDecoration(
@@ -582,67 +531,33 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
           BoxShadow(
             color: AppColors.shadow,
             blurRadius: 8,
-            offset: Offset(0, -2),
+            offset: const Offset(0, -2),
           ),
         ],
       ),
-      child: Row(
-        children: [
-          // Price Display
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: 16.rw,
-              vertical: 12.rh,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(8.rs),
-            ),
-            child: Row(
-              children: [
-                CommonText(
-                  '₹',
-                  fontSize: 18.rf,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                  height: 1.3,
-                ),
-                SizedBox(width: 4.rw),
-                CommonText(
-                  '1000',
-                  fontSize: 18.rf,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  height: 1.3,
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 12.rw),
-
-          // Confirm Button
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () {
-                controller.confirmBooking();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: EdgeInsets.symmetric(vertical: 16.rh),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.rs),
-                ),
-              ),
-              child: CommonText(
-                AppString.kConfirmAndPay,
-                fontSize: 15.rf,
-                color: Colors.white,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          width: double.infinity,
+          height: 52.rh,
+          child: ElevatedButton(
+            onPressed: controller.confirmBooking,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.rs),
               ),
             ),
+            child: CommonText(
+              AppString.kConfirmAndPay,
+              fontSize: 15.rf,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ],
+        ),
       ),
     );
   }

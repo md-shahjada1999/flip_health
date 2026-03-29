@@ -9,6 +9,8 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/routes/app_routes.dart';
+import 'package:get/get.dart' hide ResponsiveScreen;
 
 class ServicesScreen extends StatefulWidget {
   const ServicesScreen({Key? key}) : super(key: key);
@@ -387,7 +389,7 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconClaims,
                     title: AppString.kClaims,
                     subtitle: AppString.kClaimsSubtitle,
-                    onTap: () {},
+                    onTap: () => Get.toNamed(AppRoutes.claims),
                   ),
                 ),
                 _buildAnimatedCard(

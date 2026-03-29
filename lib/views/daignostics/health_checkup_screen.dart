@@ -7,9 +7,9 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
-import 'package:flip_health/views/health%20checkup/widgets/add_family_member_button.dart';
-import 'package:flip_health/views/health%20checkup/widgets/header_section.dart';
-import 'package:flip_health/views/health%20checkup/widgets/user_card.dart';
+import 'package:flip_health/views/daignostics/widgets/add_family_member_button.dart';
+import 'package:flip_health/views/daignostics/widgets/header_section.dart';
+import 'package:flip_health/views/daignostics/widgets/user_card.dart';
 
 class HealthCheckupsScreen extends GetView<HealthCheckupsController> {
   const HealthCheckupsScreen({Key? key}) : super(key: key);
@@ -77,8 +77,9 @@ class HealthCheckupsScreen extends GetView<HealthCheckupsController> {
                                 ? AppString.kPackagesAvailable
                                 : null,
                             subtitleColor: AppColors.textSecondary,
+                            isSelected: controller.isUserSelected(member.id),
                             showAddButton: true,
-                            onAddTap: () => controller.addMemberToSelection(member.id),
+                            onAddTap: () => controller.selectUser(member.id),
                           )),
                       
                       // Add new family member button

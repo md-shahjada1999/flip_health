@@ -2,11 +2,14 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/routes/app_pages.dart';
 import 'package:flip_health/routes/app_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 
-// // ////new FH main
 String accessToken = "";
-void main() {
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   runApp(MyApp());
 }
 

@@ -10,7 +10,7 @@ class CommonAppBar {
     VoidCallback? onBackPressed,
     Color? backgroundColor,
     Color? textColor,
-    double fontSize = 20,
+    double fontSize = 18,
     List<Widget>? actions,
   }) {
     return AppBar(

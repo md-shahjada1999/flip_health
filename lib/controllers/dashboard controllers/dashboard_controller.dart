@@ -42,8 +42,8 @@ class DashboardController extends GetxController {
         title: AppString.kLabTests,
         subtitle: AppString.kLabTestsSubtitle,
         onTap: () {
-          // Handle Lab Tests tap
-          Navigator.pop(context);
+          Get.back();
+          Get.toNamed(AppRoutes.labTests);
         },
         subtitleIconPath: AppString.kIconFullSponsored,
       ),
@@ -56,4 +56,48 @@ class DashboardController extends GetxController {
       maxHeight: ResponsiveHelper.screenHeight * 0.65,
     );
   }
+
+  void onTapDentalCard() {
+    Get.toNamed(AppRoutes.dental);
   }
+
+  void onTapVisionCard() {
+    Get.toNamed(AppRoutes.vision);
+  }
+
+  void onTapPharmacyCard() {
+    Get.toNamed(AppRoutes.pharmacy);
+  }
+
+  void onTapConsultationCard(BuildContext context) {
+    final items = [
+      ServiceCardData(
+        iconPath: AppString.kIconConsultation,
+        title: 'At Hospital',
+        subtitle: 'Book Your OPD Consultations Here',
+        onTap: () {
+          Get.back();
+          Get.toNamed(AppRoutes.consultation, arguments: 'hospital');
+        },
+        subtitleIconPath: AppString.kIconFreeHealthCheckups,
+      ),
+      ServiceCardData(
+        iconPath: AppString.kVirtualIcon,
+        title: 'Virtual',
+        subtitle: 'Connecting Care, Virtually Everywhere',
+        onTap: () {
+          Get.back();
+          Get.toNamed(AppRoutes.consultation, arguments: 'virtual');
+        },
+        subtitleIconPath: AppString.kIconFreeHealthCheckups,
+      ),
+    ];
+
+    CommonBottomSheet.show(
+      context: context,
+      title: AppString.kConsultation,
+      items: items,
+      maxHeight: ResponsiveHelper.screenHeight * 0.65,
+    );
+  }
+}

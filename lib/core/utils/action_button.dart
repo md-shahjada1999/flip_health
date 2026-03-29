@@ -7,12 +7,16 @@ class ActionButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final bool isLoading;
+  final Color? backgroundColor;
+  final EdgeInsetsGeometry? padding;
 
   const ActionButton({
     Key? key,
     required this.text,
     required this.onPressed,
     this.isLoading = false,
+    this.backgroundColor,
+    this.padding,
   }) : super(key: key);
 
   @override
@@ -20,11 +24,11 @@ class ActionButton extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20.rs),
+      padding: padding ?? EdgeInsets.all(20.rs),
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.textPrimary,
+          backgroundColor: backgroundColor ?? AppColors.textPrimary,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: EdgeInsets.symmetric(vertical: 18.rh),

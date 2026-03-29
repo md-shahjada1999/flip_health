@@ -41,6 +41,13 @@ dependencies:
   dio: ^5.8.0+1
   shared_preferences: ^2.5.3
   fluttertoast: ^9.0.0
+  flutter_dotenv: ^5.2.1
+  google_maps_flutter: ^2.12.1
+  geolocator: ^13.0.2
+  geocoding: ^3.0.0
+  lottie: ^3.3.1
+  image_picker: ^1.2.1
+  file_picker: ^10.3.10
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +73,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - .env
     - assets/fonts/
     - assets/lotties/
     - assets/png/
@@ -78,6 +86,8 @@ flutter:
     - assets/svg/all services icons/services/
     - assets/svg/all services icons/tab_bar_icons/
     - assets/svg/onboarding_images/
+    - assets/svg/doctor specialities/
+    - assets/png/hopitals/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -14,6 +14,30 @@ class AppRoutes {
     static const String allServices = '/all-services';
   static const String healthCheckups = '/health-checkups';
   static const String addFamilyMember = '/add-family-member';
+
+  // Address Routes
+  static const String addAddress = '/add-address';
+  static const String addressForm = '/address-form';
+
+  // Lab Test Routes
+  static const String labTests = '/lab-tests';
+  static const String labTestSearch = '/lab-test-search';
+
+  // Consultation Routes
+  static const String consultation = '/consultation';
+
+  // Dental Routes
+  static const String dental = '/dental';
+
+  // Vision Routes
+  static const String vision = '/vision';
+
+  // Pharmacy Routes
+  static const String pharmacy = '/pharmacy';
+
+  // Claims Routes
+  static const String claims = '/claims';
+
   // Error Routes
   static const String notFound = '/404';
   static const String error = '/error';

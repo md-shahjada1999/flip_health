@@ -381,6 +381,7 @@ class AppString {
 
   // Actions
   static const String kAdd = 'Add';
+  static const String kAdded = 'Added';
   static const String kContinue = 'Continue';
   static const String kAddNewFamilyMember = 'Add new family member';
 
@@ -551,4 +552,167 @@ static const String kBackToHome = 'Back to Home';
       "assets/png/orange_health_lab_logo.png";
   static const String kShoppingBagIcon = "assets/svg/my_orders_bag.svg";
   static const String kFlipCoinIcon = "assets/svg/flip_coin.svg";
+
+  // Lab Tests
+  static const String kLabTestsTitle = 'Lab Tests';
+  static const String kSearchAndBookLabTests = 'Search and book lab tests';
+  static const String kPopularLabTests = 'Popular Lab Tests';
+  static const String kBestInClassServiceRating = 'Best in class service rating';
+  static const String kTopLabsTrustedCare = 'Top Labs, Trusted Care';
+  static const String kAvgUserRating = '4.5 Avg. user rating';
+  static const String kReportsWithin48Hours = 'Reports within 48 hours';
+  static const String kInstantConfirmation = 'Instant confirmation';
+  static const String kFromComfortOfHome = 'From the comfort of your home';
+  static const String kSeeWhatsIncluded = "See what's included";
+  static const String kAddToCart = 'Add to cart';
+  static const String kTopSearches = 'Top Searches';
+  static const String kSearchResults = 'Search Results';
+  static const String kViewCart = 'View cart';
+  static const String kCartOverview = 'Cart Overview';
+  static const String kOrderInfo = 'Order info';
+  static const String kHomeCollectionTab = 'Home Collection';
+  static const String kAtCenterTab = 'At Center';
+  static const String kRadiologyTab = 'Radiology';
+  static const String kToPayLabel = 'To Pay';
+  static const String kHomeCollectionChargesLabel = 'Home Collection Charges';
+
+  // Consultation
+  static const String kAtHospitalConsultation = 'At Hospital Consultation';
+  static const String kVirtualConsultation = 'Virtual Consultation';
+  static const String kConsultTopDoctors = 'Consult Top Doctors';
+  static const String kSearchSpecialities = 'Search Specialities';
+  static const String kCommonSpecialities = 'Common Specialities';
+  static const String kFeaturedHospitals = 'Featured Hospitals';
+  static const String kSeeAll = 'See All';
+  static const String kSortList = 'Sort List';
+  static const String kRelevance = 'Relevance';
+  static const String kDistance = 'Distance';
+  static const String kExperience = 'Experience';
+  static const String kConsultationFeeLowHigh = 'Consultation Fees(Low to High)';
+  static const String kConsultationFeeHighLow = 'Consultation Fees(High to Low)';
+  static const String kCashlessAvailable = 'Cashless Available';
+  static const String kYourConsultationFee = 'Your Consultation Fee';
+  static const String kBookAppointment = 'Book Appointment';
+  static const String kDoctorsFee = "Doctor's Fee";
+  static const String kTotalAmount = 'Total Amount';
+  static const String kPatient = 'Patient';
+  static const String kDisclaimer = 'Disclaimer';
+  static const String kDisclaimerFees =
+      'The Fees and Timings are tentative and may subject to change at the time of consultation';
+  static const String kDisclaimerRegistration =
+      'Registration fee charged by Clinic or Hospital are not covered under OPD Insurance and has to be borne by the insured';
+  static const String kAppointmentNote =
+      'Flip Health will call and try to schedule an appointment with the doctor on the selected date and time slot.';
+
+  // Dental Module
+  static const String kDentalService = 'Dental Service';
+  static const String kBookFreeDentalServices = 'Book free dental services for you';
+  static const String kBookDentalForFamily = 'Book dental services for your family members';
+  static const String kDentalComprehensiveCheckup = 'Dental Comprehensive Checkup';
+  static const String kDentalOverview = 'Dental Overview';
+  static const String kSelectDentalSlots = 'Select Your Dental Slots';
+  static const String kBookingUpdatesNote = 'Booking related updates will be sent on this number';
+  static const String kEnterAlternateNumber = 'Enter your alternate number here';
+  static const String kRemarksLabel = 'Remarks :';
+  static const String kOrderCannotBeCancelled = 'Order cannot be cancelled once confirmed';
+
+  // Vision Module
+  static const String kVisionService = 'Vision Service';
+  static const String kEyeCheckup = 'Eye Checkup';
+  static const String kGlassesLens = 'Glasses/Lens';
+  static const String kBookVisionServices = 'Book vision services for you';
+  static const String kBookVisionForFamily = 'Book vision services for your family members';
+  static const String kSelectVisionSlots = 'Select Your Vision Slots';
+  static const String kVisionOverview = 'Vision Overview';
+  static const String kUploadPrescription = 'Upload Prescription';
+  static const String kPrescriptionSafe = 'Your prescription is safe with us';
+  static const String kUploadFromGallery = 'Upload from Gallery';
+  static const String kTakePhoto = 'Take Photo';
+  static const String kUploadedPrescriptions = 'Uploaded Prescriptions';
+  static const String kNoPrescriptionsYet = 'No prescriptions uploaded yet';
+  static const String kVisionComprehensiveCheckup = 'Vision Comprehensive Checkup';
+
+  // Pharmacy Module
+  static const String kPharmacyService = 'Pharmacy';
+  static const String kFlipHealthDelivery = 'Flip Health Delivery';
+  static const String kSecureHomeDelivery = 'Secure home delivery';
+  static const String kDeliveryInHours = 'Delivery in 24 hours';
+  static const String kContactlessDelivery = 'Contactless delivery';
+  static const String kMedicineDeliveryNote = 'Medicines will be delivered within 24-48 hours of placing order';
+  static const String kUploadPrescriptionTitle = 'Upload Prescription';
+  static const String kPrescriptionIsSafe = 'Your prescription is safe with us';
+  static const String kUploadImage = 'Image or File';
+  static const String kFlipHealthPrescription = 'Fliphealth\nPrescription';
+  static const String kRequestOTCProducts = 'Request OTC Products';
+  static const String kFAQOrderAll = 'Do I need to order all the medicine in the prescription?';
+  static const String kFAQOrderAllAnswer = 'No, you don\'t need to order all medicines. Our medicine partner will contact you to confirm the required medicines.';
+  static const String kFAQChangeQty = 'Can I change the quantity of medicines?';
+  static const String kFAQChangeQtyAnswer = 'Yes, our medicine partner will contact you to confirm the medicines and quantities before delivery.';
+  static const String kFAQPrice = 'How do I know the price of medicines?';
+  static const String kFAQPriceAnswer = 'Once the order is confirmed, our medicine partner will share the price details with you before delivery.';
+  static const String kOrderGenerated = 'Order Generated\nSuccessfully';
+  static const String kDone = 'Done';
+  static const String kUpload = 'Upload';
+  static const String kSelect = 'Select';
+  static const String kSelectPrescription = 'Select Prescription';
+  static const String kSelectedFiles = 'Selected Files';
+  static const String kNoFilesSelected = 'No files selected';
+  static const String kPlaceOrder = 'Place Order';
+
+  // Claims Module
+  static const String kMyClaims = 'My Claims';
+  static const String kNewClaim = 'New Claim';
+  static const String kAddNewClaim = 'Add New Claim';
+  static const String kFilterByStatus = 'Filter by Status';
+  static const String kClaimsLabel = 'Claims';
+  static const String kNoClaimsFound = 'No claims found';
+  static const String kClaimedLabel = 'Claimed';
+  static const String kApprovedLabel = 'Approved';
+  static const String kDateLabel = 'Date';
+  static const String kTypeLabel = 'Type';
+  static const String kSubmittedLabel = 'Submitted';
+  static const String kClaimDetails = 'Claim Details';
+  static const String kClaimId = 'Claim ID';
+  static const String kPatientNameLabel = 'Patient Name';
+  static const String kServiceTypeLabel = 'Service Type';
+  static const String kClaimedAmountLabel = 'Claimed Amount';
+  static const String kApprovedAmountLabel = 'Approved Amount';
+  static const String kBillsLabel = 'Bills';
+  static const String kSelectPatient = 'Select Patient';
+  static const String kContactDetails = 'Contact Details';
+  static const String kEmailAddress = 'Email Address';
+  static const String kBankDetailsLabel = 'Bank Details';
+  static const String kSelectBank = 'Select Bank';
+  static const String kTapToSelectBank = 'Tap to select bank account';
+  static const String kAcceptTermsAndConditions = 'I accept the Terms & Conditions for OPD claim reimbursement';
+  static const String kStepPatient = 'Patient';
+  static const String kStepBills = 'Bills';
+  static const String kStepReview = 'Review';
+  static const String kMedicalBills = 'Medical Bills';
+  static const String kAddMedicalBill = 'Add Medical Bill';
+  static const String kBillNumber = 'Bill Number';
+  static const String kBillDate = 'Bill Date';
+  static const String kBillAmount = 'Bill Amount';
+  static const String kClinicName = 'Clinic Name';
+  static const String kClinicAddress = 'Clinic Address';
+  static const String kDoctorName = 'Doctor Name';
+  static const String kDoctorRegistration = 'Doctor Reg. Number';
+  static const String kSaveBill = 'Save Bill';
+  static const String kSupportingDocuments = 'Supporting Documents';
+  static const String kPaymentReceipts = 'Payment Receipts';
+  static const String kMedicalReports = 'Medical Reports';
+  static const String kOtherDocuments = 'Other Documents';
+  static const String kBack = 'Back';
+  static const String kReviewClaim = 'Review Claim';
+  static const String kPatientDetails = 'Patient Details';
+  static const String kTotalClaimAmount = 'Total Claim Amount';
+  static const String kClaimDisclaimer = 'Once submitted, your claim will be reviewed by our team. You will be notified about the status updates via SMS and email.';
+  static const String kSubmitClaim = 'Submit Claim';
+  static const String kClaimSubmitted = 'Claim Submitted!';
+  static const String kClaimSubmittedMsg = 'Your claim has been submitted successfully. You will receive updates on your registered phone number.';
+
+  // Shared VVD Strings
+  static const String kSelectCenter = 'Select a Center';
+  static const String kNoClinicFound = 'No clinics found at this location';
+  static const String kDirections = 'Directions';
 }
