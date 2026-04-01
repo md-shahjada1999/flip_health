@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flip_health/core/utils/file_picker_helper.dart';
+import 'package:flip_health/data/repositories/claims_repository.dart';
+import 'package:flip_health/model/claims%20models/bank_account_model.dart';
 import 'package:flip_health/model/claims%20models/claim_model.dart';
 import 'package:flip_health/routes/app_routes.dart';
 
 class ClaimsController extends GetxController {
+  final ClaimsRepository _repository;
+
+  ClaimsController({required ClaimsRepository repository})
+      : _repository = repository;
   final isLoading = false.obs;
   final allClaims = <ClaimModel>[].obs;
   final filteredClaims = <ClaimModel>[].obs;
   final selectedFilterIndex = 0.obs;
 
-  // Claim detail
   final selectedClaim = Rxn<ClaimModel>();
 
   // Add claim wizard
@@ -23,9 +28,20 @@ class ClaimsController extends GetxController {
   final phoneController = TextEditingController();
   final emailController = TextEditingController();
   final alternatePhoneController = TextEditingController();
-  final selectedBankName = ''.obs;
   final termsAccepted = false.obs;
   final members = <Map<String, dynamic>>[].obs;
+
+  // Bank Details
+  final bankAccounts = <BankAccount>[].obs;
+  final selectedBank = Rxn<BankAccount>();
+  final bankNameController = TextEditingController();
+  final accountNumberController = TextEditingController();
+  final confirmAccountController = TextEditingController();
+  final ifscController = TextEditingController();
+  final branchController = TextEditingController();
+  final holderNameController = TextEditingController();
+  final selectedBankName = ''.obs;
+  final chequeFiles = <Map<String, dynamic>>[].obs;
 
   // Step 2 - Bill Details
   final bills = <ClaimBill>[].obs;
@@ -36,6 +52,7 @@ class ClaimsController extends GetxController {
   final clinicAddressController = TextEditingController();
   final doctorNameController = TextEditingController();
   final doctorRegController = TextEditingController();
+  final billImageFiles = <Map<String, dynamic>>[].obs;
   final paymentFiles = <Map<String, dynamic>>[].obs;
   final reportFiles = <Map<String, dynamic>>[].obs;
   final otherFiles = <Map<String, dynamic>>[].obs;
@@ -52,32 +69,53 @@ class ClaimsController extends GetxController {
     {'status': 7, 'label': 'Disputed', 'color': Color(0xFFFF5722)},
   ];
 
+  static const List<String> bankNames = [
+    'State Bank of India',
+    'HDFC Bank',
+    'ICICI Bank',
+    'Axis Bank',
+    'Punjab National Bank',
+    'Bank of Baroda',
+    'Kotak Mahindra Bank',
+    'IndusInd Bank',
+    'Yes Bank',
+    'Union Bank of India',
+    'Canara Bank',
+    'Bank of India',
+    'IDBI Bank',
+    'Federal Bank',
+    'Indian Overseas Bank',
+  ];
+
   @override
   void onInit() {
     super.onInit();
     _loadClaims();
     _loadMembers();
+    _loadBankAccounts();
   }
 
-  void _loadClaims() {
+  Future<void> _loadClaims() async {
     isLoading.value = true;
-    allClaims.value = [
-      ClaimModel(id: 'CLM001', userName: 'Kalyan', userPhone: '9876543210', status: 0, claimAmount: 2500, createdAt: '2024-03-15', serviceType: 'Dental'),
-      ClaimModel(id: 'CLM002', userName: 'Priya', userPhone: '9876543211', status: 5, claimAmount: 8500, approvedAmount: 7200, createdAt: '2024-03-10', serviceType: 'Consultation'),
-      ClaimModel(id: 'CLM003', userName: 'Kalyan', userPhone: '9876543210', status: 1, claimAmount: 1200, approvedAmount: 1200, createdAt: '2024-02-28', serviceType: 'Pharmacy'),
-      ClaimModel(id: 'CLM004', userName: 'Rahul', userPhone: '9876543212', status: 4, claimAmount: 5000, createdAt: '2024-03-20', serviceType: 'Vision'),
-      ClaimModel(id: 'CLM005', userName: 'Kalyan', userPhone: '9876543210', status: 2, claimAmount: 3200, createdAt: '2024-01-15', serviceType: 'Dental'),
-    ];
-    filteredClaims.value = List.from(allClaims);
-    isLoading.value = false;
+    try {
+      allClaims.value = await _repository.getClaims();
+      filteredClaims.value = List.from(allClaims);
+    } catch (_) {
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  void _loadMembers() {
-    members.value = [
-      {'id': '1', 'name': 'Kalyan', 'age': 32, 'gender': 'Male', 'relation': 'Self'},
-      {'id': '2', 'name': 'Priya', 'age': 28, 'gender': 'Female', 'relation': 'Spouse'},
-      {'id': '3', 'name': 'Rahul', 'age': 8, 'gender': 'Male', 'relation': 'Son'},
-    ];
+  Future<void> _loadMembers() async {
+    try {
+      members.value = await _repository.getMembers();
+    } catch (_) {}
+  }
+
+  Future<void> _loadBankAccounts() async {
+    try {
+      bankAccounts.value = await _repository.getBankAccounts();
+    } catch (_) {}
   }
 
   int getStatusCount(int status) {
@@ -99,7 +137,6 @@ class ClaimsController extends GetxController {
     selectedClaim.value = claim;
   }
 
-  // Wizard navigation
   void goToStep(int step) {
     currentStep.value = step;
     pageController.animateToPage(step, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
@@ -110,9 +147,71 @@ class ClaimsController extends GetxController {
     selectedMemberName.value = name;
   }
 
+  // Bank methods
+  void selectBankAccount(BankAccount bank) {
+    selectedBank.value = bank;
+    selectedBankName.value = '${bank.bankName} - ${bank.maskedAccountNumber}';
+  }
+
+  void addBankAccount() {
+    if (accountNumberController.text.isEmpty ||
+        holderNameController.text.isEmpty ||
+        ifscController.text.isEmpty ||
+        bankNameController.text.isEmpty) return;
+
+    if (accountNumberController.text != confirmAccountController.text) {
+      Get.snackbar('Error', 'Account numbers do not match',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red.shade100,
+          colorText: Colors.red.shade800);
+      return;
+    }
+
+    final newBank = BankAccount(
+      id: 'bank_${DateTime.now().millisecondsSinceEpoch}',
+      bankName: bankNameController.text,
+      accountNumber: accountNumberController.text,
+      ifscCode: ifscController.text,
+      branch: branchController.text,
+      holderName: holderNameController.text,
+      verifyStatus: 0,
+      chequeImagePath: chequeFiles.isNotEmpty ? chequeFiles.first['path'] : null,
+    );
+    bankAccounts.add(newBank);
+    selectBankAccount(newBank);
+    _clearBankForm();
+    Get.back();
+    Get.snackbar('Success', 'Bank account added successfully',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green.shade100,
+        colorText: Colors.green.shade800);
+  }
+
+  void _clearBankForm() {
+    bankNameController.clear();
+    accountNumberController.clear();
+    confirmAccountController.clear();
+    ifscController.clear();
+    branchController.clear();
+    holderNameController.clear();
+    chequeFiles.clear();
+  }
+
+  void pickChequeImage() {
+    FilePickerHelper.showPickerBottomSheet(
+      onFilePicked: (file) {
+        chequeFiles.clear();
+        chequeFiles.add(file.toMap());
+      },
+    );
+  }
+
+  void removeChequeImage(int index) => chequeFiles.removeAt(index);
+
   bool get isStep1Valid =>
       selectedMemberId.value.isNotEmpty &&
       phoneController.text.isNotEmpty &&
+      selectedBank.value != null &&
       termsAccepted.value;
 
   // Bill management
@@ -126,6 +225,7 @@ class ClaimsController extends GetxController {
       clinicAddress: clinicAddressController.text,
       doctorName: doctorNameController.text,
       doctorRegistration: doctorRegController.text,
+      imageFiles: List.from(billImageFiles),
     ));
     _clearBillForm();
   }
@@ -140,7 +240,16 @@ class ClaimsController extends GetxController {
     clinicAddressController.clear();
     doctorNameController.clear();
     doctorRegController.clear();
+    billImageFiles.clear();
   }
+
+  void pickBillImage() {
+    FilePickerHelper.showPickerBottomSheet(
+      onFilePicked: (file) => billImageFiles.add(file.toMap()),
+    );
+  }
+
+  void removeBillImage(int index) => billImageFiles.removeAt(index);
 
   void pickFile(String type) {
     FilePickerHelper.showPickerBottomSheet(
@@ -177,12 +286,15 @@ class ClaimsController extends GetxController {
     emailController.clear();
     alternatePhoneController.clear();
     selectedBankName.value = '';
+    selectedBank.value = null;
     termsAccepted.value = false;
     bills.clear();
     paymentFiles.clear();
     reportFiles.clear();
     otherFiles.clear();
+    billImageFiles.clear();
     _clearBillForm();
+    _clearBankForm();
   }
 
   @override
@@ -198,6 +310,12 @@ class ClaimsController extends GetxController {
     clinicAddressController.dispose();
     doctorNameController.dispose();
     doctorRegController.dispose();
+    bankNameController.dispose();
+    accountNumberController.dispose();
+    confirmAccountController.dispose();
+    ifscController.dispose();
+    branchController.dispose();
+    holderNameController.dispose();
     super.onClose();
   }
 }

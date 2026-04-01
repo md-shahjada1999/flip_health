@@ -51,6 +51,24 @@ class AppString {
   static const String kClickToAccept = 'Click here to accept ';
   static const String kTermsAndConditions = 'terms and conditions';
   static const String kConfirm = 'Confirm';
+  static const String kLogin = 'Login';
+
+  // Email Login Strings
+  static const String kEmailLoginTitle = 'Enter Email\nto Login';
+  static const String kEmailLoginSubtitle = 'Login with your email and password';
+  static const String kEmailLabel = 'Email Address';
+  static const String kEmailHint = 'you@example.com';
+  static const String kPasswordLabel = 'Password';
+  static const String kPasswordHint = 'Enter your password';
+  static const String kOrLoginWith = 'Or login with ';
+  static const String kEmail = 'Email';
+  static const String kLoginWithPhone = 'Login with ';
+  static const String kMobile = 'Mobile';
+
+  // BMI Strings
+  static const String kBmiCalculator = 'BMI Calculator';
+  static const String kCalculateBmi = 'Calculate BMI';
+  static const String kYourBmiResult = 'Your BMI Result';
 
   // OTP Screen Strings
   static const String kOTPTitle = 'Enter OTP';
@@ -62,7 +80,7 @@ class AppString {
 
   // Dashboard Strings
   static const String kHome = 'Home';
-  static const String kSearchPlaceholder = 'Search for Pharmacy';
+  static const String kSearchPlaceholder = 'Search services, medicines, tests...';
   static const String kDiagnostics = 'Diagnostics';
   static const String kConsultation = 'Consultation';
   static const String kDental = 'Dental';
@@ -143,16 +161,37 @@ class AppString {
   static const String kNutritionServicesSubtitle =
       'Nutrition and dietician expert service';
 
-  static const String kGymFitness = 'Gym & Fitness';
+  static const String kGymFitness = 'Gym Membership';
   static const String kGymFitnessSubtitle =
-      'Buy Gym memberships and fitness membership';
-
+      'Buy Gym memberships';
   // OPD Claims Tab
   static const String kClaims = 'Claims';
   static const String kClaimsSubtitle = 'Raise claims, check status';
 
   static const String kBankDetails = 'Bank Details';
   static const String kBankDetailsSubtitle = 'Add/edit bank details';
+
+  static const String kOPDWallet = 'OPD Wallet';
+  static const String kOPDWalletSubtitle = 'View balance & transactions';
+
+  // Wallet Screen
+  static const String kAvailableBalance = 'Available Balance';
+  static const String kTotalBalance = 'Total Balance';
+  static const String kValidTill = 'Valid Till';
+  static const String kModuleBreakup = 'Module Breakup';
+  static const String kRecentTransactions = 'Recent Transactions';
+  static const String kViewAll = 'View All';
+  static const String kNoTransactionsYet = 'No transactions yet';
+  static const String kAllTransactions = 'All Transactions';
+  static const String kFilterTransactions = 'Filter Transactions';
+  static const String kFilters = 'Filters:';
+  static const String kClearAll = 'Clear All';
+  static const String kApply = 'Apply';
+  static const String kNoTransactionsFound = 'No transactions found';
+  static const String kTryAdjustingFilters = 'Try adjusting your filters';
+  static const String kStatusLabel = 'Status';
+  static const String kSuccess = 'Success';
+  static const String kRefunded = 'Refunded';
 
   // Account Management Tab
   static const String kProfile = 'Profile';
@@ -271,7 +310,7 @@ class AppString {
   static const String kIconHelpSupport =
       "assets/svg/all services icons/help_and_support/support.svg";
   static const String kIconMedicalRecords =
-      "assets/svg/all services icons/tab_bar_icons/medical_records.svg";
+      "assets/svg/all services icons/medical_records.svg";
   static const String kIconServicesTabBar =
       "assets/svg/all services icons/tab_bar_icons/services.svg";
 
@@ -320,6 +359,7 @@ class AppString {
       "assets/svg/all services icons/account_management/invoices.svg";
   static const String kIconOrdersServices =
       "assets/svg/all services icons/account_management/oders.svg";
+  static const String kIconUser ="assets/svg/profile.svg";
 
   // Help & Support Tab Icons
   static const String kIconSupport =
@@ -616,6 +656,31 @@ static const String kBackToHome = 'Back to Home';
   static const String kRemarksLabel = 'Remarks :';
   static const String kOrderCannotBeCancelled = 'Order cannot be cancelled once confirmed';
 
+  // Diagnostics Bottom Sheet
+  static const String kHealthCheckupsOption = 'Health Checkups';
+  static const String kHealthCheckupsOptionDesc = 'Avail free health\ncheckups at center';
+  static const String kLabTestsOption = 'Lab Tests';
+  static const String kLabTestsOptionDesc = 'Book lab tests with\nhome collection';
+
+  // Dental Bottom Sheet
+  static const String kAtHospitalDental = 'At Hospital';
+  static const String kAtHospitalDentalDesc = 'Visit a dentist\nat the clinic';
+  static const String kVirtualDental = 'Virtual Consult';
+  static const String kVirtualDentalDesc = 'Consult a dentist\nonline from home';
+
+  // Pharmacy Bottom Sheet
+  static const String kPrescribedPharmacyOption = 'Prescribed';
+  static const String kPrescribedPharmacyDesc = 'Upload prescription\n& order medicines';
+  static const String kOTCProducts = 'OTC Products';
+  static const String kOTCProductsDesc = 'Order over-the-counter\nproducts directly';
+
+  // Service Type Sheet
+  static const String kSelectServiceType = 'Select Service Type';
+  static const String kAtHospitalDesc = 'Visit a doctor\nat the hospital';
+  static const String kVirtualDesc = 'Consult a doctor\nonline from home';
+  static const String kEyeCheckupDesc = 'Comprehensive eye\nexamination';
+  static const String kGlassesLensDesc = 'Browse glasses &\ncontact lenses';
+
   // Vision Module
   static const String kVisionService = 'Vision Service';
   static const String kEyeCheckup = 'Eye Checkup';
@@ -711,8 +776,142 @@ static const String kBackToHome = 'Back to Home';
   static const String kClaimSubmitted = 'Claim Submitted!';
   static const String kClaimSubmittedMsg = 'Your claim has been submitted successfully. You will receive updates on your registered phone number.';
 
+  // Bank Details
+  static const String kBankAccounts = 'Bank Accounts';
+  static const String kAddBankAccount = 'Add Bank Account';
+  static const String kBankName = 'Bank Name';
+  static const String kAccountHolderName = 'Account Holder Name';
+  static const String kAccountNumber = 'Account Number';
+  static const String kConfirmAccountNumber = 'Confirm Account Number';
+  static const String kIFSCCode = 'IFSC Code';
+  static const String kBranch = 'Branch';
+  static const String kCancelledCheque = 'Cancelled Cheque / Passbook';
+  static const String kUploadChequePhoto = 'Upload cheque or passbook photo';
+  static const String kSaveBankAccount = 'Save Bank Account';
+  static const String kNoBankAccounts = 'No bank accounts added';
+  static const String kAddBank = 'Add Bank';
+  static const String kBillImages = 'Bill Images';
+
+  // Mental Wellness
+  static const String kMentalWellnessDescription =
+      'Enter your details below, and once confirmed, our team will call you within 20 minutes to schedule a session with a specialist.';
+  static const String kSelectService = 'Select Service';
+  static const String kSelectCategory = 'Select Category';
+  static const String kLanguage = 'Preferred Language';
+  static const String kSelectLanguage = 'Select Language';
+  static const String kMobileNumber = 'Mobile Number';
+  static const String kConnect = 'Connect';
+  static const String kDisclaimerEmergency =
+      'Disclaimer: We do not handle emergencies. For urgent medical assistance, please contact your doctor or the nearest hospital.';
+  static const String kDisclaimerServiceHours =
+      'Service hours: 9:30 AM – 6:30 PM. Requests received after this time will be processed the next day.';
+
+  // Vaccine Module
+  static const String kVaccineService = 'Vaccine Service';
+  static const String kVaccineCare = 'Vaccine Care';
+  static const String kBookFreeVaccineServices = 'Book free vaccination services for you';
+  static const String kBookVaccineForFamily = 'Book vaccination services for your family';
+  static const String kChooseVaccineType = 'Choose Vaccine Type';
+  static const String kSelectedVaccines = 'Selected Vaccines';
+  static const String kVaccineOverview = 'Vaccine Overview';
+  static const String kSelectVaccineSlots = 'Select Your Vaccine Slots';
+  static const String kVaccinationCenter = 'Vaccination Center';
+  static const String kVaccineTypesLabel = 'Vaccine Types';
+  static const String kSelectAtLeastOneVaccine = 'Please select at least one vaccine';
+
+  // Gym & Fitness Module
+  static const String kGymMembership = 'Gym Membership';
+  static const String kChooseMembershipPlan = 'Choose a membership plan';
+  static const String kMonths = 'months';
+  static const String kPerMember = 'per member';
+  static const String kBenefits = 'Benefits';
+  static const String kSelectMembers = 'Select Members';
+  static const String kBookGymForYou = 'Buy gym membership for you';
+  static const String kBookGymForFamily = 'Buy gym membership for your family';
+  static const String kSelectCityAndCenter = 'Select City & Center';
+  static const String kSelectCity = 'Select City';
+  static const String kSelectGymCenter = 'Select Gym Center';
+  static const String kNoCentersFound = 'No centers found for this city';
+  static const String kGymOverview = 'Membership Overview';
+  static const String kMembershipPlan = 'Membership Plan';
+  static const String kSelectedMembers = 'Selected Members';
+  static const String kCityAndCenter = 'City & Center';
+  static const String kPaymentDetails = 'Payment Details';
+  static const String kSubTotal = 'Sub Total';
+  static const String kGST18 = 'GST (18%)';
+  static const String kWalletDeduction = 'Wallet Deduction';
+  static const String kTotalPayable = 'Total Payable';
+  static const String kActivationNote = 'Your membership will be activated within 72 hours of payment.';
+  static const String kAcceptTermsGym = 'I accept the Terms & Conditions for gym membership';
+  static const String kClickToPay = 'Click to Pay';
+  static const String kOff = 'OFF';
+  static const String kViewBenefits = 'View Benefits';
+  static const String kTaxesAndFees = 'taxes & fees';
+  static const String kMembership = 'Membership';
+
+  // Gym Asset Paths
+  static const String kCultEliteBanner = 'assets/png/cult_elite_mem_banner.png';
+  static const String kCultProBanner = 'assets/png/cult_pro_mem_banner.png';
+  static const String kGymPrimaryBadge = 'assets/png/gym_primary.png';
+  static const String kGymSecondaryBadge = 'assets/png/gym_secondary.png';
+
+  // Orders Module Strings
+  static const String kMyOrdersTitle = 'My Orders';
+  static const String kOrderDetails = 'Order Details';
+  static const String kOrderId = 'Order ID';
+  static const String kOrderDate = 'Order Date';
+  static const String kOrderStatus = 'Status';
+  static const String kServiceType = 'Service Type';
+  static const String kItemsOrdered = 'Items Ordered';
+  static const String kVendor = 'Vendor';
+  static const String kPending = 'Pending';
+  static const String kCompleted = 'Completed';
+  static const String kCancelled = 'Cancelled';
+  static const String kProcessing = 'Processing';
+  static const String kNoOrdersFound = 'No orders found';
+  static const String kNoOrdersForFilter = 'No orders found for this category';
+  static const String kAll = 'All';
+  static const String kPaymentSummary = 'Payment Summary';
+  static const String kServiceDetails = 'Service Details';
+
+  // Help & Support Module Strings
+  static const String kRaiseTicket = 'Raise Ticket';
+  static const String kOpenTickets = 'Open';
+  static const String kClosedTickets = 'Closed';
+  static const String kDescribeYourIssue = 'Describe your issue';
+  static const String kIssueHint = 'E.g.: Connectivity issue, payment failed...';
+  static const String kSubmit = 'Submit';
+  static const String kNoActiveTicket = 'No active tickets';
+  static const String kNoClosedTicket = 'No closed tickets';
+  static const String kNoTicketsYet = 'No tickets raised yet!';
+  static const String kTicketDetails = 'Ticket Details';
+  static const String kTicketId = 'Ticket ID';
+  static const String kTeamGetBack = 'Our support team will get back to you within 24 hours';
+  static const String kGiveFeedback = 'Give Feedback';
+  static const String kContactSupport = 'Contact Support';
+  static const String kContactSupportSubtitle = 'Talk to our support team';
+  static const String kYourTickets = 'Your Tickets';
+  static const String kOpenATicket = 'Open a Ticket';
+  static const String kIssueDescription = 'Issue Description';
+  static const String kRateExperience = 'Rate your experience';
+
   // Shared VVD Strings
   static const String kSelectCenter = 'Select a Center';
   static const String kNoClinicFound = 'No clinics found at this location';
   static const String kDirections = 'Directions';
+
+  // Profile Screen
+  static const String kProfileTitle = 'My Profile';
+  static const String kEditPhoto = 'Edit Photo';
+  static const String kPhone = 'Phone';
+  static const String kBMI = 'BMI';
+  static const String kBMICategory = 'Category';
+  static const String kHealthOverview = 'Health Overview';
+  static const String kQuickAccess = 'Quick Access';
+  static const String kViewMedicalRecords = 'View Medical Records';
+  static const String kViewPrescriptions = 'View Prescriptions';
+  static const String kViewLabReports = 'View Lab Reports';
+  static const String kNotAvailable = 'N/A';
+  static const String kLogout = 'Log Out';
+  static const String kEditProfile = 'Edit Profile';
 }

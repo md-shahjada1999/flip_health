@@ -4,6 +4,7 @@ import 'package:flip_health/controllers/address%20controllers/add_address_contro
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/custom_textfeild.dart';
 import 'package:flip_health/model/address%20models/address_model.dart';
 
 class AddressFormScreen extends GetView<AddAddressController> {
@@ -38,26 +39,21 @@ class AddressFormScreen extends GetView<AddAddressController> {
             _buildAddressPreview(),
             SizedBox(height: 24.rh),
 
-            // House / Flat / Floor
-            _buildLabel('House / Flat / Floor No.'),
-            SizedBox(height: 8.rh),
-            _buildTextField(
-              controller: controller.houseController,
+            CustomTextField(
+              label: 'House / Flat / Floor No.',
               hint: 'e.g. Flat 301, 3rd Floor',
+              controller: controller.houseController,
             ),
             SizedBox(height: 20.rh),
-
-            // Landmark
-            _buildLabel('Landmark (Optional)'),
-            SizedBox(height: 8.rh),
-            _buildTextField(
-              controller: controller.landmarkController,
+            CustomTextField(
+              label: 'Landmark (Optional)',
               hint: 'e.g. Near City Mall',
+              controller: controller.landmarkController,
             ),
             SizedBox(height: 24.rh),
 
             // Address type selector
-            _buildLabel('Save As'),
+            CommonText('Save As', fontSize: 13.rf, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
             SizedBox(height: 12.rh),
             _buildTypeSelector(),
             SizedBox(height: 40.rh),
@@ -135,49 +131,6 @@ class AddressFormScreen extends GetView<AddAddressController> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return CommonText(
-      text,
-      fontSize: 14.rf,
-      fontWeight: FontWeight.w600,
-      color: AppColors.textPrimary,
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(12.rs),
-        border: Border.all(color: AppColors.borderLight),
-      ),
-      child: TextField(
-        controller: controller,
-        style: TextStyle(
-          fontFamily: 'Poppins',
-          fontSize: 14.rf,
-          color: AppColors.textPrimary,
-        ),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14.rf,
-            color: AppColors.textQuaternary,
-          ),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: 16.rs,
-            vertical: 16.rs,
-          ),
-        ),
       ),
     );
   }

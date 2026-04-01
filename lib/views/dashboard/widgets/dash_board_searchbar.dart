@@ -9,12 +9,18 @@ class DashboardSearchBar extends StatelessWidget {
   final TextEditingController? controller;
   final VoidCallback? onVoicePressed;
   final Function(String)? onChanged;
+  final FocusNode? focusNode;
+  final VoidCallback? onClear;
+  final bool isListening;
 
   const DashboardSearchBar({
     Key? key,
     this.controller,
     this.onVoicePressed,
     this.onChanged,
+    this.focusNode,
+    this.onClear,
+    this.isListening = false,
   }) : super(key: key);
 
   @override
@@ -44,6 +50,7 @@ class DashboardSearchBar extends StatelessWidget {
             Expanded(
               child: TextField(
                 controller: controller,
+                focusNode: focusNode,
                 onChanged: onChanged,
                 style: TextStyleCustom.textFieldStyle(
                   fontSize: 14.rf,
@@ -60,21 +67,79 @@ class DashboardSearchBar extends StatelessWidget {
                 ),
               ),
             ),
-            VerticalDivider(
-              color: AppColors.border,
-              thickness: 1.rs,
-              endIndent: 10,
-              indent: 10,
-            ),
-            InkWell(
-              onTap: onVoicePressed,
-              child: SvgPicture.asset(
-                AppString.kIconMicrophone,
-                width: 20.rw,
-                height: 20.rh,
-                color: AppColors.primary,
+            if (onClear != null)
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: controller ?? TextEditingController(),
+                builder: (_, value, __) {
+                  if (value.text.isEmpty) {
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        VerticalDivider(
+                          color: AppColors.border,
+                          thickness: 1.rs,
+                          endIndent: 10,
+                          indent: 10,
+                        ),
+                        InkWell(
+                          onTap: onVoicePressed,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding: EdgeInsets.all(isListening ? 4.rs : 0),
+                            decoration: BoxDecoration(
+                              color: isListening ? AppColors.primaryLight : Colors.transparent,
+                              shape: BoxShape.circle,
+                            ),
+                            child: isListening
+                                ? Icon(
+                                    Icons.mic_rounded,
+                                    size: 20.rf,
+                                    color: AppColors.primary,
+                                  )
+                                : SvgPicture.asset(
+                                    AppString.kIconMicrophone,
+                                    width: 20.rw,
+                                    height: 20.rh,
+                                    colorFilter: ColorFilter.mode(
+                                      AppColors.primary,
+                                      BlendMode.srcIn,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  return GestureDetector(
+                    onTap: onClear,
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 20.rf,
+                      color: AppColors.textSecondary,
+                    ),
+                  );
+                },
               ),
-            ),
+            if (onClear == null) ...[
+              VerticalDivider(
+                color: AppColors.border,
+                thickness: 1.rs,
+                endIndent: 10,
+                indent: 10,
+              ),
+              InkWell(
+                onTap: onVoicePressed,
+                child: SvgPicture.asset(
+                  AppString.kIconMicrophone,
+                  width: 20.rw,
+                  height: 20.rh,
+                  colorFilter: ColorFilter.mode(
+                    AppColors.primary,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

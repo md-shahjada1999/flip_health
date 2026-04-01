@@ -3,8 +3,13 @@ import 'package:get/get.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/app_toasts.dart';
+import 'package:flip_health/data/repositories/family_member_repository.dart';
 
 class AddFamilyMemberController extends GetxController {
+  final FamilyMemberRepository _repository;
+
+  AddFamilyMemberController({required FamilyMemberRepository repository})
+      : _repository = repository;
   // Form key for validation
   final formKey = GlobalKey<FormState>();
 
@@ -140,10 +145,6 @@ class AddFamilyMemberController extends GetxController {
     isLoading.value = true;
 
     try {
-      // Simulate API call - Replace with actual service call
-      await Future.delayed(Duration(seconds: 2));
-
-      // Prepare data
       final familyMemberData = {
         'relationship': selectedRelationship.value,
         'name': nameController.text.trim(),
@@ -152,8 +153,7 @@ class AddFamilyMemberController extends GetxController {
         'phoneNumber': phoneController.text.trim(),
       };
 
-      // TODO: Call your API service here
-      // await yourApiService.addFamilyMember(familyMemberData);
+      await _repository.addFamilyMember(data: familyMemberData);
 
       isLoading.value = false;
 

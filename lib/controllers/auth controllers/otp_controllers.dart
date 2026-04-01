@@ -1,9 +1,14 @@
 import 'dart:async';
+import 'package:flip_health/data/repositories/auth_repository.dart';
 import 'package:flip_health/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class OTPController extends GetxController {
+  final AuthRepository _repository;
+
+  OTPController({required AuthRepository repository})
+      : _repository = repository;
   // Controllers & focus nodes
   final List<TextEditingController> otpControllers =
       List.generate(6, (_) => TextEditingController());
@@ -111,9 +116,7 @@ class OTPController extends GetxController {
 
     try {
       _isLoading.value = true;
-      // simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-      // On success
+      await _repository.verifyOtp(otp: otp);
       Get.snackbar(
         'Success',
         'OTP verified successfully',
@@ -121,7 +124,7 @@ class OTPController extends GetxController {
         backgroundColor: Colors.green.shade100,
         colorText: Colors.green.shade800,
       );
-      Get.offAllNamed(AppRoutes.dashboard);
+      Get.offAllNamed(AppRoutes.healthScore);
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -141,8 +144,7 @@ class OTPController extends GetxController {
 
     try {
       _isLoading.value = true;
-      // simulate resend
-      await Future.delayed(const Duration(seconds: 1));
+      await _repository.resendOtp(input: _phoneNumber.value);
       Get.snackbar(
         'OTP Sent',
         'A new OTP has been sent',

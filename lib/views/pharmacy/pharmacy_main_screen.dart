@@ -14,14 +14,19 @@ class PharmacyMainScreen extends GetView<PharmacyController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
         leadingWidth: 0,
         automaticallyImplyLeading: false,
         titleSpacing: 0,
-        title: const LocationHeaderBar(),
+        title: Row(
+          children: [
+            BackButton(),
+            Expanded(child: LocationHeaderBar()),
+          ],
+        ),
+        
       ),
       body: SingleChildScrollView(
         child: Column(

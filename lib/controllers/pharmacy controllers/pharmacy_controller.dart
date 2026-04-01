@@ -1,18 +1,22 @@
 import 'package:get/get.dart';
 import 'package:flip_health/core/utils/file_picker_helper.dart';
+import 'package:flip_health/data/repositories/pharmacy_repository.dart';
 import 'package:flip_health/model/pharmacy%20models/pharmacy_model.dart';
 import 'package:flip_health/routes/app_routes.dart';
 
 class PharmacyController extends GetxController {
+  final PharmacyRepository _repository;
+
+  PharmacyController({required PharmacyRepository repository})
+      : _repository = repository;
+
   final isLoading = false.obs;
   final prescriptionSource = ''.obs;
 
-  // Uploaded files
   final selectedFiles = <Map<String, dynamic>>[].obs;
   final prescriptionsDataFetched = false.obs;
   final flipHealthPrescriptions = <Map<String, dynamic>>[].obs;
 
-  // FAQs
   final faqItems = <FAQItem>[].obs;
 
   @override
@@ -22,40 +26,14 @@ class PharmacyController extends GetxController {
     _loadFlipHealthPrescriptions();
   }
 
-  void _loadFAQs() {
-    faqItems.value = [
-      FAQItem(
-        question: 'Do I need to order all the medicine in the prescription?',
-        answer:
-            'No, you don\'t need to order all medicines. Our medicine partner will contact you to confirm the required medicines.',
-      ),
-      FAQItem(
-        question: 'Can I change the quantity of medicines?',
-        answer:
-            'Yes, our medicine partner will contact you to confirm the medicines and quantities before delivery.',
-      ),
-      FAQItem(
-        question: 'How do I know the price of medicines?',
-        answer:
-            'Once the order is confirmed, our medicine partner will share the price details with you before delivery.',
-      ),
-    ];
+  Future<void> _loadFAQs() async {
+    faqItems.value = await _repository.getFAQs();
   }
 
-  void _loadFlipHealthPrescriptions() {
+  Future<void> _loadFlipHealthPrescriptions() async {
+    flipHealthPrescriptions.value =
+        await _repository.getFlipHealthPrescriptions();
     prescriptionsDataFetched.value = true;
-    flipHealthPrescriptions.value = [
-      {
-        'id': 'rx_1',
-        'name': 'Prescription - Dr. Sharma',
-        'date': '12 Mar 2024',
-      },
-      {
-        'id': 'rx_2',
-        'name': 'Prescription - Dr. Reddy',
-        'date': '28 Feb 2024',
-      },
-    ];
   }
 
   Future<void> pickFromGallery() async {
@@ -93,5 +71,4 @@ class PharmacyController extends GetxController {
   void navigateToOTC() {
     // Placeholder for OTC flow
   }
-
 }

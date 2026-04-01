@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flip_health/controllers/member%20controllers/member_controller.dart';
 import 'package:flip_health/core/helpers/app_toasts.dart';
 import 'package:flip_health/core/utils/payment_success_screen.dart';
-import 'package:flip_health/model/heath%20checkup%20models/family_member_data_model.dart';
+import 'package:flip_health/data/repositories/lab_test_repository.dart';
 import 'package:flip_health/model/heath%20checkup%20models/lab_test_model.dart';
-import 'package:flip_health/routes/app_routes.dart';
 import 'package:flip_health/views/daignostics/lab_test/lab_selection_screen.dart';
 import 'package:flip_health/views/daignostics/lab_test/lab_test_cart_screen.dart';
 import 'package:flip_health/views/daignostics/lab_test/lab_test_overview_screen.dart';
@@ -12,9 +12,10 @@ import 'package:flip_health/views/daignostics/lab_test/lab_test_screen.dart';
 import 'package:flip_health/views/daignostics/lab_test/lab_test_slot_selection_page.dart';
 
 class LabTestController extends GetxController {
-  // --- Member selection state ---
-  final RxString selectedUserId = ''.obs;
-  final RxList<FamilyMember> familyMembers = <FamilyMember>[].obs;
+  final LabTestRepository _repository;
+
+  LabTestController({required LabTestRepository repository})
+      : _repository = repository;
 
   // --- Search state ---
   final TextEditingController searchTextController = TextEditingController();
@@ -68,7 +69,6 @@ class LabTestController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadFamilyMembers();
     _loadMockData();
   }
 
@@ -78,57 +78,11 @@ class LabTestController extends GetxController {
     super.onClose();
   }
 
-  // --- Member selection ---
-
-  void _loadFamilyMembers() {
-    isLoading.value = true;
-    Future.delayed(const Duration(seconds: 1), () {
-      familyMembers.value = [
-        FamilyMember(
-          id: '1',
-          name: 'Gundari Abhinay',
-          isSponsored: true,
-          sponsoredBy: 'your company',
-        ),
-        FamilyMember(
-          id: '2',
-          name: 'Gundari Abhinaya',
-          isSponsored: false,
-          hasPackages: true,
-        ),
-      ];
-      final sponsored = familyMembers.firstWhere(
-        (m) => m.isSponsored,
-        orElse: () => familyMembers.first,
-      );
-      selectedUserId.value = sponsored.id;
-      isLoading.value = false;
-    });
-  }
-
-  void selectUser(String userId) {
-    selectedUserId.value = userId;
-  }
-
-  FamilyMember? get selectedMember {
-    final idx = familyMembers.indexWhere((m) => m.id == selectedUserId.value);
-    return idx != -1 ? familyMembers[idx] : null;
-  }
-
-  bool isUserSelected(String userId) => selectedUserId.value == userId;
-
-  List<FamilyMember> get sponsoredMembers =>
-      familyMembers.where((m) => m.isSponsored).toList();
-
-  List<FamilyMember> get nonSponsoredMembers =>
-      familyMembers.where((m) => !m.isSponsored).toList();
-
-  void addNewFamilyMember() {
-    Get.toNamed(AppRoutes.addFamilyMember);
-  }
+  // --- Member selection (delegated to MemberController) ---
 
   void continueWithMemberSelection() {
-    if (selectedUserId.value.isEmpty) {
+    final mc = Get.find<MemberController>();
+    if (mc.selectedUserId.value.isEmpty) {
       AppToast.error(title: 'Failed', message: 'Please select a family member');
       return;
     }
@@ -137,104 +91,18 @@ class LabTestController extends GetxController {
 
   // --- Data loading ---
 
-  void _loadMockData() {
-    allTests.value = [
-      const LabTestModel(
-        id: '1',
-        name: 'Bilurubin (total, direct and indirect)',
-        reportTime: 'Reports within 48 hours',
-      ),
-      const LabTestModel(
-        id: '2',
-        name: 'Complete Blood Count (CBC)',
-        reportTime: 'Reports within 24 hours',
-      ),
-      const LabTestModel(
-        id: '3',
-        name: 'Thyroid Profile (T3, T4, TSH)',
-        reportTime: 'Reports within 48 hours',
-      ),
-      const LabTestModel(
-        id: '4',
-        name: 'Liver Function Test (LFT)',
-        reportTime: 'Reports within 48 hours',
-      ),
-      const LabTestModel(
-        id: '5',
-        name: 'Kidney Function Test (KFT)',
-        reportTime: 'Reports within 48 hours',
-      ),
-      const LabTestModel(
-        id: '6',
-        name: 'Lipid Profile',
-        reportTime: 'Reports within 24 hours',
-      ),
-      const LabTestModel(
-        id: '7',
-        name: 'HbA1c (Glycated Hemoglobin)',
-        reportTime: 'Reports within 48 hours',
-      ),
-      const LabTestModel(
-        id: '8',
-        name: 'Vitamin D (25-Hydroxy)',
-        reportTime: 'Reports within 48 hours',
-      ),
-    ];
-
-    searchResults.value = List.from(allTests);
-
-    popularPackages.value = [
-      const LabPackageModel(
-        id: 'pkg1',
-        name: 'Basic Diagnostic Package - Home Collection',
-        price: 6000,
-        includedTests: ['1', '2', '3', '4'],
-      ),
-      const LabPackageModel(
-        id: 'pkg2',
-        name: 'Advanced Health Package - Home Collection',
-        price: 12000,
-        includedTests: ['1', '2', '3', '4', '5', '6', '7', '8'],
-      ),
-    ];
+  Future<void> _loadMockData() async {
+    try {
+      allTests.value = await _repository.getAllTests();
+      searchResults.value = List.from(allTests);
+      popularPackages.value = await _repository.getPopularPackages();
+    } catch (_) {}
   }
 
-  void loadAvailableLabs() {
-    availableLabs.value = [
-      LabModel(
-        id: 'lab1',
-        name: 'Neuberg Diagnostics',
-        logoPath: 'assets/png/neuberg_logo.png',
-        rating: '4.5',
-        testPrices: cartTests
-            .map((t) => LabTestPrice(
-                  testId: t.id,
-                  testName: t.name,
-                  price: t.id == '1' ? 300 : 210,
-                ))
-            .toList(),
-        homeCollectionCharge: 80,
-        supportedTypes: [CollectionType.home, CollectionType.center],
-      ),
-      LabModel(
-        id: 'lab2',
-        name: 'OrangeHealthLabs',
-        logoPath: 'assets/png/orange_health_logo.png',
-        rating: '4.5',
-        address:
-            '3rd & 4th floor, Bright Square, Dharam Karan Rd, ShivBagh, Ameerpet, Hyderabad, Telangana 500016',
-        distance: '18 km',
-        testPrices: cartTests
-            .map((t) => LabTestPrice(
-                  testId: t.id,
-                  testName: t.name,
-                  price: t.id == '1' ? 210 : 210,
-                ))
-            .toList(),
-        homeCollectionCharge: 80,
-        supportedTypes: [CollectionType.home, CollectionType.center],
-      ),
-    ];
+  Future<void> loadAvailableLabs() async {
+    try {
+      availableLabs.value = await _repository.getAvailableLabs(cartTests: cartTests);
+    } catch (_) {}
   }
 
   // --- Search ---

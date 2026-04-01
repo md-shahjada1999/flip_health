@@ -2,21 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flip_health/core/helpers/app_toasts.dart';
 import 'package:flip_health/core/utils/payment_success_screen.dart';
+import 'package:flip_health/controllers/member%20controllers/member_controller.dart';
+import 'package:flip_health/data/repositories/consultation_repository.dart';
 import 'package:flip_health/model/consultation%20models/consultation_model.dart';
-import 'package:flip_health/model/heath%20checkup%20models/family_member_data_model.dart';
-import 'package:flip_health/routes/app_routes.dart';
 import 'package:flip_health/views/consultation/consultation_booking_screen.dart';
 import 'package:flip_health/views/consultation/consultation_slot_selection_screen.dart';
 import 'package:flip_health/views/consultation/doctor_list_screen.dart';
 import 'package:flip_health/views/consultation/select_speciality_screen.dart';
 
 class ConsultationController extends GetxController {
+  final ConsultationRepository _repository;
+  ConsultationController({required ConsultationRepository repository}) : _repository = repository;
   // --- Consultation type ---
   final Rx<ConsultationType> consultationType = ConsultationType.hospital.obs;
 
-  // --- Member selection state ---
-  final RxString selectedUserId = ''.obs;
-  final RxList<FamilyMember> familyMembers = <FamilyMember>[].obs;
   final RxBool isLoading = false.obs;
 
   // --- Speciality state ---
@@ -70,7 +69,6 @@ class ConsultationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadFamilyMembers();
     _loadSpecialities();
     _loadDoctors();
     _loadHospitals();
@@ -87,57 +85,11 @@ class ConsultationController extends GetxController {
       ? 'At Hospital Consultation'
       : 'Virtual Consultation';
 
-  // --- Member selection ---
-
-  void _loadFamilyMembers() {
-    isLoading.value = true;
-    Future.delayed(const Duration(seconds: 1), () {
-      familyMembers.value = [
-        FamilyMember(
-          id: '1',
-          name: 'Gundari Abhinay',
-          isSponsored: true,
-          sponsoredBy: 'your company',
-        ),
-        FamilyMember(
-          id: '2',
-          name: 'Gundari Abhinaya',
-          isSponsored: false,
-          hasPackages: true,
-        ),
-      ];
-      final sponsored = familyMembers.firstWhere(
-        (m) => m.isSponsored,
-        orElse: () => familyMembers.first,
-      );
-      selectedUserId.value = sponsored.id;
-      isLoading.value = false;
-    });
-  }
-
-  void selectUser(String userId) {
-    selectedUserId.value = userId;
-  }
-
-  FamilyMember? get selectedMember {
-    final idx = familyMembers.indexWhere((m) => m.id == selectedUserId.value);
-    return idx != -1 ? familyMembers[idx] : null;
-  }
-
-  bool isUserSelected(String userId) => selectedUserId.value == userId;
-
-  List<FamilyMember> get sponsoredMembers =>
-      familyMembers.where((m) => m.isSponsored).toList();
-
-  List<FamilyMember> get nonSponsoredMembers =>
-      familyMembers.where((m) => !m.isSponsored).toList();
-
-  void addNewFamilyMember() {
-    Get.toNamed(AppRoutes.addFamilyMember);
-  }
+  // --- Member selection (delegated to MemberController) ---
 
   void continueWithMemberSelection() {
-    if (selectedUserId.value.isEmpty) {
+    final mc = Get.find<MemberController>();
+    if (mc.selectedUserId.value.isEmpty) {
       AppToast.error(
           title: 'Failed', message: 'Please select a family member');
       return;
@@ -147,15 +99,8 @@ class ConsultationController extends GetxController {
 
   // --- Specialities ---
 
-  void _loadSpecialities() {
-    allSpecialities.value = const [
-      SpecialityModel(id: '1', name: 'General Physician',iconPath:"assets/svg/all services icons/services/bookConsultations.svg" ),
-      SpecialityModel(id: '2', name: 'Dietician',iconPath: "assets/svg/doctor specialities/dietician.svg"),
-      SpecialityModel(id: '3', name: 'Dematologist',iconPath: "assets/svg/doctor specialities/dermatologist.svg"),
-      SpecialityModel(id: '4', name: 'Pulmonologist',iconPath: "assets/svg/doctor specialities/pulmonologist.svg"),
-      SpecialityModel(id: '5', name: 'Cardiologist',iconPath: "assets/svg/doctor specialities/cardiologist.svg"),
-      SpecialityModel(id: '6', name: 'Dentist',iconPath: "assets/svg/doctor specialities/dentist.svg"),
-    ];
+  Future<void> _loadSpecialities() async {
+    allSpecialities.value = await _repository.getSpecialities();
     searchSpecialityResults.value = List.from(allSpecialities);
   }
 
@@ -177,49 +122,13 @@ class ConsultationController extends GetxController {
 
   // --- Doctors ---
 
-  void _loadDoctors() {
-    allDoctors.value = const [
-      DoctorModel(
-        id: '1',
-        name: 'Dr. Prananka Reddy',
-        qualification: 'MBBS, MD',
-        imageUrl: 'assets/png/hopitals/dr_prananka_reddy.png',
-        experience: '10+ years exp',
-        hospitalName: 'Medicover Hospital',
-        consultationFee: 600,
-        isCashless: true,
-      ),
-      DoctorModel(
-        id: '2',
-        name: 'Dr. Strange',
-        qualification: 'MBBS, MD',
-        imageUrl: 'assets/png/hopitals/dr_strange.png',
-        experience: '10+ years exp',
-        hospitalName: 'Yashoda Hospital',
-        consultationFee: 600,
-        isCashless: true,
-      ),
-    ];
+  Future<void> _loadDoctors() async {
+    allDoctors.value = await _repository.getDoctors();
     filteredDoctors.value = List.from(allDoctors);
   }
 
-  void _loadHospitals() {
-    featuredHospitals.value = const [
-      HospitalModel(
-        id: '1',
-        name: 'Medicover Hospitals',
-        logoPath: 'assets/png/hopitals/medicover_hospitals.png',
-        location: 'HITEC City',
-        distance: '1.2km',
-      ),
-      HospitalModel(
-        id: '2',
-        name: 'KIMS Hospitals',
-        logoPath: 'assets/png/hopitals/kims_hospitals.png',
-        location: 'Gachibowli',
-        distance: '1.6km',
-      ),
-    ];
+  Future<void> _loadHospitals() async {
+    featuredHospitals.value = await _repository.getFeaturedHospitals();
   }
 
   void searchDoctors(String query) {

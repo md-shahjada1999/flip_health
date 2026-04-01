@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:flip_health/controllers/health%20checkup%20controllers/health_checkup_controller.dart';
+import 'package:flip_health/core/services/api%20services/api_controller.dart';
+import 'package:flip_health/data/repositories/health_checkup_repository.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
@@ -14,7 +16,13 @@ class SelectPlanPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(HealthCheckupsController());
+    if (!Get.isRegistered<ApiService>()) {
+      Get.lazyPut<ApiService>(() => ApiService());
+    }
+    if (!Get.isRegistered<HealthCheckupRepository>()) {
+      Get.lazyPut<HealthCheckupRepository>(() => HealthCheckupRepository(apiService: Get.find()));
+    }
+    final controller = Get.put(HealthCheckupsController(repository: Get.find()));
 
     return Scaffold(
       backgroundColor: AppColors.background,

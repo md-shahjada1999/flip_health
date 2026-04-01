@@ -85,7 +85,7 @@ class CommonSlotSelector extends StatelessWidget {
 
   Widget _buildDateSelection() {
     return SizedBox(
-      height: 70.rh,
+      height: 60.rh,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 12.rw),
@@ -100,7 +100,7 @@ class CommonSlotSelector extends StatelessWidget {
             child: GestureDetector(
               onTap: () => onDateSelected(index),
               child: Container(
-                width: 70.rw,
+                width: 60.rw,
                 margin: EdgeInsets.only(right: 12.rw),
                 decoration: BoxDecoration(
                   color: isSelected ? Colors.black : Colors.white,
@@ -177,7 +177,7 @@ class CommonSlotSelector extends StatelessWidget {
                       isDisabled ? null : () => onTimeSlotSelected(slot['time']),
                   child: Container(
                     padding: EdgeInsets.symmetric(
-                        horizontal: 20.rw, vertical: 10.rh),
+                        horizontal: 18.rw, vertical: 8.rh),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Colors.black

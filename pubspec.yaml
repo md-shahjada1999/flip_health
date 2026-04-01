@@ -48,6 +48,9 @@ dependencies:
   lottie: ^3.3.1
   image_picker: ^1.2.1
   file_picker: ^10.3.10
+  percent_indicator: ^4.2.5
+  intl: ^0.20.2
+  speech_to_text: ^7.3.0
 
 dev_dependencies:
   flutter_test:
@@ -88,7 +91,6 @@ flutter:
     - assets/svg/onboarding_images/
     - assets/svg/doctor specialities/
     - assets/png/hopitals/
-
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

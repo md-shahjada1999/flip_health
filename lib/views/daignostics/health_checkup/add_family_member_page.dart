@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flip_health/controllers/health%20checkup%20controllers/add_family_member_controller.dart';
+import 'package:flip_health/core/services/api%20services/api_controller.dart';
+import 'package:flip_health/data/repositories/family_member_repository.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
@@ -16,7 +18,13 @@ class AddFamilyMemberScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(AddFamilyMemberController());
+    if (!Get.isRegistered<ApiService>()) {
+      Get.lazyPut<ApiService>(() => ApiService());
+    }
+    if (!Get.isRegistered<FamilyMemberRepository>()) {
+      Get.lazyPut<FamilyMemberRepository>(() => FamilyMemberRepository(apiService: Get.find()));
+    }
+    final controller = Get.put(AddFamilyMemberController(repository: Get.find()));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -39,8 +47,8 @@ class AddFamilyMemberScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Relationship dropdown
                     Obx(() => CustomDropdown(
+                          label: AppString.kRelationship,
                           hint: AppString.kRelationshipHint,
                           value: controller.selectedRelationship.value.isEmpty
                               ? null
@@ -80,8 +88,8 @@ class AddFamilyMemberScreen extends StatelessWidget {
                         )),
                     SizedBox(height: 20.rh),
 
-                    // Gender dropdown
                     Obx(() => CustomDropdown(
+                          label: AppString.kGender,
                           hint: AppString.kGenderHint,
                           value: controller.selectedGender.value.isEmpty
                               ? null

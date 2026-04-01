@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:flip_health/controllers/health%20checkup%20controllers/lab_test_controller.dart';
+import 'package:flip_health/controllers/member%20controllers/member_controller.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/font_style.dart';
 import 'package:flip_health/core/constants/string_define.dart';
@@ -71,7 +72,7 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
               )),
           SizedBox(height: 4.rh),
           Obx(() => CommonText(
-                'For ${controller.selectedMember?.name ?? ''}',
+                'For ${Get.find<MemberController>().selectedMember?.name ?? ''}',
                 fontSize: 12.rf,
                 color: AppColors.textSecondary,
               )),

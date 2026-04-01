@@ -18,7 +18,7 @@ class VisionVendorsScreen extends GetView<VisionController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CommonAppBar.build(title: controller.appBarTitle),
+      appBar: CommonAppBar.build(title: controller.vendorListTitle),
       body: Column(
         children: [
           const LocationHeaderBar(),
@@ -31,7 +31,9 @@ class VisionVendorsScreen extends GetView<VisionController> {
               if (controller.vendors.isEmpty) {
                 return Center(
                   child: CommonText(
-                    AppString.kNoClinicFound,
+                    controller.isEyeCheckup
+                        ? 'No hospitals found at this location'
+                        : 'No stores found at this location',
                     fontSize: 14.rf,
                     color: AppColors.textSecondary,
                   ),

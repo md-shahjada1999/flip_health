@@ -7,9 +7,14 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flip_health/controllers/address%20controllers/address_controller.dart';
 import 'package:flip_health/core/services/google%20places/google_places_service.dart';
 import 'package:flip_health/core/services/google%20places/place_prediction.dart';
+import 'package:flip_health/data/repositories/address_repository.dart';
 import 'package:flip_health/model/address%20models/address_model.dart';
 
 class AddAddressController extends GetxController {
+  final AddressRepository _repository;
+
+  AddAddressController({required AddressRepository repository})
+      : _repository = repository;
   // Map state
   final Rx<LatLng> selectedLatLng = const LatLng(17.4401, 78.3489).obs;
   GoogleMapController? mapController;
@@ -227,6 +232,8 @@ class AddAddressController extends GetxController {
         longitude: selectedLatLng.value.longitude,
         type: selectedType.value,
       );
+
+      await _repository.saveAddress(address: newAddress);
 
       final addressController = Get.find<AddressController>();
       addressController.addAddress(newAddress);

@@ -61,8 +61,36 @@ class DashboardController extends GetxController {
     Get.toNamed(AppRoutes.dental);
   }
 
-  void onTapVisionCard() {
-    Get.toNamed(AppRoutes.vision);
+  void onTapVisionCard(BuildContext context) {
+    final items = [
+      ServiceCardData(
+        iconPath: 'assets/svg/eyecheck.svg',
+        title: 'Eye Checkup',
+        subtitle: 'Comprehensive eye examination',
+        onTap: () {
+          Get.back();
+          Get.toNamed(AppRoutes.vision, arguments: 'eye_checkup');
+        },
+        subtitleIconPath: AppString.kIconFreeHealthCheckups,
+      ),
+      ServiceCardData(
+        iconPath: 'assets/svg/Lens.svg',
+        title: 'Glasses/Lens',
+        subtitle: 'Browse glasses & contact lenses',
+        onTap: () {
+          Get.back();
+          Get.toNamed(AppRoutes.vision, arguments: 'glasses_lens');
+        },
+        subtitleIconPath: AppString.kIconFreeHealthCheckups,
+      ),
+    ];
+
+    CommonBottomSheet.show(
+      context: context,
+      title: AppString.kVision,
+      items: items,
+      maxHeight: ResponsiveHelper.screenHeight * 0.65,
+    );
   }
 
   void onTapPharmacyCard() {

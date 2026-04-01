@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flip_health/views/dashboard/dashboard_home_page.dart';
+import 'package:flip_health/views/dashboard/view_more_services.dart';
+import 'package:flip_health/views/orders/orders_screen.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
-import 'package:flip_health/core/helpers/responsive_helpers.dart';
-import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/controllers/orders%20controllers/orders_controller.dart';
+import 'package:flip_health/controllers/help%20controllers/help_controller.dart';
+import 'package:flip_health/core/services/api%20services/api_controller.dart';
+import 'package:flip_health/data/repositories/help_repository.dart';
+import 'package:flip_health/data/repositories/orders_repository.dart';
+import 'package:flip_health/views/help/help_screen.dart';
+import 'package:get/get.dart';
 
 class DashboardBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -13,296 +20,149 @@ class DashboardBottomNav extends StatelessWidget {
 
   const DashboardBottomNav({
     Key? key,
-    this.currentIndex = 0,
+    this.currentIndex = 2,
     this.onTap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-
     return PersistentTabView(
-  context,
-  controller: PersistentTabController(initialIndex: currentIndex),
-  screens: _buildScreens(),
-  items: _navBarItems(),
-  backgroundColor: Colors.white,
-  handleAndroidBackButtonPress: true,
-  resizeToAvoidBottomInset: true,
-  stateManagement: true,
-  decoration: NavBarDecoration(
-    borderRadius: BorderRadius.circular(0),
-    colorBehindNavBar: Colors.white,
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        blurRadius: 10,
-        offset: const Offset(0, -5),
+      context,
+      controller: PersistentTabController(initialIndex: currentIndex),
+      screens: _buildScreens(),
+      items: _navBarItems(),
+      backgroundColor: Colors.white,
+      handleAndroidBackButtonPress: true,
+      resizeToAvoidBottomInset: true,
+      stateManagement: true,
+      decoration: NavBarDecoration(
+        borderRadius: BorderRadius.circular(0),
+        colorBehindNavBar: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(15),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
-    ],
-  ),
-  onItemSelected: (index) {
-    onTap?.call(index);
-  },
-  navBarStyle: NavBarStyle.style16,
- navBarHeight: 50.rh + MediaQuery.of(context).padding.bottom,
-
-);
-
+      onItemSelected: (index) {
+        onTap?.call(index);
+      },
+      navBarStyle: NavBarStyle.style16,
+      navBarHeight: 56,
+    );
   }
 
   List<Widget> _buildScreens() {
-    // Return your actual screen widgets here
     return [
-      DashboardHomeScreen(), // Home Screen
-      Container(), // Services Screen
-      Container(), // Pharmacy Screen
-      Container(), // Orders Screen
-      Container(), // Help Screen
+      _ordersTab(),
+      const ServicesScreen(),
+      DashboardHomeScreen(),
+      Container(), // Medical Records placeholder
+      _helpTab(),
     ];
   }
 
- List<PersistentBottomNavBarItem> _navBarItems() {
-  return [
-    PersistentBottomNavBarItem(
-      icon: Padding(
-        padding: EdgeInsets.only(top: 8.rh),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              AppString.kIconHome,
-              width: 20.rw,
-              height: 20.rh,
-              color: AppColors.primary,
-            ),
-            SizedBox(height: 3.rh),
-            CommonText(
-              AppString.kHome,
-              fontSize: 8.rf,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-              height: 1.2,
-            ),
-          ],
-        ),
+  Widget _ordersTab() {
+    if (!Get.isRegistered<ApiService>()) {
+      Get.lazyPut<ApiService>(() => ApiService());
+    }
+    if (!Get.isRegistered<OrdersRepository>()) {
+      Get.lazyPut<OrdersRepository>(() => OrdersRepository(apiService: Get.find()));
+    }
+    if (!Get.isRegistered<OrdersController>()) {
+      Get.lazyPut<OrdersController>(() => OrdersController(repository: Get.find()));
+    }
+    return const OrdersScreen();
+  }
+
+  Widget _helpTab() {
+    if (!Get.isRegistered<ApiService>()) {
+      Get.lazyPut<ApiService>(() => ApiService());
+    }
+    if (!Get.isRegistered<HelpRepository>()) {
+      Get.lazyPut<HelpRepository>(() => HelpRepository(apiService: Get.find()));
+    }
+    if (!Get.isRegistered<HelpController>()) {
+      Get.lazyPut<HelpController>(() => HelpController(repository: Get.find()));
+    }
+    return const HelpScreen();
+  }
+
+  Widget _svgIcon(String path, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(top:8.0),
+      child: SvgPicture.asset(
+        path,
+        width: 22,
+        height: 22,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
       ),
-      inactiveIcon: Padding(
-        padding: EdgeInsets.only(top: 8.rh),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              AppString.kIconHome,
-              width: 20.rw,
-              height: 20.rh,
-              color: AppColors.iconTertiary,
-            ),
-            SizedBox(height: 3.rh),
-            CommonText(
-              AppString.kHome,
-              fontSize: 8.rf,
-              fontWeight: FontWeight.w600,
-              color: AppColors.iconTertiary,
-              height: 1.2,
-            ),
-          ],
-        ),
+    );
+  }
+
+  List<PersistentBottomNavBarItem> _navBarItems() {
+    const labelStyle = TextStyle(fontWeight: FontWeight.w500, fontSize: 10);
+
+    return [
+      // My Orders
+      PersistentBottomNavBarItem(
+        icon: _svgIcon(AppString.kIconOrders, AppColors.primary),
+        inactiveIcon: _svgIcon(AppString.kIconOrders, AppColors.iconTertiary),
+        title: AppString.kMyOrders,
+        textStyle: labelStyle,
+        activeColorPrimary: AppColors.primary,
+        inactiveColorPrimary: const Color.fromARGB(255, 53, 49, 49),
       ),
-      title: "",
-      activeColorPrimary: AppColors.primary,
-      inactiveColorPrimary: AppColors.iconTertiary,
-    ),
-    PersistentBottomNavBarItem(
-      icon: Padding(
-        padding: EdgeInsets.only(top: 8.rh),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              AppString.kIconServices,
-              width: 20.rw,
-              height: 20.rh,
-              color: AppColors.primary,
-            ),
-            SizedBox(height: 3.rh),
-            CommonText(
-              AppString.kServices,
-              fontSize: 8.rf,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-              height: 1.2,
-            ),
-          ],
-        ),
+
+      // Services
+      PersistentBottomNavBarItem(
+        icon: _svgIcon(AppString.kIconServices, AppColors.primary),
+        inactiveIcon: _svgIcon(AppString.kIconServices, AppColors.iconTertiary),
+        title: AppString.kServices,
+        textStyle: labelStyle,
+        activeColorPrimary: AppColors.primary,
+        inactiveColorPrimary: AppColors.iconTertiary,
       ),
-      inactiveIcon: Padding(
-        padding: EdgeInsets.only(top: 8.rh),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              AppString.kIconServices,
-              width: 20.rw,
-              height: 20.rh,
-              color: AppColors.iconTertiary,
-            ),
-            SizedBox(height: 3.rh),
-            CommonText(
-              AppString.kServices,
-              fontSize: 8.rf,
-              fontWeight: FontWeight.w600,
-              color: AppColors.iconTertiary,
-              height: 1.2,
-            ),
-          ],
+
+      // Home (center floating button)
+      PersistentBottomNavBarItem(
+        icon: SvgPicture.asset(
+          AppString.kIconHome,
+          width: 22,
+          height: 22,
+          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
         ),
+        title: AppString.kHome,
+        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 10),
+        activeColorPrimary: AppColors.primary,
+        activeColorSecondary: AppColors.textPrimary,
+        inactiveColorPrimary: AppColors.textPrimary,
       ),
-      title: "",
-      activeColorPrimary: AppColors.primary,
-      inactiveColorPrimary: AppColors.iconTertiary,
-    ),
-    PersistentBottomNavBarItem(
-      icon: Padding(
-        padding: EdgeInsets.only(top: 6.rh),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 30.rw,
-              height: 30.rh,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(12.rw),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  AppString.kIconPharmacy,
-                  width: 18.rw,
-                  height: 18.rh,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            SizedBox(height: 3.rh),
-            CommonText(
-              AppString.kPharmacy,
-              fontSize: 8.rf,
-              fontWeight: FontWeight.w600,
-              color: AppColors.background,
-              height: 1.2,
-            ),
-          ],
-        ),
+
+      // Medical Records
+      PersistentBottomNavBarItem(
+        icon: Icon(Icons.medical_information, ),
+       //_svgIcon(AppString.kIconMedicalRecords, AppColors.primary),
+        inactiveIcon:  Icon(Icons.medical_information, color: AppColors.iconTertiary),
+        // _svgIcon(AppString.kIconMedicalRecords, AppColors.iconTertiary),
+        title: AppString.kMedicalRecords,
+        iconSize: 30,
+        textStyle: labelStyle,
+        activeColorPrimary: AppColors.primary,
+        inactiveColorPrimary: AppColors.iconTertiary,
       ),
-      title: "",
-      activeColorPrimary: AppColors.primary,
-      inactiveColorPrimary: AppColors.primary,
-    ),
-    PersistentBottomNavBarItem(
-      icon: Padding(
-        padding: EdgeInsets.only(top: 8.rh),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              AppString.kIconOrders,
-              width: 20.rw,
-              height: 20.rh,
-              color: AppColors.primary,
-            ),
-            SizedBox(height: 3.rh),
-            CommonText(
-              AppString.kMyOrders,
-              fontSize: 8.rf,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-              height: 1.2,
-            ),
-          ],
-        ),
+
+      // Need Help
+      PersistentBottomNavBarItem(
+        icon: _svgIcon(AppString.kIconHelp, AppColors.primary),
+        inactiveIcon: _svgIcon(AppString.kIconHelp, AppColors.iconTertiary),
+        title: AppString.kNeedHelp,
+        textStyle: labelStyle,
+        activeColorPrimary: AppColors.primary,
+        inactiveColorPrimary: AppColors.iconTertiary,
       ),
-      inactiveIcon: Padding(
-        padding: EdgeInsets.only(top: 8.rh),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              AppString.kIconOrders,
-              width: 20.rw,
-              height: 20.rh,
-              color: AppColors.iconTertiary,
-            ),
-            SizedBox(height: 3.rh),
-            CommonText(
-              AppString.kMyOrders,
-              fontSize: 8.rf,
-              fontWeight: FontWeight.w600,
-              color: AppColors.iconTertiary,
-              height: 1.2,
-            ),
-          ],
-        ),
-      ),
-      title: "",
-      activeColorPrimary: AppColors.primary,
-      inactiveColorPrimary: AppColors.iconTertiary,
-    ),
-    PersistentBottomNavBarItem(
-      icon: Padding(
-        padding: EdgeInsets.only(top: 8.rh),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              AppString.kIconHelp,
-              width: 20.rw,
-              height: 20.rh,
-              color: AppColors.primary,
-            ),
-            SizedBox(height: 3.rh),
-            CommonText(
-              AppString.kNeedHelp,
-              fontSize: 8.rf,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-              height: 1.2,
-            ),
-          ],
-        ),
-      ),
-      inactiveIcon: Padding(
-        padding: EdgeInsets.only(top: 8.rh),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              AppString.kIconHelp,
-              width: 20.rw,
-              height: 20.rh,
-              color: AppColors.iconTertiary,
-            ),
-            SizedBox(height: 3.rh),
-            CommonText(
-              AppString.kNeedHelp,
-              fontSize: 8.rf,
-              fontWeight: FontWeight.w600,
-              color: AppColors.iconTertiary,
-              height: 1.2,
-            ),
-          ],
-        ),
-      ),
-      title: "",
-      activeColorPrimary: AppColors.primary,
-      inactiveColorPrimary: AppColors.iconTertiary,
-    ),
-  ];
-}
+    ];
+  }
 }

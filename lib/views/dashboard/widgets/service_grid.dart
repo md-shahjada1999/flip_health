@@ -105,7 +105,7 @@ class ServicesGrid extends StatelessWidget {
                   badgeText: AppString.kUpTo20Off,
                   imagePath: AppString.kDashboardGlasses,
                   // borderColor: Colors.purple,
-                  onPressed: () => Get.find<DashboardController>().onTapVisionCard(),
+                  onPressed: () => Get.find<DashboardController>().onTapVisionCard(context),
                 ),
               ),
               SizedBox(

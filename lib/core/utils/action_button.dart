@@ -9,6 +9,7 @@ class ActionButton extends StatelessWidget {
   final bool isLoading;
   final Color? backgroundColor;
   final EdgeInsetsGeometry? padding;
+  final IconData? icon;
 
   const ActionButton({
     Key? key,
@@ -17,6 +18,7 @@ class ActionButton extends StatelessWidget {
     this.isLoading = false,
     this.backgroundColor,
     this.padding,
+    this.icon,
   }) : super(key: key);
 
   @override
@@ -45,12 +47,21 @@ class ActionButton extends StatelessWidget {
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : CommonText(
-                text,
-                fontSize: 15.rf,
-                color: Colors.white,
-                fontWeight: FontWeight.w400,
-              ),
+            : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CommonText(
+                    text,
+                    fontSize: 15.rf,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  SizedBox(width: 8.rw),
+
+                  Icon(icon, color: Colors.white, size: 20.rs),
+              ],
+            ),
       ),
     );
   }

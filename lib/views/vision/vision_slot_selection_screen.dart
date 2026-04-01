@@ -8,6 +8,7 @@ import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_slot_selector.dart';
 import 'package:flip_health/views/vision/vision_prescription_screen.dart';
+import 'package:flip_health/views/vision/vision_overview_screen.dart';
 
 class VisionSlotSelectionScreen extends GetView<VisionController> {
   const VisionSlotSelectionScreen({Key? key}) : super(key: key);
@@ -37,7 +38,9 @@ class VisionSlotSelectionScreen extends GetView<VisionController> {
           Obx(() => controller.selectedTimeSlot.value.isNotEmpty
               ? ActionButton(
                   text: AppString.kContinue,
-                  onPressed: () => Get.to(() => const VisionPrescriptionScreen()),
+                  onPressed: () => Get.to(() => controller.isEyeCheckup
+                      ? const VisionOverviewScreen()
+                      : const VisionPrescriptionScreen()),
                 )
               : const SizedBox.shrink()),
         ],

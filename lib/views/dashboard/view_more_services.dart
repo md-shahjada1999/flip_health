@@ -10,6 +10,11 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/routes/app_routes.dart';
+import 'package:flip_health/core/utils/service_type_sheet.dart';
+import 'package:flip_health/controllers/help%20controllers/help_controller.dart';
+import 'package:flip_health/core/services/api%20services/api_controller.dart';
+import 'package:flip_health/data/repositories/help_repository.dart';
+import 'package:flip_health/views/help/help_screen.dart';
 import 'package:get/get.dart' hide ResponsiveScreen;
 
 class ServicesScreen extends StatefulWidget {
@@ -252,7 +257,23 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconDiagnostics,
                     title: AppString.kBookDiagnostics,
                     subtitle: AppString.kBookDiagnosticsSubtitle,
-                    onTap: () {},
+                    onTap: () => ServiceTypeSheet.show(
+                      title: AppString.kSelectServiceType,
+                      options: [
+                        ServiceOption(
+                          title: AppString.kHealthCheckupsOption,
+                          subtitle: AppString.kHealthCheckupsOptionDesc,
+                          svgPath: AppString.kIconFreeHealthCheckups,
+                          onTap: () => Get.toNamed(AppRoutes.healthCheckups),
+                        ),
+                        ServiceOption(
+                          title: AppString.kLabTestsOption,
+                          subtitle: AppString.kLabTestsOptionDesc,
+                          svgPath: AppString.kIconLabTests,
+                          onTap: () => Get.toNamed(AppRoutes.labTests),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 _buildAnimatedCard(
@@ -261,7 +282,23 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconConsultation,
                     title: AppString.kBookConsultation,
                     subtitle: AppString.kBookConsultationSubtitle,
-                    onTap: () {},
+                    onTap: () => ServiceTypeSheet.show(
+                      title: AppString.kSelectServiceType,
+                      options: [
+                        ServiceOption(
+                          title: AppString.kAtHospitalConsultation,
+                          subtitle: AppString.kAtHospitalDesc,
+                          svgPath: AppString.kIconConsultation,
+                          onTap: () => Get.toNamed(AppRoutes.consultation, arguments: 'hospital'),
+                        ),
+                        ServiceOption(
+                          title: AppString.kVirtualConsultation,
+                          subtitle: AppString.kVirtualDesc,
+                          svgPath: AppString.kVirtualIcon,
+                          onTap: () => Get.toNamed(AppRoutes.consultation, arguments: 'virtual'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 _buildAnimatedCard(
@@ -270,7 +307,23 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconDental,
                     title: AppString.kDentalServices,
                     subtitle: AppString.kDentalServicesSubtitle,
-                    onTap: () {},
+                    onTap: () => ServiceTypeSheet.show(
+                      title: AppString.kSelectServiceType,
+                      options: [
+                        ServiceOption(
+                          title: AppString.kAtHospitalDental,
+                          subtitle: AppString.kAtHospitalDentalDesc,
+                          svgPath: AppString.kIconDental,
+                          onTap: () => Get.toNamed(AppRoutes.dental, arguments: 'hospital'),
+                        ),
+                        ServiceOption(
+                          title: AppString.kVirtualDental,
+                          subtitle: AppString.kVirtualDentalDesc,
+                          svgPath: AppString.kVirtualIcon,
+                          onTap: () => Get.toNamed(AppRoutes.dental, arguments: 'virtual'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 _buildAnimatedCard(
@@ -279,7 +332,23 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconPrescribedPharmacy,
                     title: AppString.kPrescribedPharmacy,
                     subtitle: AppString.kPrescribedPharmacySubtitle,
-                    onTap: () {},
+                    onTap: () => ServiceTypeSheet.show(
+                      title: AppString.kSelectServiceType,
+                      options: [
+                        ServiceOption(
+                          title: AppString.kPrescribedPharmacyOption,
+                          subtitle: AppString.kPrescribedPharmacyDesc,
+                          svgPath: AppString.kIconPrescribedPharmacy,
+                          onTap: () => Get.toNamed(AppRoutes.pharmacy, arguments: 'prescribed'),
+                        ),
+                        ServiceOption(
+                          title: AppString.kOTCProducts,
+                          subtitle: AppString.kOTCProductsDesc,
+                          svgPath: AppString.kIconPrescribedPharmacy,
+                          onTap: () => Get.toNamed(AppRoutes.pharmacy, arguments: 'otc'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 _buildAnimatedCard(
@@ -288,8 +357,7 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconVaccination,
                     title: AppString.kVaccinationServices,
                     subtitle: AppString.kVaccinationServicesSubtitle,
-                    showBadge: true,
-                    onTap: () {},
+                    onTap: () => Get.toNamed(AppRoutes.vaccine),
                   ),
                 ),
                 _buildAnimatedCard(
@@ -298,18 +366,34 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconVision,
                     title: AppString.kVisionServices,
                     subtitle: AppString.kVisionServicesSubtitle,
-                    onTap: () {},
+                    onTap: () => ServiceTypeSheet.show(
+                      title: AppString.kSelectServiceType,
+                      options: [
+                        ServiceOption(
+                          title: AppString.kEyeCheckup,
+                          subtitle: AppString.kEyeCheckupDesc,
+                          svgPath: 'assets/svg/eyecheck.svg',
+                          onTap: () => Get.toNamed(AppRoutes.vision, arguments: 'eye_checkup'),
+                        ),
+                        ServiceOption(
+                          title: AppString.kGlassesLens,
+                          subtitle: AppString.kGlassesLensDesc,
+                          svgPath: 'assets/svg/Lens.svg',
+                          onTap: () => Get.toNamed(AppRoutes.vision, arguments: 'glasses_lens'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 _buildAnimatedCard(
-                  index: 6,
-                  child: ServiceCard(
-                    icon: AppString.kIconMentalWellness,
-                    title: AppString.kMentalWellness,
-                    subtitle: AppString.kMentalWellnessSubtitle,
-                    onTap: () {},
-                  ),
-                ),
+                 index: 6,
+                 child: ServiceCard(
+                   icon: AppString.kIconMentalWellness,
+                   title: AppString.kMentalWellness,
+                   subtitle: AppString.kMentalWellnessSubtitle,
+                   onTap: () => Get.toNamed(AppRoutes.mentalWellness),
+                 ),
+               ),
                 _buildAnimatedCard(
                   index: 7,
                   child: ServiceCard(
@@ -335,7 +419,7 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconGymFitness,
                     title: AppString.kGymFitness,
                     subtitle: AppString.kGymFitnessSubtitle,
-                    onTap: () {},
+                    onTap: () => Get.toNamed(AppRoutes.gym),
                   ),
                 ),
               ],
@@ -393,12 +477,21 @@ class _ServicesScreenState extends State<ServicesScreen>
                   ),
                 ),
                 _buildAnimatedCard(
-                  index: 1,
+                 index: 1,
+                 child: ServiceCard(
+                   icon: AppString.kIconBankDetails,
+                   title: AppString.kBankDetails,
+                   subtitle: AppString.kBankDetailsSubtitle,
+                   onTap: () => Get.toNamed(AppRoutes.bankDetails),
+                 ),
+               ),
+                _buildAnimatedCard(
+                  index: 2,
                   child: ServiceCard(
-                    icon: AppString.kIconBankDetails,
-                    title: AppString.kBankDetails,
-                    subtitle: AppString.kBankDetailsSubtitle,
-                    onTap: () {},
+                    icon: AppString.kIconCalendar,
+                    title: AppString.kOPDWallet,
+                    subtitle: AppString.kOPDWalletSubtitle,
+                    onTap: () => Get.toNamed(AppRoutes.wallet),
                   ),
                 ),
               ],
@@ -451,7 +544,9 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconProfileSerices,
                     title: AppString.kProfile,
                     subtitle: AppString.kProfileSubtitle,
-                    onTap: () {},
+                    onTap: () {
+                      Get.toNamed(AppRoutes.profile);
+                    },
                   ),
                 ),
                 _buildAnimatedCard(
@@ -487,7 +582,7 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconOrdersServices,
                     title: AppString.kOrders,
                     subtitle: AppString.kOrdersSubtitle,
-                    onTap: () {},
+                    onTap: () => Get.toNamed(AppRoutes.orders),
                   ),
                 ),
                 _buildAnimatedCard(
@@ -567,7 +662,18 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconSupport,
                     title: AppString.kSupport,
                     subtitle: AppString.kSupportSubtitle,
-                    onTap: () {},
+                    onTap: () {
+                      if (!Get.isRegistered<ApiService>()) {
+                        Get.lazyPut<ApiService>(() => ApiService());
+                      }
+                      if (!Get.isRegistered<HelpRepository>()) {
+                        Get.lazyPut<HelpRepository>(() => HelpRepository(apiService: Get.find()));
+                      }
+                      if (!Get.isRegistered<HelpController>()) {
+                        Get.lazyPut<HelpController>(() => HelpController(repository: Get.find()));
+                      }
+                      Get.to(() => const HelpScreen());
+                    },
                   ),
                 ),
                 _buildAnimatedCard(

@@ -5,6 +5,8 @@ class AppRoutes {
   static const String login = '/login';
   static const String otp = '/otp';
 
+  static const String healthScore = '/health-score';
+
   static const String signup = '/signup';
   static const String resetPassword = '/reset-password';
   static const String forgotPasswordOtp = '/forgot-password-OTP';
@@ -35,8 +37,27 @@ class AppRoutes {
   // Pharmacy Routes
   static const String pharmacy = '/pharmacy';
 
+  // Mental Wellness
+  static const String mentalWellness = '/mental-wellness';
+
   // Claims Routes
   static const String claims = '/claims';
+  static const String bankDetails = '/bank-details';
+
+  // Vaccine Routes
+  static const String vaccine = '/vaccine';
+
+  // Gym Routes
+  static const String gym = '/gym';
+
+  // Orders
+  static const String orders = '/orders';
+
+  // Profile
+  static const String profile = '/profile';
+
+  // Wallet
+  static const String wallet = '/wallet';
 
   // Error Routes
   static const String notFound = '/404';

@@ -51,6 +51,10 @@
 	<string>FlipHealth needs your location to help you add and select nearby addresses.</string>
 	<key>MAPS_API_KEY</key>
 	<string>$(MAPS_API_KEY)</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>FlipHealth uses speech recognition to let you search by voice.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>FlipHealth needs microphone access for voice search.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>FlipHealth needs camera access to capture prescriptions and medical documents.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

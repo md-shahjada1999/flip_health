@@ -1,18 +1,18 @@
 import 'package:get/get.dart';
-import 'package:flip_health/core/constants/app_colors.dart';
+import 'package:flip_health/controllers/member%20controllers/member_controller.dart';
 import 'package:flip_health/core/helpers/app_toasts.dart';
 import 'package:flip_health/core/utils/payment_success_screen.dart';
-import 'package:flip_health/model/heath%20checkup%20models/family_member_data_model.dart';
-import 'package:flip_health/routes/app_routes.dart';
+import 'package:flip_health/data/repositories/health_checkup_repository.dart';
 import 'package:flip_health/views/daignostics/health_checkup/explore_health_packages_page.dart';
 import 'package:flip_health/views/daignostics/health_checkup/health_checkup_overview_page.dart';
 import 'package:flip_health/views/daignostics/health_checkup/health_selection_slot_page.dart';
 import 'package:flip_health/views/daignostics/health_checkup/select_plan_page.dart';
 
 class HealthCheckupsController extends GetxController {
-  // Observable variables
-  final RxString selectedUserId = ''.obs;
-  final RxList<FamilyMember> familyMembers = <FamilyMember>[].obs;
+  final HealthCheckupRepository _repository;
+
+  HealthCheckupsController({required HealthCheckupRepository repository})
+      : _repository = repository;
   final RxBool isLoading = false.obs;
   var selectedPackageIndex = (-1).obs;
   var isHomeCollection = true.obs;
@@ -49,75 +49,17 @@ final List<Map<String, dynamic>> afternoonSlots = [
   {'time': '11 AM-12 PM', 'isDisabled': false},
 ];
 
-  @override
-  void onInit() {
-    super.onInit();
-    loadFamilyMembers();
-  }
+  // --- Member selection (delegated to MemberController) ---
 
-  // Load family members (replace with actual API call)
-  void loadFamilyMembers() {
-    isLoading.value = true;
-
-    // Simulate API call - replace with actual service call
-    Future.delayed(Duration(seconds: 1), () {
-      familyMembers.value = [
-        FamilyMember(
-          id: '1',
-          name: 'Gundari Abhinay',
-          isSponsored: true,
-          sponsoredBy: 'your company',
-        ),
-        FamilyMember(
-          id: '2',
-          name: 'Gundari Abhinaya',
-          isSponsored: false,
-          hasPackages: true,
-        ),
-      ];
-
-      // Auto-select first sponsored member
-      final sponsoredMember = familyMembers.firstWhere(
-        (m) => m.isSponsored,
-        orElse: () => familyMembers.first,
-      );
-      selectedUserId.value = sponsoredMember.id;
-
-      isLoading.value = false;
-    });
-  }
-
-  // Select user
-  void selectUser(String userId) {
-    selectedUserId.value = userId;
-  }
-
-  // Add family member to selection
-  void addMemberToSelection(String userId) {
-    // Implement your logic here
-    AppToast.success(
-      title: 'Member Added',
-      message: 'Family member added to selection',
-    );
-  }
-
-  // Navigate to add new family member
-  void addNewFamilyMember() {
-    // Navigate to add family member screen
-    Get.toNamed(AppRoutes.addFamilyMember);
-  }
-
-  // Continue with selected user
   void continueWithSelection() {
-    if (selectedUserId.value.isEmpty) {
+    final mc = Get.find<MemberController>();
+    if (mc.selectedUserId.value.isEmpty) {
       AppToast.error(
         title: 'Failed',
         message: 'Please select a family member',
       );
-
       return;
     }
-
     Get.to(() => SelectPlanPage());
   }
 
@@ -133,24 +75,6 @@ final List<Map<String, dynamic>> afternoonSlots = [
   void continueWithPackageSelection() {
     Get.to(()=>HealthCheckUpSlotSelectionPage());
   }
-
-  // Get sponsored members
-  List<FamilyMember> get sponsoredMembers =>
-      familyMembers.where((m) => m.isSponsored).toList();
-
-  // Get non-sponsored members
-  List<FamilyMember> get nonSponsoredMembers =>
-      familyMembers.where((m) => !m.isSponsored).toList();
-
-  // Get selected member
-  FamilyMember? get selectedMember {
-    final idx = familyMembers.indexWhere((m) => m.id == selectedUserId.value);
-    return idx != -1 ? familyMembers[idx] : null;
-  }
-
-  // Check if user is selected
-  bool isUserSelected(String userId) => selectedUserId.value == userId;
-
 
 
 

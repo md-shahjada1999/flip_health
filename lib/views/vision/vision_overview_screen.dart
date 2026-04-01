@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flip_health/controllers/vision%20controllers/vision_controller.dart';
+import 'package:flip_health/controllers/member%20controllers/member_controller.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
@@ -117,14 +118,16 @@ class VisionOverviewScreen extends GetView<VisionController> {
           ),
           SizedBox(height: 12.rh),
           CommonText(
-            AppString.kVisionComprehensiveCheckup,
+            controller.isEyeCheckup
+                ? AppString.kVisionComprehensiveCheckup
+                : AppString.kGlassesLens,
             fontSize: 14.rf,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
           ),
           SizedBox(height: 4.rh),
           Obx(() => CommonText(
-            'For ${controller.selectedMember?.name ?? ''}',
+            'For ${Get.find<MemberController>().selectedMember?.name ?? ''}',
             fontSize: 12.rf,
             color: AppColors.textTertiary,
           )),

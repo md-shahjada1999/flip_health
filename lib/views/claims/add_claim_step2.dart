@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -6,6 +7,7 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/custom_textfeild.dart';
 import 'package:flip_health/model/claims%20models/claim_model.dart';
 
 class AddClaimStep2 extends GetView<ClaimsController> {
@@ -168,18 +170,18 @@ class AddClaimStep2 extends GetView<ClaimsController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSheetField(
+                    CustomTextField(
                       label: AppString.kBillNumber,
                       hint: 'Enter bill number',
                       controller: controller.billNumberController,
-                      prefixIcon: Icons.tag,
+                      prefixIcon: Icon(Icons.tag, size: 20.rs, color: AppColors.textSecondary),
                     ),
                     SizedBox(height: 16.rh),
-                    _buildSheetField(
+                    CustomTextField(
                       label: AppString.kBillDate,
                       hint: 'Select bill date',
                       controller: controller.billDateController,
-                      prefixIcon: Icons.calendar_today_outlined,
+                      prefixIcon: Icon(Icons.calendar_today_outlined, size: 20.rs, color: AppColors.textSecondary),
                       readOnly: true,
                       onTap: () async {
                         final date = await showDatePicker(
@@ -198,42 +200,44 @@ class AddClaimStep2 extends GetView<ClaimsController> {
                       },
                     ),
                     SizedBox(height: 16.rh),
-                    _buildSheetField(
+                    CustomTextField(
                       label: AppString.kBillAmount,
                       hint: 'Enter bill amount',
                       controller: controller.billAmountController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
-                      prefixIcon: Icons.currency_rupee,
+                      prefixIcon: Icon(Icons.currency_rupee, size: 20.rs, color: AppColors.textSecondary),
                     ),
                     SizedBox(height: 16.rh),
-                    _buildSheetField(
+                    CustomTextField(
                       label: AppString.kClinicName,
                       hint: 'Enter clinic / hospital name',
                       controller: controller.clinicNameController,
-                      prefixIcon: Icons.local_hospital_outlined,
+                      prefixIcon: Icon(Icons.local_hospital_outlined, size: 20.rs, color: AppColors.textSecondary),
                     ),
                     SizedBox(height: 16.rh),
-                    _buildSheetField(
+                    CustomTextField(
                       label: AppString.kClinicAddress,
                       hint: 'Enter clinic address',
                       controller: controller.clinicAddressController,
-                      prefixIcon: Icons.location_on_outlined,
+                      prefixIcon: Icon(Icons.location_on_outlined, size: 20.rs, color: AppColors.textSecondary),
                     ),
                     SizedBox(height: 16.rh),
-                    _buildSheetField(
+                    CustomTextField(
                       label: AppString.kDoctorName,
                       hint: 'Enter doctor name',
                       controller: controller.doctorNameController,
-                      prefixIcon: Icons.person_outline,
+                      prefixIcon: Icon(Icons.person_outline, size: 20.rs, color: AppColors.textSecondary),
                     ),
                     SizedBox(height: 16.rh),
-                    _buildSheetField(
+                    CustomTextField(
                       label: AppString.kDoctorRegistration,
                       hint: 'Enter doctor registration number',
                       controller: controller.doctorRegController,
-                      prefixIcon: Icons.badge_outlined,
+                      prefixIcon: Icon(Icons.badge_outlined, size: 20.rs, color: AppColors.textSecondary),
                     ),
+                    SizedBox(height: 20.rh),
+                    _buildBillImageUpload(),
                     SizedBox(height: 24.rh),
                     SizedBox(
                       width: double.infinity,
@@ -260,44 +264,6 @@ class AddClaimStep2 extends GetView<ClaimsController> {
         ),
       ),
       isScrollControlled: true,
-    );
-  }
-
-  Widget _buildSheetField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    TextInputType? keyboardType,
-    List<TextInputFormatter>? inputFormatters,
-    IconData? prefixIcon,
-    bool readOnly = false,
-    VoidCallback? onTap,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CommonText(label, fontSize: 12.rf, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
-        SizedBox(height: 6.rh),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          inputFormatters: inputFormatters,
-          readOnly: readOnly,
-          onTap: onTap,
-          style: TextStyle(fontSize: 14.rf, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(fontSize: 13.rf, color: AppColors.textSecondary.withValues(alpha: 0.6)),
-            prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20.rs, color: AppColors.textSecondary) : null,
-            filled: true,
-            fillColor: AppColors.surfaceLight,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 14.rh),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.rs), borderSide: BorderSide(color: AppColors.borderLight)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.rs), borderSide: BorderSide(color: AppColors.borderLight)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.rs), borderSide: BorderSide(color: AppColors.primary, width: 1.5)),
-          ),
-        ),
-      ],
     );
   }
 
@@ -403,6 +369,96 @@ class AddClaimStep2 extends GetView<ClaimsController> {
         ),
         SizedBox(width: 10.rw),
         CommonText(title, fontSize: 16.rf, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+      ],
+    );
+  }
+
+  Widget _buildBillImageUpload() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.image_outlined, size: 18.rs, color: AppColors.textSecondary),
+            SizedBox(width: 8.rw),
+            CommonText(AppString.kBillImages, fontSize: 13.rf, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          ],
+        ),
+        SizedBox(height: 10.rh),
+        Obx(() => Wrap(
+              spacing: 8.rw,
+              runSpacing: 8.rh,
+              children: [
+                ...controller.billImageFiles.asMap().entries.map((entry) {
+                  final file = entry.value;
+                  final isImage = file['isImage'] == true;
+                  final path = file['path'] as String? ?? '';
+                  return Stack(
+                    children: [
+                      Container(
+                        width: 72.rs,
+                        height: 72.rs,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10.rs),
+                          border: Border.all(color: AppColors.borderLight),
+                          color: AppColors.backgroundTertiary,
+                        ),
+                        child: isImage && path.isNotEmpty
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(10.rs),
+                                child: Image.file(File(path), fit: BoxFit.cover, width: 72.rs, height: 72.rs,
+                                  errorBuilder: (_, __, ___) => Center(
+                                    child: Icon(Icons.broken_image_outlined, size: 24.rs, color: AppColors.textSecondary),
+                                  )),
+                              )
+                            : Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.insert_drive_file_outlined, size: 22.rs, color: AppColors.textSecondary),
+                                    CommonText(file['name'] ?? '', fontSize: 7.rf, color: AppColors.textSecondary, maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  ],
+                                ),
+                              ),
+                      ),
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: GestureDetector(
+                          onTap: () => controller.removeBillImage(entry.key),
+                          child: Container(
+                            width: 18.rs,
+                            height: 18.rs,
+                            decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
+                            child: Icon(Icons.close, color: Colors.white, size: 12.rs),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+                GestureDetector(
+                  onTap: controller.pickBillImage,
+                  child: Container(
+                    width: 72.rs,
+                    height: 72.rs,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10.rs),
+                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.4), style: BorderStyle.solid),
+                      color: AppColors.primary.withValues(alpha: 0.04),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_photo_alternate_outlined, size: 24.rs, color: AppColors.primary),
+                        SizedBox(height: 2.rh),
+                        CommonText(AppString.kUpload, fontSize: 10.rf, color: AppColors.primary, fontWeight: FontWeight.w500),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            )),
       ],
     );
   }

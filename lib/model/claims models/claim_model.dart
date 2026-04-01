@@ -33,6 +33,7 @@ class ClaimBill {
   final String doctorName;
   final String doctorRegistration;
   final List<String> attachments;
+  final List<Map<String, dynamic>> imageFiles;
 
   ClaimBill({
     required this.billNumber,
@@ -43,6 +44,7 @@ class ClaimBill {
     this.doctorName = '',
     this.doctorRegistration = '',
     this.attachments = const [],
+    this.imageFiles = const [],
   });
 }
 

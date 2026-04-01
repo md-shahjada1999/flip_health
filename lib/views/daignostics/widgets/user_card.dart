@@ -3,6 +3,7 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
+import 'package:flutter_svg/svg.dart';
 
 class UserCard extends StatelessWidget {
   final String name;
@@ -43,17 +44,13 @@ class UserCard extends StatelessWidget {
           children: [
             // Avatar
             Container(
-              width: 45.rw,
-              height: 45.rh,
+              width: 40.rw,
+              height: 40.rh,
               decoration: BoxDecoration(
-                color: AppColors.textPrimary,
+                color: AppColors.background,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 27.rs,
-              ),
+              child: SvgPicture.asset(AppString.kIconUser,color: AppColors.textPrimary),
             ),
 
             SizedBox(width: 12.rw),
