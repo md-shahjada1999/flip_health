@@ -17,28 +17,39 @@ class GymMembershipScreen extends GetView<GymController> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CommonAppBar.build(title: AppString.kGymMembership),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 10.rh),
-              itemCount: controller.membershipPlans.length,
-              itemBuilder: (context, index) {
-                return _MembershipCard(
-                  plan: controller.membershipPlans[index],
-                  index: index,
-                );
-              },
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
+
+        return Column(
+          children: [
+            Expanded(
+              child: controller.membershipPlans.isEmpty
+                  ? Center(
+                      child: CircularProgressIndicator(color: AppColors.primary),
+                    )
+                  : ListView.builder(
+                      padding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 10.rh),
+                      itemCount: controller.membershipPlans.length,
+                      itemBuilder: (context, index) {
+                        return _MembershipCard(
+                          plan: controller.membershipPlans[index],
+                          index: index,
+                        );
+                      },
+                    ),
             ),
-          ),
-          Obx(() => controller.selectedPlanIndex.value >= 0
-              ? ActionButton(
-                  text: AppString.kContinue,
-                  onPressed: () => Get.to(() => const GymMemberSelectionScreen()),
-                )
-              : const SizedBox.shrink()),
-        ],
-      ),
+            if (controller.selectedPlanIndex.value >= 0)
+              ActionButton(
+                text: AppString.kContinue,
+                onPressed: () => Get.to(() => const GymMemberSelectionScreen()),
+              ),
+          ],
+        );
+      }),
     );
   }
 }

@@ -10,10 +10,16 @@ class DashboardBinding extends Bindings {
     if (!Get.isRegistered<ApiService>()) {
       Get.lazyPut<ApiService>(() => ApiService(), fenix: true);
     }
-    Get.lazyPut<AddressRepository>(
-        () => AddressRepository(apiService: Get.find()));
+    if (!Get.isRegistered<AddressRepository>()) {
+      Get.lazyPut<AddressRepository>(
+          () => AddressRepository(apiService: Get.find()),
+          fenix: true);
+    }
     Get.lazyPut<DashboardController>(() => DashboardController());
-    Get.lazyPut<AddressController>(
-        () => AddressController(repository: Get.find()));
+    if (!Get.isRegistered<AddressController>()) {
+      Get.lazyPut<AddressController>(
+          () => AddressController(repository: Get.find()),
+          fenix: true);
+    }
   }
 }

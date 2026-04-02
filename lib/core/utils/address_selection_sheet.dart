@@ -42,6 +42,7 @@ class _AddressSheetBodyState extends State<_AddressSheetBody>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     )..forward();
+    Get.find<AddressController>().loadAddresses(forceRefresh: true);
   }
 
   @override
@@ -117,6 +118,7 @@ class _AddressSheetBodyState extends State<_AddressSheetBody>
                         controller.selectAddress(address);
                         Navigator.pop(context);
                       },
+                      onDelete: () => controller.deleteAddress(address.id),
                     )),
                   );
                 },
@@ -241,20 +243,22 @@ class _AddressTile extends StatelessWidget {
   final AddressModel address;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   const _AddressTile({
     required this.address,
     required this.isSelected,
     required this.onTap,
+    this.onDelete,
   });
 
   IconData get _typeIcon {
-    switch (address.type) {
-      case AddressType.home:
+    switch (address.tag.toUpperCase()) {
+      case 'HOME':
         return Icons.home_outlined;
-      case AddressType.office:
+      case 'WORK':
         return Icons.business_outlined;
-      case AddressType.other:
+      default:
         return Icons.location_on_outlined;
     }
   }
@@ -297,34 +301,11 @@ class _AddressTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      CommonText(
-                        address.label,
-                        fontSize: 15.rf,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                      if (address.isDefault) ...[
-                        SizedBox(width: 8.rw),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8.rs,
-                            vertical: 2.rs,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.success.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(6.rs),
-                          ),
-                          child: CommonText(
-                            'Default',
-                            fontSize: 10.rf,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.success,
-                          ),
-                        ),
-                      ],
-                    ],
+                  CommonText(
+                    address.displayLabel,
+                    fontSize: 15.rf,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
                   SizedBox(height: 4.rh),
                   CommonText(

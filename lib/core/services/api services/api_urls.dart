@@ -26,6 +26,9 @@ class ApiUrl {
   static const String GET_DOCTORS = "/patient/doctor";
   static const String GET_HOSPITALS = "/patient/hospital";
 
+  // Address
+  static const String ADDRESS = "/patient/address";
+
   // Static pages
   static const TERMS_AND_CONDITIONS_URL = "${kDomain}/terms-and-conditions";
   static const PRIVACY_POLICY_URL = "${kDomain}/privacy-policy";

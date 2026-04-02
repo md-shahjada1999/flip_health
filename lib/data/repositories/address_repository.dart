@@ -1,5 +1,7 @@
 import 'package:flip_health/core/services/api%20services/api_controller.dart';
+import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/core/services/app_exception.dart';
+import 'package:flip_health/core/utils/print_log.dart';
 import 'package:flip_health/model/address%20models/address_model.dart';
 
 class AddressRepository {
@@ -9,46 +11,69 @@ class AddressRepository {
 
   Future<List<AddressModel>> getAddresses() async {
     try {
-      // TODO: Replace with real API call
-      return [
-        const AddressModel(
-          id: '1',
-          label: 'Home',
-          fullAddress:
-              'Isprout, 7th floor, Plot No: 25, Divyasree Trinity, Gachibowli',
-          city: 'Hyderabad',
-          pincode: '500032',
-          isDefault: true,
-          type: AddressType.home,
-        ),
-        const AddressModel(
-          id: '2',
-          label: 'Office',
-          fullAddress: 'WeWork, Raheja Mindspace IT Park, HITEC City',
-          city: 'Hyderabad',
-          pincode: '500081',
-          type: AddressType.office,
-        ),
-        const AddressModel(
-          id: '3',
-          label: 'Other',
-          fullAddress: '12-1-45, Tarnaka, Secunderabad',
-          city: 'Secunderabad',
-          pincode: '500017',
-          type: AddressType.other,
-        ),
-      ];
+      final response = await apiService.get(ApiUrl.ADDRESS);
+      PrintLog.printLog('AddressRepository.getAddresses status: ${response.statusCode}');
+      PrintLog.printLog('AddressRepository.getAddresses data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map<String, dynamic>) {
+          return AddressModel.fromListResponse(data);
+        }
+        PrintLog.printLog('AddressRepository: unexpected data type: ${data.runtimeType}');
+      }
+
+      throw AppException(
+        message: response.data?['message'] ?? 'Failed to fetch addresses',
+        statusCode: response.statusCode,
+      );
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AppException(message: 'Failed to load addresses.');
+      PrintLog.printLog('AddressRepository.getAddresses error: $e');
+      throw AppException(message: 'Failed to load addresses: $e');
     }
   }
 
-  Future<AddressModel> saveAddress({required AddressModel address}) async {
+  Future<AddressModel> addAddress({required Map<String, dynamic> data}) async {
     try {
-      // TODO: Replace with real API call
-      return address;
+      final response = await apiService.post(
+        ApiUrl.ADDRESS,
+        data: data,
+      );
+
+      if ((response.statusCode == 200 || response.statusCode == 201) &&
+          response.data is Map<String, dynamic>) {
+        return AddressModel.fromSingleResponse(response.data);
+      }
+
+      throw AppException(
+        message: response.data?['message'] ?? 'Failed to add address',
+        statusCode: response.statusCode,
+      );
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AppException(message: 'Failed to save address.');
+      PrintLog.printLog('AddressRepository.addAddress error: $e');
+      throw AppException(message: 'Failed to add address: $e');
+    }
+  }
+
+  Future<void> deleteAddress(String id) async {
+    try {
+      final response = await apiService.delete('${ApiUrl.ADDRESS}/$id');
+
+      if (response.statusCode != 200) {
+        throw AppException(
+          message: response.data?['message'] ?? 'Failed to delete address',
+          statusCode: response.statusCode,
+        );
+      }
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('AddressRepository.deleteAddress error: $e');
+      throw AppException(message: 'Failed to delete address: $e');
     }
   }
 }
