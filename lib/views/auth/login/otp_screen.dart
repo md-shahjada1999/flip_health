@@ -13,7 +13,6 @@ class OTPScreen extends GetView<OTPController> {
 
   @override
   Widget build(BuildContext context) {
-    // ensure controller is initialized
     final OTPController c = controller;
 
     return Scaffold(
@@ -34,22 +33,25 @@ class OTPScreen extends GetView<OTPController> {
                   children: [
                     const SizedBox(height: 120),
 
-                    // Title
-                    CommonText(
-                      AppString.kOTPTitle,
-                      fontSize: 28,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      height: 1.3,
-                    ),
+                    Obx(() => CommonText(
+                          c.isLinkFlow
+                              ? 'Verify Link'
+                              : AppString.kOTPTitle,
+                          fontSize: 28,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          height: 1.3,
+                        )),
                     const SizedBox(height: 16),
-                    // Subtitle with phone
+
                     Obx(() {
                       return RichText(
                         text: TextSpan(
                           children: [
                             TextSpan(
-                              text: AppString.kOTPSubtitle,
+                              text: c.isLinkFlow
+                                  ? 'Enter the OTP sent to '
+                                  : AppString.kOTPSubtitle,
                               style: TextStyleCustom.normalStyle(
                                 fontSize: 16,
                                 color: AppColors.textTertiary,
@@ -83,7 +85,6 @@ class OTPScreen extends GetView<OTPController> {
 
                     const SizedBox(height: 40),
 
-                    // OTP input boxes - Fixed: Single Obx wrapper
                     Obx(() {
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -131,7 +132,6 @@ class OTPScreen extends GetView<OTPController> {
 
                     const SizedBox(height: 32),
 
-                    // Resend OTP
                     Obx(() {
                       return GestureDetector(
                         onTap: c.canResend ? c.resendOTP : null,
@@ -164,7 +164,6 @@ class OTPScreen extends GetView<OTPController> {
 
                     const Spacer(),
 
-                    // Confirm button
                     Obx(() {
                       return SizedBox(
                         width: double.infinity,

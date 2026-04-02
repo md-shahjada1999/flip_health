@@ -6,7 +6,6 @@ import 'package:flip_health/core/helpers/app_validators.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 class LoginScreen extends GetView<LoginController> {
@@ -24,42 +23,17 @@ class LoginScreen extends GetView<LoginController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 120),
-
-                  CommonText(
-                    controller.isEmailLogin.value
-                        ? AppString.kEmailLoginTitle
-                        : AppString.kLoginTitle,
-                    fontSize: 28,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
-                    height: 1.3,
-                  ),
+                  _buildTitle(),
                   const SizedBox(height: 8),
-
-                  CommonText(
-                    controller.isEmailLogin.value
-                        ? AppString.kEmailLoginSubtitle
-                        : AppString.kLoginSubtitle,
-                    fontSize: 16,
-                    color: AppColors.textTertiary,
-                  ),
+                  _buildSubtitle(),
                   const SizedBox(height: 40),
-
-                  if (controller.isEmailLogin.value) ...[
-                    _buildEmailFields(),
-                  ] else ...[
-                    _buildPhoneField(),
-                  ],
-
+                  _buildInputFields(),
                   const Spacer(),
-
                   _buildTermsCheckbox(),
                   const SizedBox(height: 24),
-
                   _buildConfirmButton(),
                   const SizedBox(height: 16),
-
-                  _buildLoginModeToggle(),
+                  if (!controller.isLinkFlow) _buildLoginModeToggle(),
                   const SizedBox(height: 24),
                 ],
               )),
@@ -68,16 +42,80 @@ class LoginScreen extends GetView<LoginController> {
     );
   }
 
+  Widget _buildTitle() {
+    if (controller.isLinkFlow) {
+      return CommonText(
+        controller.linkTitle.value,
+        fontSize: 28,
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.bold,
+        height: 1.3,
+      );
+    }
+    return CommonText(
+      controller.isEmailLogin.value
+          ? AppString.kEmailLoginTitle
+          : AppString.kLoginTitle,
+      fontSize: 28,
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.bold,
+      height: 1.3,
+    );
+  }
+
+  Widget _buildSubtitle() {
+    if (controller.isLinkFlow) {
+      return CommonText(
+        controller.linkSubtitle.value,
+        fontSize: 16,
+        color: AppColors.textTertiary,
+      );
+    }
+    return CommonText(
+      controller.isEmailLogin.value
+          ? AppString.kEmailLoginSubtitle
+          : AppString.kLoginSubtitle,
+      fontSize: 16,
+      color: AppColors.textTertiary,
+    );
+  }
+
+  Widget _buildInputFields() {
+    if (controller.loginMode.value == LoginMode.linkEmail) {
+      return _buildLinkEmailField();
+    }
+    if (controller.loginMode.value == LoginMode.linkPhone) {
+      return _buildPhoneField();
+    }
+    if (controller.isEmailLogin.value) {
+      return _buildEmailFields();
+    }
+    return _buildPhoneField();
+  }
+
   Widget _buildPhoneField() {
     return Obx(() => CustomTextField(
-          label: AppString.kMobileNumberLabel,
-          hint: AppString.kPhoneHint,
+          label: 'Phone Number or Email',
+          hint: 'Enter phone number or email',
           controller: controller.phoneController,
-          keyboardType: TextInputType.phone,
-          maxLength: 10,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          keyboardType: TextInputType.emailAddress,
           suffixIcon: controller.phoneText.isNotEmpty &&
                   AppValidator.isValidPhoneOrEmail(controller.phoneText.value)
+              ? const Icon(Icons.check, color: AppColors.success)
+              : null,
+        ));
+  }
+
+  Widget _buildLinkEmailField() {
+    return Obx(() => CustomTextField(
+          label: AppString.kEmailLabel,
+          hint: AppString.kEmailHint,
+          controller: controller.emailController,
+          keyboardType: TextInputType.emailAddress,
+          prefixIcon: const Icon(Icons.email_outlined,
+              color: AppColors.textSecondary, size: 20),
+          suffixIcon: controller.emailText.isNotEmpty &&
+                  AppValidator.isValidEmail(controller.emailText.value)
               ? const Icon(Icons.check, color: AppColors.success)
               : null,
         ));
@@ -92,7 +130,8 @@ class LoginScreen extends GetView<LoginController> {
               hint: AppString.kEmailHint,
               controller: controller.emailController,
               keyboardType: TextInputType.emailAddress,
-              prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textSecondary, size: 20),
+              prefixIcon: const Icon(Icons.email_outlined,
+                  color: AppColors.textSecondary, size: 20),
               suffixIcon: controller.emailText.isNotEmpty &&
                       AppValidator.isValidEmail(controller.emailText.value)
                   ? const Icon(Icons.check, color: AppColors.success)
@@ -104,7 +143,8 @@ class LoginScreen extends GetView<LoginController> {
               hint: AppString.kPasswordHint,
               controller: controller.passwordController,
               obscureText: controller.obscurePassword.value,
-              prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary, size: 20),
+              prefixIcon: const Icon(Icons.lock_outline,
+                  color: AppColors.textSecondary, size: 20),
               suffixIcon: GestureDetector(
                 onTap: controller.togglePasswordVisibility,
                 child: Icon(
@@ -182,9 +222,7 @@ class LoginScreen extends GetView<LoginController> {
             onPressed: controller.isLoading
                 ? null
                 : controller.isButtonEnabled
-                    ? (controller.isEmailLogin.value
-                        ? controller.loginWithEmail
-                        : controller.sendOTP)
+                    ? _getButtonAction()
                     : null,
             style: ElevatedButton.styleFrom(
               backgroundColor:
@@ -208,14 +246,24 @@ class LoginScreen extends GetView<LoginController> {
                     ),
                   )
                 : CommonText(
-                    controller.isEmailLogin.value
-                        ? AppString.kLogin
-                        : AppString.kConfirm,
+                    _getButtonText(),
                     fontSize: 16,
                     color: AppColors.textOnPrimary,
                   ),
           ),
         ));
+  }
+
+  VoidCallback? _getButtonAction() {
+    if (controller.isLinkFlow) return controller.sendLinkOTP;
+    if (controller.isEmailLogin.value) return controller.loginWithEmail;
+    return controller.sendOTP;
+  }
+
+  String _getButtonText() {
+    if (controller.isLinkFlow) return 'Send OTP';
+    if (controller.isEmailLogin.value) return AppString.kLogin;
+    return AppString.kConfirm;
   }
 
   Widget _buildLoginModeToggle() {

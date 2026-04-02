@@ -1,40 +1,46 @@
 import 'dart:async';
+
+import 'package:flip_health/core/services/secure%20storage/secure_storage.dart';
+import 'package:flip_health/core/utils/custom_toast.dart';
+import 'package:flip_health/core/utils/print_log.dart';
+import 'package:flip_health/controllers/auth%20controllers/login_controller.dart';
 import 'package:flip_health/data/repositories/auth_repository.dart';
 import 'package:flip_health/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../main.dart';
 
 class OTPController extends GetxController {
   final AuthRepository _repository;
 
   OTPController({required AuthRepository repository})
       : _repository = repository;
-  // Controllers & focus nodes
+
   final List<TextEditingController> otpControllers =
       List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> focusNodes =
-      List.generate(6, (_) => FocusNode());
+  final List<FocusNode> focusNodes = List.generate(6, (_) => FocusNode());
 
-  // Reactive OTP values
   final RxList<String> otpValues = List.filled(6, '').obs;
 
-  // Other reactive state
   final RxBool _isButtonEnabled = false.obs;
   final RxBool _isLoading = false.obs;
   final RxInt _resendTimer = 30.obs;
   final RxBool _canResend = false.obs;
   final RxString _phoneNumber = ''.obs;
+  final RxString _action = 'RLOGIN'.obs;
   final RxBool _isEmail = false.obs;
+  final RxString _loginType = ''.obs;
 
   Timer? _timer;
 
-  // Getters
   bool get isButtonEnabled => _isButtonEnabled.value;
   bool get isLoading => _isLoading.value;
   int get resendTimer => _resendTimer.value;
   bool get canResend => _canResend.value;
   String get phoneNumber => _phoneNumber.value;
   bool get isEmail => _isEmail.value;
+  bool get isLinkFlow => _loginType.value == 'link';
 
   @override
   void onInit() {
@@ -42,7 +48,9 @@ class OTPController extends GetxController {
     final args = Get.arguments as Map<String, dynamic>?;
     if (args != null) {
       _phoneNumber.value = args['input'] ?? '';
+      _action.value = args['action'] ?? 'RLOGIN';
       _isEmail.value = args['isEmail'] ?? false;
+      _loginType.value = args['loginType'] ?? '';
     }
 
     _startResendTimer();
@@ -81,8 +89,7 @@ class OTPController extends GetxController {
   }
 
   void _validateOTP() {
-    bool allFilled = otpValues.every((v) => v.length == 1);
-    _isButtonEnabled.value = allFilled;
+    _isButtonEnabled.value = otpValues.every((v) => v.length == 1);
   }
 
   String _getOTP() => otpValues.join();
@@ -101,41 +108,100 @@ class OTPController extends GetxController {
     });
   }
 
+  /// Verify OTP -- either normal verify or link verify depending on flow
   Future<void> verifyOTP() async {
     final otp = _getOTP();
     if (otp.length != otpControllers.length) {
-      Get.snackbar(
-        'Invalid OTP',
-        'Please enter all digits of the OTP',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade800,
-      );
+      ToastCustom.showSnackBar(subtitle: 'Please enter all digits');
       return;
     }
 
     try {
       _isLoading.value = true;
-      await _repository.verifyOtp(otp: otp);
-      Get.snackbar(
-        'Success',
-        'OTP verified successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.shade100,
-        colorText: Colors.green.shade800,
-      );
-      Get.offAllNamed(AppRoutes.healthScore);
+
+      if (isLinkFlow) {
+        await _verifyLinkOTP(otp);
+      } else {
+        await _verifyLoginOTP(otp);
+      }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Invalid OTP. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade800,
-      );
+      ToastCustom.showSnackBar(subtitle: e.toString());
       _clearOTP();
     } finally {
       _isLoading.value = false;
+    }
+  }
+
+  /// Normal verify: POST /patient/verify
+  Future<void> _verifyLoginOTP(String otp) async {
+    final result = await _repository.verifyOtp(
+      action: _action.value,
+      value: _phoneNumber.value,
+      code: otp,
+    );
+
+    PrintLog.printLog('Verify response - token: ${result.token.isNotEmpty}, '
+        'isReg: ${result.isReg}, link: ${result.link}');
+
+    accessToken = result.token;
+    await AppSecureStorage.saveLoginResponse(result.toLoginResponse());
+
+    ToastCustom.showSnackBar(
+      subtitle: result.message.isNotEmpty ? result.message : 'OTP verified',
+      isSuccess: true,
+    );
+
+    if (result.needsLinking) {
+      _handleLinkFlow(result.link);
+      return;
+    }
+
+    _handlePostLogin(result.isReg);
+  }
+
+  /// Link verify: POST /patient/vlink
+  Future<void> _verifyLinkOTP(String otp) async {
+    final result = await _repository.verifyLink(
+      value: _phoneNumber.value,
+      code: otp,
+    );
+
+    PrintLog.printLog('VerifyLink response - link: ${result.link}, '
+        'isReg: ${result.isReg}');
+
+    accessToken = result.token;
+    await AppSecureStorage.saveLoginResponse(result.toLoginResponse());
+
+    if (result.needsLinking) {
+      _handleLinkFlow(result.link);
+      return;
+    }
+
+    _handlePostLogin(result.isReg);
+  }
+
+  /// Redirect to login screen for the missing identifier
+  void _handleLinkFlow(String linkType) {
+    PrintLog.printLog('Link flow needed: $linkType');
+
+    // Remove old LoginController so a fresh one is created with the link args
+    if (Get.isRegistered<LoginController>()) {
+      Get.delete<LoginController>(force: true);
+    }
+
+    Get.offNamed(AppRoutes.login, arguments: {
+      'linkType': linkType,
+    });
+  }
+
+  /// Route based on isReg: true -> Dashboard, false -> Health Score
+  void _handlePostLogin(bool isReg) {
+    if (isReg) {
+      AppSecureStorage.setHealthStatus(1);
+      Get.offAllNamed(AppRoutes.dashboard);
+    } else {
+      AppSecureStorage.setHealthStatus(0);
+      Get.offAllNamed(AppRoutes.healthScore);
     }
   }
 
@@ -144,24 +210,14 @@ class OTPController extends GetxController {
 
     try {
       _isLoading.value = true;
-      await _repository.resendOtp(input: _phoneNumber.value);
-      Get.snackbar(
-        'OTP Sent',
-        'A new OTP has been sent',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green.shade100,
-        colorText: Colors.green.shade800,
+      final result = await _repository.resendOtp(
+        value: _phoneNumber.value,
       );
+      ToastCustom.showSnackBar(subtitle: result.message, isSuccess: true);
       _clearOTP();
       _startResendTimer();
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Failed to resend OTP',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red.shade100,
-        colorText: Colors.red.shade800,
-      );
+      ToastCustom.showSnackBar(subtitle: e.toString());
     } finally {
       _isLoading.value = false;
     }

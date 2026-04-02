@@ -47,6 +47,10 @@ class AppSecureStorage {
   static const String kUserRelationship = "user_relationship";
   static const String kUserJson = "user_json";
 
+  // Keys - Onboarding & Health Score
+  static const String kOnboardingDone = "onboarding_done";
+  static const String kHealthStatus = "health_status";
+
   /// Save complete login response (token + user info)
   static Future<void> saveLoginResponse(LoginResponse response) async {
     await addStringValueToSharedPref(
@@ -191,6 +195,20 @@ class AppSecureStorage {
     List<String>? returnValue = _preferences?.getStringList(variableName);
     return returnValue;
   }
+
+  /// Onboarding status
+  static bool isOnboardingDone() =>
+      getBoolValueFromSharedPref(variableName: kOnboardingDone) ?? false;
+
+  static Future<void> setOnboardingDone() async =>
+      addBoolValueToSharedPref(variableName: kOnboardingDone, variableValue: true);
+
+  /// Health score status: 0 = not completed, 1 = completed
+  static int getHealthStatus() =>
+      getIntValueFromSharedPref(variableName: kHealthStatus) ?? 0;
+
+  static Future<void> setHealthStatus(int value) async =>
+      addIntValueToSharedPref(variableName: kHealthStatus, variableValue: value);
 
   /// CLEAR SHARED PREFERENCE
   static Future clearSharedPref() async {

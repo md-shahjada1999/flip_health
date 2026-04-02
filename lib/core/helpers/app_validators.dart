@@ -13,7 +13,7 @@ class AppValidator {
   // Email validation
   static bool isValidEmail(String email) {
     if (email.isEmpty) return false;
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$').hasMatch(email);
   }
   
   // Check if input is valid phone or email

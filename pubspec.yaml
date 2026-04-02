@@ -36,7 +36,6 @@ dependencies:
   cupertino_icons: ^1.0.8
   get: ^4.7.3
   flutter_svg: ^2.0.17
-  persistent_bottom_nav_bar: ^6.2.1
   animate_do: ^3.3.4
   dio: ^5.8.0+1
   shared_preferences: ^2.5.3
@@ -51,6 +50,8 @@ dependencies:
   percent_indicator: ^4.2.5
   intl: ^0.20.2
   speech_to_text: ^7.3.0
+  package_info_plus: ^9.0.1
+  animated_bottom_navigation_bar: ^1.4.0
 
 dev_dependencies:
   flutter_test:

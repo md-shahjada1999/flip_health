@@ -114,40 +114,50 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json['id'] ?? 0,
-        name: json['name'] ?? '',
-        firstName: json['first_name'] ?? json['name'] ?? '',
-        lastName: json['last_name'] ?? '',
-        email: json['email'] ?? '',
-        phone: json['phone'] ?? '',
-        dob: json['dob'],
-        image: json['image'],
-        gender: json['gender'],
-        isBloodPressure: json['isBloodPressure'],
-        isDiabetic: json['isDiabetic'],
-        bloodGroup: json['bloodGroup'],
-        occupation: json['occupation'],
-        language: json['language'],
-        vip: json['vip'] ?? false,
-        empId: json['empId'],
-        deviceId: json['device_id'],
-        platform: json['platform'],
-        refCode: json['ref_code'],
-        relationship: json['relationship'],
-        age: json['age'] ?? 0,
-        type: json['type'] ?? 'patient',
-        primary: json['primary']?.toString() ?? '',
-        freeConsultations: json['freeConsultations'] ?? 0,
-        corporateId: json['corporate_id'] ?? 0,
-        status: json['status'] ?? 1,
+        id: _toInt(json['id']),
+        name: _toStr(json['name']),
+        firstName: _toStr(json['first_name'] ?? json['name']),
+        lastName: _toStr(json['last_name']),
+        email: _toStr(json['email']),
+        phone: _toStr(json['phone']),
+        dob: json['dob']?.toString(),
+        image: json['image']?.toString(),
+        gender: json['gender']?.toString(),
+        isBloodPressure: json['isBloodPressure']?.toString(),
+        isDiabetic: json['isDiabetic']?.toString(),
+        bloodGroup: json['bloodGroup']?.toString(),
+        occupation: json['occupation']?.toString(),
+        language: json['language']?.toString(),
+        vip: json['vip'] == true,
+        empId: json['empId']?.toString(),
+        deviceId: json['device_id']?.toString(),
+        platform: json['platform']?.toString(),
+        refCode: json['ref_code']?.toString(),
+        relationship: json['relationship']?.toString(),
+        age: _toInt(json['age']),
+        type: _toStr(json['type'], fallback: 'patient'),
+        primary: _toStr(json['primary']),
+        freeConsultations: _toInt(json['freeConsultations']),
+        corporateId: _toInt(json['corporate_id']),
+        status: _toInt(json['status'], fallback: 1),
         isSubscribed: json['isSubscribed'] == true || json['isSubscribed'] == 1,
-        company: json['company'] != null
-            ? CompanyModel.fromJson(json['company'])
+        company: json['company'] is Map
+            ? CompanyModel.fromJson(Map<String, dynamic>.from(json['company']))
             : null,
-        healthScore: json['health_score'] != null
-            ? HealthScoreModel.fromJson(json['health_score'])
+        healthScore: json['health_score'] is Map
+            ? HealthScoreModel.fromJson(Map<String, dynamic>.from(json['health_score']))
             : null,
       );
+
+  static String _toStr(dynamic v, {String fallback = ''}) =>
+      v?.toString() ?? fallback;
+
+  static int _toInt(dynamic v, {int fallback = 0}) {
+    if (v is int) return v;
+    if (v is double) return v.toInt();
+    if (v is String) return int.tryParse(v) ?? fallback;
+    return fallback;
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -185,11 +195,27 @@ class UserModel {
 class LoginResponse {
   final String token;
   final UserModel user;
+  final bool isReg;
+  final String link;
+  final String message;
 
-  const LoginResponse({required this.token, required this.user});
+  const LoginResponse({
+    required this.token,
+    required this.user,
+    this.isReg = true,
+    this.link = 'NONE',
+    this.message = '',
+  });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) => LoginResponse(
         token: json['token'] ?? '',
         user: UserModel.fromJson(json['user'] ?? {}),
+        isReg: json['isReg'] ?? true,
+        link: json['link'] ?? 'NONE',
+        message: json['message'] ?? '',
       );
+
+  bool get needsLinking => link != 'NONE';
+  bool get needsEmailLink => link == 'EMAIL';
+  bool get needsPhoneLink => link == 'PHONE';
 }

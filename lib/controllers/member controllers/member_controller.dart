@@ -14,7 +14,7 @@ class MemberController extends GetxController {
   // Single-select
   final selectedUserId = ''.obs;
 
-  // Multi-select
+  // Multi-selectlets 
   final selectedMemberIds = <String>{}.obs;
 
   @override

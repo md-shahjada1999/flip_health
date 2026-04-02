@@ -26,9 +26,9 @@ class LoginBinding extends Bindings {
       Get.lazyPut<ApiService>(() => ApiService(), fenix: true);
     }
     Get.lazyPut<AuthRepository>(
-        () => AuthRepository(apiService: Get.find()));
+        () => AuthRepository(apiService: Get.find()), fenix: true);
     Get.lazyPut<LoginController>(
-        () => LoginController(repository: Get.find()));
+        () => LoginController(repository: Get.find()), fenix: true);
   }
 }
 
