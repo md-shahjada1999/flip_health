@@ -21,10 +21,7 @@ class ApiService {
       baseUrl: ApiUrl.BASE_URL,
       connectTimeout: const Duration(seconds: 40),
       receiveTimeout: const Duration(minutes: 1),
-      headers: {
-        "Content-type": "application/json",
-        "Connection": "Keep-Alive",
-      },
+      headers: {"Content-type": "application/json", "Connection": "Keep-Alive"},
       validateStatus: (_) => true,
     );
 
@@ -50,10 +47,7 @@ class ApiService {
   }
 
   /// POST
-  Future<Response> post(
-    String path, {
-    dynamic data,
-  }) async {
+  Future<Response> post(String path, {dynamic data}) async {
     try {
       final response = await dio.post(path, data: data);
       _checkHtmlError(response);
@@ -64,10 +58,7 @@ class ApiService {
   }
 
   /// PUT
-  Future<Response> put(
-    String path, {
-    dynamic data,
-  }) async {
+  Future<Response> put(String path, {dynamic data}) async {
     try {
       final response = await dio.put(path, data: data);
       _checkHtmlError(response);
@@ -78,10 +69,7 @@ class ApiService {
   }
 
   /// PATCH
-  Future<Response> patch(
-    String path, {
-    dynamic data,
-  }) async {
+  Future<Response> patch(String path, {dynamic data}) async {
     try {
       final response = await dio.patch(path, data: data);
       _checkHtmlError(response);
@@ -105,13 +93,17 @@ class ApiService {
     }
   }
 
-  /// MULTIPART
+  /// MULTIPART — [FormData] gets `multipart/form-data` + boundary (avoids default JSON content-type).
   Future<Response> postMultipart(
     String path, {
     required FormData formData,
   }) async {
     try {
-      final response = await dio.post(path, data: formData);
+      final response = await dio.post(
+        path,
+        data: formData,
+        options: Options(contentType: null),
+      );
       _checkHtmlError(response);
       return response;
     } on DioException catch (e) {
@@ -161,11 +153,15 @@ class _AuthInterceptor extends Interceptor {
     final isExpired = response.data.toString().contains('unauthorized');
 
     if (isExpired) {
-      final fcm = AppSecureStorage.getStringFromSharedPref(
-              variableName: AppSecureStorage.kFcmToken) ??
+      final fcm =
+          AppSecureStorage.getStringFromSharedPref(
+            variableName: AppSecureStorage.kFcmToken,
+          ) ??
           '';
-      final userId = AppSecureStorage.getStringFromSharedPref(
-              variableName: AppSecureStorage.kUserId) ??
+      final userId =
+          AppSecureStorage.getStringFromSharedPref(
+            variableName: AppSecureStorage.kUserId,
+          ) ??
           '';
 
       AppSecureStorage.clearSharedPref().then((_) async {
@@ -173,9 +169,13 @@ class _AuthInterceptor extends Interceptor {
         g.Get.deleteAll();
         accessToken = '';
         await AppSecureStorage.addStringValueToSharedPref(
-            variableName: AppSecureStorage.kFcmToken, variableValue: fcm);
+          variableName: AppSecureStorage.kFcmToken,
+          variableValue: fcm,
+        );
         await AppSecureStorage.addStringValueToSharedPref(
-            variableName: AppSecureStorage.kUserId, variableValue: userId);
+          variableName: AppSecureStorage.kUserId,
+          variableValue: userId,
+        );
       });
     }
   }

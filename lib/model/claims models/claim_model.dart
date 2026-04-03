@@ -11,6 +11,9 @@ class ClaimModel {
   final String? serviceType;
   final List<ClaimBill> bills;
 
+  /// From list API when present — detail may refresh this.
+  final bool canDispute;
+
   ClaimModel({
     required this.id,
     required this.userName,
@@ -21,7 +24,62 @@ class ClaimModel {
     required this.createdAt,
     this.serviceType,
     this.bills = const [],
+    this.canDispute = false,
   });
+
+  /// Parses one row from `GET /patient/reimbursement?page=…` (`data[]`).
+  factory ClaimModel.fromApiMap(Map<String, dynamic> m) {
+    final user = m['user'];
+    String userName = '--';
+    String userPhone = '';
+    if (user is Map) {
+      final um = Map<String, dynamic>.from(user);
+      userName = um['name']?.toString() ?? '--';
+      userPhone = um['phone']?.toString() ?? '';
+    }
+    final id = m['id']?.toString() ?? '';
+    final status =
+        int.tryParse(m['reimbursement_status']?.toString() ?? '') ?? 0;
+    double readAmount(dynamic v) {
+      if (v is num) return v.toDouble();
+      return double.tryParse(v?.toString() ?? '') ?? 0;
+    }
+
+    final claimAmount = readAmount(m['claim_amount']);
+    final approvedAmount = readAmount(m['approved_amount']);
+    final createdRaw =
+        m['createdAt']?.toString() ?? m['created_at']?.toString() ?? '';
+    final createdAt = createdRaw.isNotEmpty ? createdRaw.split('T').first : '';
+
+    String? serviceType;
+    final st = m['service_types'];
+    if (st is List && st.isNotEmpty) {
+      final first = st.first;
+      if (first is Map) {
+        final fm = Map<String, dynamic>.from(first);
+        final v = fm['value']?.toString();
+        final k = fm['key']?.toString() ?? '';
+        serviceType = (v != null && v.isNotEmpty)
+            ? v
+            : k.replaceAll(RegExp('_'), ' ');
+      }
+    }
+
+    final canDispute = m['can_dispute'] == true || m['can_dispute'] == 1;
+
+    return ClaimModel(
+      id: id,
+      userName: userName,
+      userPhone: userPhone,
+      status: status,
+      claimAmount: claimAmount,
+      approvedAmount: approvedAmount,
+      createdAt: createdAt.isNotEmpty ? createdAt : createdRaw,
+      serviceType: serviceType,
+      bills: const [],
+      canDispute: canDispute,
+    );
+  }
 }
 
 class ClaimBill {

@@ -34,7 +34,9 @@ import 'package:flip_health/views/daignostics/lab_test/lab_test_member_selection
 import 'package:flip_health/views/daignostics/lab_test/lab_test_search_screen.dart';
 import 'package:flip_health/views/dental/dental_member_selection_screen.dart';
 import 'package:flip_health/views/mental_wellness/mental_wellness_screen.dart';
+import 'package:flip_health/views/mental_wellness/wellness_request_success_screen.dart';
 import 'package:flip_health/views/claims/claims_list_screen.dart';
+import 'package:flip_health/views/claims/add_bank_screen.dart';
 import 'package:flip_health/views/claims/bank_list_screen.dart';
 import 'package:flip_health/views/pharmacy/pharmacy_main_screen.dart';
 import 'package:flip_health/views/splash/onboarding_screen.dart';
@@ -149,6 +151,10 @@ class AppPages {
       page: () => const MentalWellnessScreen(),
       binding: MentalWellnessBinding(),
     ),
+    GetPage(
+      name: AppRoutes.wellnessRequestSuccess,
+      page: () => const WellnessRequestSuccessScreen(),
+    ),
 
     // Claims
     GetPage(
@@ -159,6 +165,11 @@ class AppPages {
     GetPage(
       name: AppRoutes.bankDetails,
       page: () => const BankListScreen(),
+      binding: ClaimsBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.addBank,
+      page: () => const AddBankScreen(),
       binding: ClaimsBinding(),
     ),
 

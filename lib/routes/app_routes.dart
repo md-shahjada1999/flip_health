@@ -37,12 +37,14 @@ class AppRoutes {
   // Pharmacy Routes
   static const String pharmacy = '/pharmacy';
 
-  // Mental Wellness
+  // Mental Wellness & nutrition (same flow as patient_app TRIJOG)
   static const String mentalWellness = '/mental-wellness';
+  static const String wellnessRequestSuccess = '/wellness-request-success';
 
   // Claims Routes
   static const String claims = '/claims';
   static const String bankDetails = '/bank-details';
+  static const String addBank = '/add-bank';
 
   // Vaccine Routes
   static const String vaccine = '/vaccine';

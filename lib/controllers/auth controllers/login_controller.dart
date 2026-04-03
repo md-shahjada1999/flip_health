@@ -16,7 +16,7 @@ class LoginController extends GetxController {
   final AuthRepository _repository;
 
   LoginController({required AuthRepository repository})
-      : _repository = repository;
+    : _repository = repository;
 
   final phoneController = TextEditingController();
   final emailController = TextEditingController();
@@ -110,14 +110,15 @@ class LoginController extends GetxController {
     if (loginMode.value == LoginMode.linkEmail) {
       _isButtonEnabled.value =
           AppValidator.isValidEmail(emailController.text) &&
-              _isTermsAccepted.value;
+          _isTermsAccepted.value;
     } else if (loginMode.value == LoginMode.linkPhone) {
       _isButtonEnabled.value =
           phoneController.text.length >= 10 &&
-              AppValidator.isValidPhoneNumber(phoneController.text) &&
-              _isTermsAccepted.value;
+          AppValidator.isValidPhoneNumber(phoneController.text) &&
+          _isTermsAccepted.value;
     } else if (isEmailLogin.value) {
-      final isValid = AppValidator.isValidEmail(emailController.text) &&
+      final isValid =
+          AppValidator.isValidEmail(emailController.text) &&
           passwordController.text.length >= 6;
       _isButtonEnabled.value = isValid && _isTermsAccepted.value;
     } else {
@@ -138,7 +139,8 @@ class LoginController extends GetxController {
 
     if (!AppValidator.isValidPhoneOrEmail(input)) {
       ToastCustom.showSnackBar(
-          subtitle: 'Please enter a valid phone number or email');
+        subtitle: 'Please enter a valid phone number or email',
+      );
       return;
     }
 
@@ -149,20 +151,20 @@ class LoginController extends GetxController {
 
     try {
       _isLoading.value = true;
-      final result = await _repository.sendOtp(
-        value: input,
-        type: 'RLOGIN',
-      );
+      final result = await _repository.sendOtp(value: input, type: 'RLOGIN');
       PrintLog.printLog('OTP response: ${result.message}');
 
       ToastCustom.showSnackBar(subtitle: result.message, isSuccess: true);
 
       final isInputEmail = AppValidator.isValidEmail(input);
-      Get.toNamed(AppRoutes.otp, arguments: {
-        'input': input,
-        'action': 'RLOGIN',
-        'isEmail': isInputEmail,
-      });
+      Get.toNamed(
+        AppRoutes.otp,
+        arguments: {
+          'input': input,
+          'action': 'RLOGIN',
+          'isEmail': isInputEmail,
+        },
+      );
     } catch (e) {
       ToastCustom.showSnackBar(subtitle: e.toString());
     } finally {
@@ -188,19 +190,20 @@ class LoginController extends GetxController {
 
     try {
       _isLoading.value = true;
-      final result = await _repository.linkAccount(
-        value: input,
-      );
+      final result = await _repository.linkAccount(value: input);
       PrintLog.printLog('Link OTP response: ${result.message}');
 
       ToastCustom.showSnackBar(subtitle: result.message, isSuccess: true);
 
-      Get.toNamed(AppRoutes.otp, arguments: {
-        'input': input,
-        'action': 'LINK',
-        'isEmail': isEmail,
-        'loginType': 'link',
-      });
+      Get.toNamed(
+        AppRoutes.otp,
+        arguments: {
+          'input': input,
+          'action': 'LINK',
+          'isEmail': isEmail,
+          'loginType': 'link',
+        },
+      );
     } catch (e) {
       ToastCustom.showSnackBar(subtitle: e.toString());
     } finally {
@@ -210,6 +213,7 @@ class LoginController extends GetxController {
 
   /// Password login via POST /patient/login
   Future<void> loginWithEmail() async {
+    PrintLog.printLog('loginWithEmail');
     final email = emailController.text.trim();
     final password = passwordController.text;
 
@@ -220,7 +224,8 @@ class LoginController extends GetxController {
 
     if (password.length < 6) {
       ToastCustom.showSnackBar(
-          subtitle: 'Password must be at least 6 characters');
+        subtitle: 'Password must be at least 6 characters',
+      );
       return;
     }
 

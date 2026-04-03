@@ -5,17 +5,23 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/data/repositories/wallet_repository.dart';
+import 'package:flip_health/model/wallet%20models/opd_wallet_model.dart';
+import 'package:flip_health/model/wallet%20models/opd_wallet_transaction_model.dart';
 
 class WalletController extends GetxController {
-  final WalletRepository _repository;
-
   WalletController({required WalletRepository repository})
       : _repository = repository;
+
+  final WalletRepository _repository;
+
   final walletDataFetched = false.obs;
   final transDataFetched = false.obs;
 
-  final opdWalletData = <String, dynamic>{}.obs;
-  final transactions = <Map<String, dynamic>>[].obs;
+  /// Parsed `/patient/opd/wallet` → `wallet` (balance, module, `subscription_id`).
+  final wallet = OpdWallet.empty().obs;
+
+  /// Parsed `/patient/opd/wallet/transactions/{wallet.subscription_id}`.
+  final transactions = <OpdWalletTransaction>[].obs;
 
   final page = 1.obs;
   final hasNoMoreTransactions = false.obs;
@@ -39,29 +45,53 @@ class WalletController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadMockData();
+    loadWallet();
   }
 
-  void _loadMockData() async {
+  /// Loads OPD wallet, then transactions at
+  /// `opd/wallet/transactions/{wallet['subscription_id']}?page=`.
+  Future<void> loadWallet() async {
     walletDataFetched.value = false;
+    transDataFetched.value = false;
     try {
-      opdWalletData.value = await _repository.getWalletData();
-      transactions.value = await _repository.getTransactions();
+      final rawWallet = await _repository.getWalletData();
+      final parsed = OpdWallet.fromJson(rawWallet);
+      wallet.value = parsed;
+      walletDataFetched.value = true;
+
+      page.value = 1;
+
+      if (parsed.hasValidSubscription) {
+        final subPath = parsed.subscriptionIdForPath;
+        final rawTx = await _repository.getOpdWalletTransactions(
+          subscriptionId: subPath,
+          page: page.value,
+        );
+        transactions.assignAll(
+          rawTx.map(OpdWalletTransaction.fromJson).toList(),
+        );
+        hasNoMoreTransactions.value = rawTx.length < 20;
+      } else {
+        transactions.clear();
+        hasNoMoreTransactions.value = true;
+      }
+      transDataFetched.value = true;
+    } catch (_) {
+      wallet.value = OpdWallet.empty();
+      transactions.clear();
       walletDataFetched.value = true;
       transDataFetched.value = true;
-    } catch (e) {
-      walletDataFetched.value = true;
+      hasNoMoreTransactions.value = true;
     }
   }
 
-  List<Map<String, dynamic>> get filteredTransactions {
+  List<OpdWalletTransaction> get filteredTransactions {
     return transactions.where((tx) {
       if (statusSelected.value.isNotEmpty &&
-          tx['status'] != statusSelected.value.toLowerCase()) {
+          tx.status != statusSelected.value.toLowerCase()) {
         return false;
       }
-      if (typeSelected.value.isNotEmpty &&
-          tx['ref_type'] != typeSelected.value) {
+      if (typeSelected.value.isNotEmpty && tx.refType != typeSelected.value) {
         return false;
       }
       return true;

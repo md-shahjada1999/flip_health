@@ -9,6 +9,8 @@ class DashboardHeader extends StatelessWidget {
   final VoidCallback? onAddressPressed;
   final VoidCallback? onCalendarPressed;
   final VoidCallback? onProfilePressed;
+  /// OPD wallet quick balance from `/patient/opd/wallet` (shown next to wallet icon).
+  final String? walletBalanceText;
 
   const DashboardHeader({
     Key? key,
@@ -16,6 +18,7 @@ class DashboardHeader extends StatelessWidget {
     this.onAddressPressed,
     this.onCalendarPressed,
     this.onProfilePressed,
+    this.walletBalanceText,
   }) : super(key: key);
 
   @override
@@ -73,6 +76,20 @@ class DashboardHeader extends StatelessWidget {
             // Action Buttons
             Row(
               children: [
+                if (walletBalanceText != null &&
+                    walletBalanceText!.trim().isNotEmpty) ...[
+                  Flexible(
+                    child: RText(
+                      walletBalanceText!,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  RSizedBox.horizontal(6),
+                ],
                 _HeaderIconButton(
                   icon: AppString.kIconCalendar,
                   onPressed: onCalendarPressed,

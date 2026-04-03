@@ -55,7 +55,8 @@ class AppString {
 
   // Email Login Strings
   static const String kEmailLoginTitle = 'Enter Email\nto Login';
-  static const String kEmailLoginSubtitle = 'Login with your email and password';
+  static const String kEmailLoginSubtitle =
+      'Login with your email and password';
   static const String kEmailLabel = 'Email Address';
   static const String kEmailHint = 'you@example.com';
   static const String kPasswordLabel = 'Password';
@@ -80,7 +81,8 @@ class AppString {
 
   // Dashboard Strings
   static const String kHome = 'Home';
-  static const String kSearchPlaceholder = 'Search services, medicines, tests...';
+  static const String kSearchPlaceholder =
+      'Search services, medicines, tests...';
   static const String kDiagnostics = 'Diagnostics';
   static const String kConsultation = 'Consultation';
   static const String kDental = 'Dental';
@@ -162,8 +164,7 @@ class AppString {
       'Nutrition and dietician expert service';
 
   static const String kGymFitness = 'Gym Membership';
-  static const String kGymFitnessSubtitle =
-      'Buy Gym memberships';
+  static const String kGymFitnessSubtitle = 'Buy Gym memberships';
   // OPD Claims Tab
   static const String kClaims = 'Claims';
   static const String kClaimsSubtitle = 'Raise claims, check status';
@@ -257,10 +258,8 @@ class AppString {
       "assets/png/daignosticsCardDashbaord.png";
   static const String kDashboardDoctor =
       "assets/png/consultationCardDashbaord.png";
-  static const String kDashboardDental =
-      "assets/png/DentalCardDashboard.png";
-  static const String kDashboardGlasses =
-      "assets/png/VisionCardDashboard.png";
+  static const String kDashboardDental = "assets/png/DentalCardDashboard.png";
+  static const String kDashboardGlasses = "assets/png/VisionCardDashboard.png";
   static const String kDashboardPharmacy =
       "assets/png/pharmacyCardDashboard.png";
 
@@ -273,15 +272,13 @@ class AppString {
       "assets/png/nutritionBanner1Dashbaord.png";
 
   // Legacy banner path
-  static const String kNutritionBanner =
-      "assets/png/nutrition_banner.png";
+  static const String kNutritionBanner = "assets/png/nutrition_banner.png";
 
   // Service option icons
   static const String kHomeIcon = "assets/svg/daignosticsHome.svg";
   static const String kCenterIcon = "assets/svg/daignosticsCenter.svg";
   static const String kClockIcon = "assets/svg/sameDaySlotBook.svg";
-  static const String kVirtualIcon =
-      "assets/svg/virtualCardDashbaord.svg";
+  static const String kVirtualIcon = "assets/svg/virtualCardDashbaord.svg";
   static const String kBoltIcon = "assets/svg/bolt_icon.svg";
 
   // Bottom Navigation Icons
@@ -289,14 +286,10 @@ class AppString {
   static const String kIconProfile = "assets/svg/profile.svg";
   static const String kIconMicrophone = "assets/svg/mic.svg";
   static const String kIconHome = "assets/svg/bottomNavBarHomeIcon.svg";
-  static const String kIconServices =
-      "assets/svg/services_bottom_navbar.svg";
-  static const String kIconPharmacy =
-      "assets/svg/pharmacy_bottom_navbar.svg";
-  static const String kIconOrders =
-      "assets/svg/my_orders_bottom_navbar.svg";
-  static const String kIconHelp =
-      "assets/svg/need_help_bottom_navbar.svg";
+  static const String kIconServices = "assets/svg/services_bottom_navbar.svg";
+  static const String kIconPharmacy = "assets/svg/pharmacy_bottom_navbar.svg";
+  static const String kIconOrders = "assets/svg/my_orders_bottom_navbar.svg";
+  static const String kIconHelp = "assets/svg/need_help_bottom_navbar.svg";
 
   // ==============================================
   // SERVICES SCREEN ICONS (All SVG)
@@ -359,7 +352,7 @@ class AppString {
       "assets/svg/all services icons/account_management/invoices.svg";
   static const String kIconOrdersServices =
       "assets/svg/all services icons/account_management/oders.svg";
-  static const String kIconUser ="assets/svg/profile.svg";
+  static const String kIconUser = "assets/svg/profile.svg";
 
   // Help & Support Tab Icons
   static const String kIconSupport =
@@ -399,7 +392,7 @@ class AppString {
   static const String kIconFullSponsored =
       "assets/svg/all services icons/fully_sponsored.svg";
 
-// ==============================================
+  // ==============================================
   // HEALTH CHECKUPS SCREEN STRINGS
   // ==============================================
 
@@ -429,9 +422,9 @@ class AppString {
   // ASSET PATHS
   // ==============================================
 
-// ==============================================
-// ADD FAMILY MEMBER SCREEN STRINGS
-// ==============================================
+  // ==============================================
+  // ADD FAMILY MEMBER SCREEN STRINGS
+  // ==============================================
 
   static const String kAddNewFamilyMemberTitle = 'Add new family member';
   static const String kRelationship = 'Relationship';
@@ -446,11 +439,11 @@ class AppString {
   static const String kPhoneNumberHint = 'Enter phone number';
   static const String kSaveAndContinue = 'Save and continue';
 
-// Disclaimer text
+  // Disclaimer text
   static const String kFamilyMemberDisclaimer =
       'Lorem ipsum is simply dummy text of the printing and typesetting Lorem ipsum is simply dummy text of the printing and typesetting';
 
-// Validation messages
+  // Validation messages
   static const String kRelationshipRequired = 'Please select a relationship';
   static const String kNameRequired = 'Please enter name';
   static const String kDateOfBirthRequired = 'Please select date of birth';
@@ -459,7 +452,7 @@ class AppString {
   static const String kInvalidPhoneNumber =
       'Please enter a valid 10-digit phone number';
 
-// Relationship options
+  // Relationship options
   static const List<String> kRelationships = [
     'Spouse',
     'Son',
@@ -468,42 +461,42 @@ class AppString {
     'Mother',
     'Brother',
     'Sister',
-    'Other'
+    'Other',
   ];
 
-// ==============================================
-// HEALTH CHECKUP SLOT SELECTION STRINGS
-// ==============================================
+  // ==============================================
+  // HEALTH CHECKUP SLOT SELECTION STRINGS
+  // ==============================================
 
-// Location
+  // Location
   static const String kDefaultAddress =
       'Isprout, 7th floor, Plot No: 25, Divyasree trinity,';
 
-// Date and Time Section
+  // Date and Time Section
   static const String kChooseDateAndTime = 'Choose date and time';
   static const String kSeptemberIST = 'Sept 2025 ( IST )';
 
-// Time Slot Sections
+  // Time Slot Sections
   static const String kMorning = 'Morning';
   static const String kAfternoon = 'Afternoon';
 
-// Time Slots
+  // Time Slots
   static const String kTimeSlot7to8AM = '7 AM-8 AM';
   static const String kTimeSlot8to9AM = '8 AM-9 AM';
   static const String kTimeSlot9to10AM = '9 AM-10 AM';
   static const String kTimeSlot10to11AM = '10 AM-11 AM';
   static const String kTimeSlot11to12PM = '11 AM-12 PM';
 
-// Note Section
+  // Note Section
   static const String kTimeSlotNote =
       'Note : Time slot is indicative of the reporting time at the center. Appointment time may vary depending on ongoing appointments and doctors availability at center';
 
-// Points to Remember
+  // Points to Remember
   static const String kPointsToRemember = 'Points to remember';
   static const String kPointToRemember1 =
       'Both Pathology and Radiology tests have to be completed within a span of 7 days';
 
-// Weekdays
+  // Weekdays
   static const String kMonday = 'Mon';
   static const String kTuesday = 'Tue';
   static const String kWednesday = 'Wed';
@@ -511,68 +504,67 @@ class AppString {
   static const String kFriday = 'Fri';
   static const String kSaturday = 'Sat';
   static const String kSunday = 'Sun';
-// Gender options
+  // Gender options
   static const List<String> kGenders = ['Male', 'Female', 'Other'];
 
+  // ==============================================
+  // HEALTH CHECKUP OVERVIEW SCREEN STRINGS
+  // ==============================================
 
+  static const String kAddedItems = 'Added Items';
+  static const String kBookingUpdatesMessage =
+      'Booking related updates will be sent on this number';
+  static const String kAlternatePhoneNumber = 'Alternate Phone number';
+  static const String kAlternatePhoneHint = 'Enter your alternate number here';
+  static const String kDateAndTime = 'Date and time';
 
+  // Price Breakdown
+  static const String kTotalMRP = 'Total MRP';
+  static const String kHomeCollectionCharges = 'Home Collection Charges';
+  static const String kFromWallet = 'From Wallet';
+  static String kWalletLimit(String amount) => 'Wallet Limit : ₹ $amount';
+  static const String kNetPay = 'Net Pay';
 
+  // Flip Coins
+  static const String kFlipCoinsToBeEarned = 'Flip Coins to be earned (1%):';
+  static String kFlipCoinsWorth(String amount) => 'Worth ₹ $amount';
+  static const String kFlipCoinsNote =
+      'Note : Flip Coins will be credited after order completion';
 
-// ==============================================
-// HEALTH CHECKUP OVERVIEW SCREEN STRINGS
-// ==============================================
+  // Actions
+  static const String kConfirmAndPay = 'Confirm and pay';
 
-static const String kAddedItems = 'Added Items';
-static const String kBookingUpdatesMessage = 'Booking related updates will be sent on this number';
-static const String kAlternatePhoneNumber = 'Alternate Phone number';
-static const String kAlternatePhoneHint = 'Enter your alternate number here';
-static const String kDateAndTime = 'Date and time';
+  // Remarks
+  static const String kRemarks = 'Remarks :';
+  static const String kOrderCancellationWarning =
+      'Order cannot be cancelled once confirmed';
 
-// Price Breakdown
-static const String kTotalMRP = 'Total MRP';
-static const String kHomeCollectionCharges = 'Home Collection Charges';
-static const String kFromWallet = 'From Wallet';
-static String kWalletLimit(String amount) => 'Wallet Limit : ₹ $amount';
-static const String kNetPay = 'Net Pay';
+  // Package Info
+  static const String kEmployeeAnnualHealthCheckup =
+      'Employee Annual Health Checkup';
+  static String kForPatient(String name) => 'For $name';
 
-// Flip Coins
-static const String kFlipCoinsToBeEarned = 'Flip Coins to be earned (1%):';
-static String kFlipCoinsWorth(String amount) => 'Worth ₹ $amount';
-static const String kFlipCoinsNote = 'Note : Flip Coins will be credited after order completion';
+  // ==============================================
+  // PAYMENT SUCCESS SCREEN STRINGS
+  // ==============================================
 
-// Actions
-static const String kConfirmAndPay = 'Confirm and pay';
+  static const String kPaymentSuccessTitle = 'Payment Successful!';
+  static const String kPaymentSuccessMessage =
+      'Your health checkup has been booked successfully';
 
-// Remarks
-static const String kRemarks = 'Remarks :';
-static const String kOrderCancellationWarning = 'Order cannot be cancelled once confirmed';
+  // Booking Details
+  static const String kBookingId = 'Booking ID';
+  static const String kPatientName = 'Patient Name';
+  static const String kTestName = 'Test Name';
+  static const String kScheduledDate = 'Scheduled Date';
+  static const String kCollectionType = 'Collection Type';
 
-// Package Info
-static const String kEmployeeAnnualHealthCheckup = 'Employee Annual Health Checkup';
-static String kForPatient(String name) => 'For $name';
+  // Flip Coins
+  static const String kFlipCoinsEarned = 'Flip Coins Earned';
 
-
-
-// ==============================================
-// PAYMENT SUCCESS SCREEN STRINGS
-// ==============================================
-
-static const String kPaymentSuccessTitle = 'Payment Successful!';
-static const String kPaymentSuccessMessage = 'Your health checkup has been booked successfully';
-
-// Booking Details
-static const String kBookingId = 'Booking ID';
-static const String kPatientName = 'Patient Name';
-static const String kTestName = 'Test Name';
-static const String kScheduledDate = 'Scheduled Date';
-static const String kCollectionType = 'Collection Type';
-
-// Flip Coins
-static const String kFlipCoinsEarned = 'Flip Coins Earned';
-
-// Actions
-static const String kViewBookingDetails = 'View Booking Details';
-static const String kBackToHome = 'Back to Home';
+  // Actions
+  static const String kViewBookingDetails = 'View Booking Details';
+  static const String kBackToHome = 'Back to Home';
 
   /// Images
   static const String logo = "assets/png/logo.png";
@@ -585,8 +577,7 @@ static const String kBackToHome = 'Back to Home';
       "assets/svg/onboarding_images/splash_image_2.svg";
   static const String OnboardingScreen3Image =
       "assets/svg/onboarding_images/splash_image_3.svg";
-  static const String reportsOntimeIcon =
-      "assets/svg/report_time_icon.svg";
+  static const String reportsOntimeIcon = "assets/svg/report_time_icon.svg";
   static const String kNeubergLogo = "assets/png/neuberg_lab_logo.png";
   static const String kOrangeHealthLogo =
       "assets/png/orange_health_lab_logo.png";
@@ -597,7 +588,8 @@ static const String kBackToHome = 'Back to Home';
   static const String kLabTestsTitle = 'Lab Tests';
   static const String kSearchAndBookLabTests = 'Search and book lab tests';
   static const String kPopularLabTests = 'Popular Lab Tests';
-  static const String kBestInClassServiceRating = 'Best in class service rating';
+  static const String kBestInClassServiceRating =
+      'Best in class service rating';
   static const String kTopLabsTrustedCare = 'Top Labs, Trusted Care';
   static const String kAvgUserRating = '4.5 Avg. user rating';
   static const String kReportsWithin48Hours = 'Reports within 48 hours';
@@ -628,8 +620,10 @@ static const String kBackToHome = 'Back to Home';
   static const String kRelevance = 'Relevance';
   static const String kDistance = 'Distance';
   static const String kExperience = 'Experience';
-  static const String kConsultationFeeLowHigh = 'Consultation Fees(Low to High)';
-  static const String kConsultationFeeHighLow = 'Consultation Fees(High to Low)';
+  static const String kConsultationFeeLowHigh =
+      'Consultation Fees(Low to High)';
+  static const String kConsultationFeeHighLow =
+      'Consultation Fees(High to Low)';
   static const String kCashlessAvailable = 'Cashless Available';
   static const String kYourConsultationFee = 'Your Consultation Fee';
   static const String kBookAppointment = 'Book Appointment';
@@ -646,33 +640,44 @@ static const String kBackToHome = 'Back to Home';
 
   // Dental Module
   static const String kDentalService = 'Dental Service';
-  static const String kBookFreeDentalServices = 'Book free dental services for you';
-  static const String kBookDentalForFamily = 'Book dental services for your family members';
-  static const String kDentalComprehensiveCheckup = 'Dental Comprehensive Checkup';
+  static const String kBookFreeDentalServices =
+      'Book free dental services for you';
+  static const String kBookDentalForFamily =
+      'Book dental services for your family members';
+  static const String kDentalComprehensiveCheckup =
+      'Dental Comprehensive Checkup';
   static const String kDentalOverview = 'Dental Overview';
   static const String kSelectDentalSlots = 'Select Your Dental Slots';
-  static const String kBookingUpdatesNote = 'Booking related updates will be sent on this number';
-  static const String kEnterAlternateNumber = 'Enter your alternate number here';
+  static const String kBookingUpdatesNote =
+      'Booking related updates will be sent on this number';
+  static const String kEnterAlternateNumber =
+      'Enter your alternate number here';
   static const String kRemarksLabel = 'Remarks :';
-  static const String kOrderCannotBeCancelled = 'Order cannot be cancelled once confirmed';
+  static const String kOrderCannotBeCancelled =
+      'Order cannot be cancelled once confirmed';
 
   // Diagnostics Bottom Sheet
   static const String kHealthCheckupsOption = 'Health Checkups';
-  static const String kHealthCheckupsOptionDesc = 'Avail free health\ncheckups at center';
+  static const String kHealthCheckupsOptionDesc =
+      'Avail free health\ncheckups at center';
   static const String kLabTestsOption = 'Lab Tests';
-  static const String kLabTestsOptionDesc = 'Book lab tests with\nhome collection';
+  static const String kLabTestsOptionDesc =
+      'Book lab tests with\nhome collection';
 
   // Dental Bottom Sheet
   static const String kAtHospitalDental = 'At Hospital';
   static const String kAtHospitalDentalDesc = 'Visit a dentist\nat the clinic';
   static const String kVirtualDental = 'Virtual Consult';
-  static const String kVirtualDentalDesc = 'Consult a dentist\nonline from home';
+  static const String kVirtualDentalDesc =
+      'Consult a dentist\nonline from home';
 
   // Pharmacy Bottom Sheet
   static const String kPrescribedPharmacyOption = 'Prescribed';
-  static const String kPrescribedPharmacyDesc = 'Upload prescription\n& order medicines';
+  static const String kPrescribedPharmacyDesc =
+      'Upload prescription\n& order medicines';
   static const String kOTCProducts = 'OTC Products';
-  static const String kOTCProductsDesc = 'Order over-the-counter\nproducts directly';
+  static const String kOTCProductsDesc =
+      'Order over-the-counter\nproducts directly';
 
   // Service Type Sheet
   static const String kSelectServiceType = 'Select Service Type';
@@ -686,7 +691,8 @@ static const String kBackToHome = 'Back to Home';
   static const String kEyeCheckup = 'Eye Checkup';
   static const String kGlassesLens = 'Glasses/Lens';
   static const String kBookVisionServices = 'Book vision services for you';
-  static const String kBookVisionForFamily = 'Book vision services for your family members';
+  static const String kBookVisionForFamily =
+      'Book vision services for your family members';
   static const String kSelectVisionSlots = 'Select Your Vision Slots';
   static const String kVisionOverview = 'Vision Overview';
   static const String kUploadPrescription = 'Upload Prescription';
@@ -695,7 +701,8 @@ static const String kBackToHome = 'Back to Home';
   static const String kTakePhoto = 'Take Photo';
   static const String kUploadedPrescriptions = 'Uploaded Prescriptions';
   static const String kNoPrescriptionsYet = 'No prescriptions uploaded yet';
-  static const String kVisionComprehensiveCheckup = 'Vision Comprehensive Checkup';
+  static const String kVisionComprehensiveCheckup =
+      'Vision Comprehensive Checkup';
 
   // Pharmacy Module
   static const String kPharmacyService = 'Pharmacy';
@@ -703,18 +710,23 @@ static const String kBackToHome = 'Back to Home';
   static const String kSecureHomeDelivery = 'Secure home delivery';
   static const String kDeliveryInHours = 'Delivery in 24 hours';
   static const String kContactlessDelivery = 'Contactless delivery';
-  static const String kMedicineDeliveryNote = 'Medicines will be delivered within 24-48 hours of placing order';
+  static const String kMedicineDeliveryNote =
+      'Medicines will be delivered within 24-48 hours of placing order';
   static const String kUploadPrescriptionTitle = 'Upload Prescription';
   static const String kPrescriptionIsSafe = 'Your prescription is safe with us';
   static const String kUploadImage = 'Image or File';
   static const String kFlipHealthPrescription = 'Fliphealth\nPrescription';
   static const String kRequestOTCProducts = 'Request OTC Products';
-  static const String kFAQOrderAll = 'Do I need to order all the medicine in the prescription?';
-  static const String kFAQOrderAllAnswer = 'No, you don\'t need to order all medicines. Our medicine partner will contact you to confirm the required medicines.';
+  static const String kFAQOrderAll =
+      'Do I need to order all the medicine in the prescription?';
+  static const String kFAQOrderAllAnswer =
+      'No, you don\'t need to order all medicines. Our medicine partner will contact you to confirm the required medicines.';
   static const String kFAQChangeQty = 'Can I change the quantity of medicines?';
-  static const String kFAQChangeQtyAnswer = 'Yes, our medicine partner will contact you to confirm the medicines and quantities before delivery.';
+  static const String kFAQChangeQtyAnswer =
+      'Yes, our medicine partner will contact you to confirm the medicines and quantities before delivery.';
   static const String kFAQPrice = 'How do I know the price of medicines?';
-  static const String kFAQPriceAnswer = 'Once the order is confirmed, our medicine partner will share the price details with you before delivery.';
+  static const String kFAQPriceAnswer =
+      'Once the order is confirmed, our medicine partner will share the price details with you before delivery.';
   static const String kOrderGenerated = 'Order Generated\nSuccessfully';
   static const String kDone = 'Done';
   static const String kUpload = 'Upload';
@@ -749,7 +761,8 @@ static const String kBackToHome = 'Back to Home';
   static const String kBankDetailsLabel = 'Bank Details';
   static const String kSelectBank = 'Select Bank';
   static const String kTapToSelectBank = 'Tap to select bank account';
-  static const String kAcceptTermsAndConditions = 'I accept the Terms & Conditions for OPD claim reimbursement';
+  static const String kAcceptTermsAndConditions =
+      'I accept the Terms & Conditions for OPD claim reimbursement';
   static const String kStepPatient = 'Patient';
   static const String kStepBills = 'Bills';
   static const String kStepReview = 'Review';
@@ -771,10 +784,28 @@ static const String kBackToHome = 'Back to Home';
   static const String kReviewClaim = 'Review Claim';
   static const String kPatientDetails = 'Patient Details';
   static const String kTotalClaimAmount = 'Total Claim Amount';
-  static const String kClaimDisclaimer = 'Once submitted, your claim will be reviewed by our team. You will be notified about the status updates via SMS and email.';
+  static const String kClaimDisclaimer =
+      'Once submitted, your claim will be reviewed by our team. You will be notified about the status updates via SMS and email.';
   static const String kSubmitClaim = 'Submit Claim';
   static const String kClaimSubmitted = 'Claim Submitted!';
-  static const String kClaimSubmittedMsg = 'Your claim has been submitted successfully. You will receive updates on your registered phone number.';
+  static const String kClaimSubmittedMsg =
+      'Your claim has been submitted successfully. You will receive updates on your registered phone number.';
+
+  static const String kClaimHistory = 'History';
+  static const String kBankDetailsTab = 'Bank';
+  static const String kDocumentsTab = 'Documents';
+  static const String kNoClaimHistory = 'No status history yet.';
+  static const String kBankRejectedUpdateHint =
+      'Bank verification was rejected. Please update your bank details and upload a valid cheque.';
+  static const String kMissingDocsShort = 'Missing';
+  static const String kInvalidBillShort = 'Invalid bill';
+  static const String kOpenFile = 'Open';
+  static const String kDisputeClaim = 'Dispute claim';
+  static const String kDisputeReasonHint =
+      'Briefly explain why you are disputing this decision';
+  static const String kUtrNumber = 'UTR number';
+  static const String kSettledDate = 'Settled date';
+  static const String kClaimReasonTitle = 'Status note';
 
   // Bank Details
   static const String kBankAccounts = 'Bank Accounts';
@@ -788,6 +819,14 @@ static const String kBackToHome = 'Back to Home';
   static const String kCancelledCheque = 'Cancelled Cheque / Passbook';
   static const String kUploadChequePhoto = 'Upload cheque or passbook photo';
   static const String kSaveBankAccount = 'Save Bank Account';
+  static const String kUpdateBankAccount = 'Update Bank Account';
+  static const String kEditBankAccount = 'Edit Bank Account';
+  static const String kVerificationStatus = 'Verification status';
+  static const String kBankDetailReadOnlyHint =
+      'You can only change bank details when verification is rejected. Contact support if you need help.';
+  static const String kStatusPending = 'Pending';
+  static const String kStatusVerified = 'Verified';
+  static const String kStatusRejected = 'Rejected';
   static const String kNoBankAccounts = 'No bank accounts added';
   static const String kAddBank = 'Add Bank';
   static const String kBillImages = 'Bill Images';
@@ -805,19 +844,30 @@ static const String kBackToHome = 'Back to Home';
       'Disclaimer: We do not handle emergencies. For urgent medical assistance, please contact your doctor or the nearest hospital.';
   static const String kDisclaimerServiceHours =
       'Service hours: 9:30 AM – 6:30 PM. Requests received after this time will be processed the next day.';
+  static const String kTalkToNutritionist = 'Talk to a Nutritionist';
+  static const String kNutritionConsultDescription =
+      'Enter your details here and we will connect you to a nutritionist.';
+  static const String kWellnessSuccessTitle = 'Thank you for your request';
+  static const String kWellnessSuccessBody =
+      'Our team will call you within 20 minutes to schedule your session.';
+  static const String kWellnessSuccessBodyNutrition =
+      'Our team will call you within 20 minutes to connect you with a nutritionist.';
 
   // Vaccine Module
   static const String kVaccineService = 'Vaccine Service';
   static const String kVaccineCare = 'Vaccine Care';
-  static const String kBookFreeVaccineServices = 'Book free vaccination services for you';
-  static const String kBookVaccineForFamily = 'Book vaccination services for your family';
+  static const String kBookFreeVaccineServices =
+      'Book free vaccination services for you';
+  static const String kBookVaccineForFamily =
+      'Book vaccination services for your family';
   static const String kChooseVaccineType = 'Choose Vaccine Type';
   static const String kSelectedVaccines = 'Selected Vaccines';
   static const String kVaccineOverview = 'Vaccine Overview';
   static const String kSelectVaccineSlots = 'Select Your Vaccine Slots';
   static const String kVaccinationCenter = 'Vaccination Center';
   static const String kVaccineTypesLabel = 'Vaccine Types';
-  static const String kSelectAtLeastOneVaccine = 'Please select at least one vaccine';
+  static const String kSelectAtLeastOneVaccine =
+      'Please select at least one vaccine';
 
   // Gym & Fitness Module
   static const String kGymMembership = 'Gym Membership';
@@ -841,8 +891,10 @@ static const String kBackToHome = 'Back to Home';
   static const String kGST18 = 'GST (18%)';
   static const String kWalletDeduction = 'Wallet Deduction';
   static const String kTotalPayable = 'Total Payable';
-  static const String kActivationNote = 'Your membership will be activated within 72 hours of payment.';
-  static const String kAcceptTermsGym = 'I accept the Terms & Conditions for gym membership';
+  static const String kActivationNote =
+      'Your membership will be activated within 72 hours of payment.';
+  static const String kAcceptTermsGym =
+      'I accept the Terms & Conditions for gym membership';
   static const String kClickToPay = 'Click to Pay';
   static const String kOff = 'OFF';
   static const String kViewBenefits = 'View Benefits';
@@ -879,14 +931,16 @@ static const String kBackToHome = 'Back to Home';
   static const String kOpenTickets = 'Open';
   static const String kClosedTickets = 'Closed';
   static const String kDescribeYourIssue = 'Describe your issue';
-  static const String kIssueHint = 'E.g.: Connectivity issue, payment failed...';
+  static const String kIssueHint =
+      'E.g.: Connectivity issue, payment failed...';
   static const String kSubmit = 'Submit';
   static const String kNoActiveTicket = 'No active tickets';
   static const String kNoClosedTicket = 'No closed tickets';
   static const String kNoTicketsYet = 'No tickets raised yet!';
   static const String kTicketDetails = 'Ticket Details';
   static const String kTicketId = 'Ticket ID';
-  static const String kTeamGetBack = 'Our support team will get back to you within 24 hours';
+  static const String kTeamGetBack =
+      'Our support team will get back to you within 24 hours';
   static const String kGiveFeedback = 'Give Feedback';
   static const String kContactSupport = 'Contact Support';
   static const String kContactSupportSubtitle = 'Talk to our support team';

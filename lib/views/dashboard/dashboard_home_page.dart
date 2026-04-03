@@ -6,6 +6,7 @@ import 'package:flip_health/controllers/search%20controllers/search_controller.d
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/address_selection_sheet.dart';
+import 'package:flip_health/controllers/mental%20wellness%20controllers/mental_wellness_controller.dart';
 import 'package:flip_health/routes/app_routes.dart';
 import 'package:flip_health/views/dashboard/widgets/dash_board_searchbar.dart';
 import 'package:flip_health/views/dashboard/widgets/dashboard_banner.dart';
@@ -61,18 +62,23 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
             behavior: HitTestBehavior.translucent,
             child: Column(
               children: [
-                Obx(() => DashboardHeader(
-                      address: _addressController.displayAddress,
-                      onAddressPressed: () {
-                        AddressSelectionSheet.show(context);
-                      },
-                      onCalendarPressed: () {
-                        Get.toNamed(AppRoutes.wallet);
-                      },
-                      onProfilePressed: () {
-                        Get.toNamed(AppRoutes.profile);
-                      },
-                    )),
+                Obx(
+                  () => DashboardHeader(
+                    address: _addressController.displayAddress,
+                    walletBalanceText:
+                        _dashboardController.walletAvailableShortLabel,
+                    onAddressPressed: () {
+                      AddressSelectionSheet.show(context);
+                    },
+                    onCalendarPressed: () async {
+                      await Get.toNamed(AppRoutes.wallet);
+                      await _dashboardController.refreshWalletPreview();
+                    },
+                    onProfilePressed: () {
+                      Get.toNamed(AppRoutes.profile);
+                    },
+                  ),
+                ),
                 RSizedBox.vertical(20),
                 Expanded(
                   child: Stack(
@@ -80,25 +86,29 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                     children: [
                       Column(
                         children: [
-                          Obx(() => DashboardSearchBar(
-                            controller: _searchController.textController,
-                            focusNode: _searchFocusNode,
-                            onChanged: _searchController.onQueryChanged,
-                            isListening: _searchController.isListening.value,
-                            onClear: () {
-                              _searchController.clearSearch();
-                              _searchFocusNode.unfocus();
-                              _searchController.onFocusChanged(false);
-                            },
-                            onVoicePressed: _searchController.toggleVoiceSearch,
-                          )),
+                          Obx(
+                            () => DashboardSearchBar(
+                              controller: _searchController.textController,
+                              focusNode: _searchFocusNode,
+                              onChanged: _searchController.onQueryChanged,
+                              isListening: _searchController.isListening.value,
+                              onClear: () {
+                                _searchController.clearSearch();
+                                _searchFocusNode.unfocus();
+                                _searchController.onFocusChanged(false);
+                              },
+                              onVoicePressed:
+                                  _searchController.toggleVoiceSearch,
+                            ),
+                          ),
                           RSizedBox.vertical(12),
                           Expanded(
                             child: SingleChildScrollView(
                               child: Column(
                                 children: [
                                   ServicesGrid(
-                                      services: _dashboardController.services),
+                                    services: _dashboardController.services,
+                                  ),
                                   RSizedBox.vertical(16),
                                   ViewMoreButton(
                                     onPressed: () {
@@ -106,7 +116,15 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                                     },
                                   ),
                                   RSizedBox.vertical(24),
-                                  NutritionBanner(onJoinPressed: () {}),
+                                  NutritionBanner(
+                                    onJoinPressed: () => Get.toNamed(
+                                      AppRoutes.mentalWellness,
+                                      arguments: {
+                                        'from': MentalWellnessController
+                                            .kFromNutritionist,
+                                      },
+                                    ),
+                                  ),
                                   RSizedBox.vertical(24),
                                 ],
                               ),

@@ -6,18 +6,37 @@ import 'package:flip_health/controllers/claims%20controllers/claims_controller.d
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
-import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
-
 class AddBankScreen extends GetView<ClaimsController> {
   const AddBankScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop && controller.editingBankId.value != null) {
+          controller.clearEditBankMode();
+        }
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CommonAppBar.build(title: AppString.kAddBankAccount),
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        title: Obx(
+          () => CommonText(
+            controller.editingBankId.value != null
+                ? AppString.kEditBankAccount
+                : AppString.kAddBankAccount,
+            fontSize: 18.rf,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w500,
+            height: 1.3,
+          ),
+        ),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -35,7 +54,11 @@ class AddBankScreen extends GetView<ClaimsController> {
                     label: '${AppString.kAccountHolderName} *',
                     hint: 'Enter account holder name',
                     controller: controller.holderNameController,
-                    prefixIcon: Icon(Icons.person_outline, size: 20.rs, color: AppColors.textSecondary),
+                    prefixIcon: Icon(
+                      Icons.person_outline,
+                      size: 20.rs,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   SizedBox(height: 20.rh),
                   CustomTextField(
@@ -44,7 +67,11 @@ class AddBankScreen extends GetView<ClaimsController> {
                     controller: controller.accountNumberController,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    prefixIcon: Icon(Icons.credit_card_outlined, size: 20.rs, color: AppColors.textSecondary),
+                    prefixIcon: Icon(
+                      Icons.credit_card_outlined,
+                      size: 20.rs,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   SizedBox(height: 20.rh),
                   CustomTextField(
@@ -53,7 +80,11 @@ class AddBankScreen extends GetView<ClaimsController> {
                     controller: controller.confirmAccountController,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    prefixIcon: Icon(Icons.credit_card_outlined, size: 20.rs, color: AppColors.textSecondary),
+                    prefixIcon: Icon(
+                      Icons.credit_card_outlined,
+                      size: 20.rs,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   SizedBox(height: 20.rh),
                   CustomTextField(
@@ -61,14 +92,22 @@ class AddBankScreen extends GetView<ClaimsController> {
                     hint: 'Enter IFSC code',
                     controller: controller.ifscController,
                     textCapitalization: TextCapitalization.characters,
-                    prefixIcon: Icon(Icons.pin_outlined, size: 20.rs, color: AppColors.textSecondary),
+                    prefixIcon: Icon(
+                      Icons.pin_outlined,
+                      size: 20.rs,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   SizedBox(height: 20.rh),
                   CustomTextField(
-                    label: AppString.kBranch,
+                    label: '${AppString.kBranch} *',
                     hint: 'Enter branch name',
                     controller: controller.branchController,
-                    prefixIcon: Icon(Icons.location_city_outlined, size: 20.rs, color: AppColors.textSecondary),
+                    prefixIcon: Icon(
+                      Icons.location_city_outlined,
+                      size: 20.rs,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   SizedBox(height: 24.rh),
                   _buildChequeUpload(),
@@ -80,6 +119,7 @@ class AddBankScreen extends GetView<ClaimsController> {
           _buildSaveButton(),
         ],
       ),
+    ),
     );
   }
 
@@ -87,7 +127,12 @@ class AddBankScreen extends GetView<ClaimsController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CommonText(label, fontSize: 12.rf, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
+        CommonText(
+          label,
+          fontSize: 12.rf,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textSecondary,
+        ),
         SizedBox(height: 8.rh),
         child,
       ],
@@ -108,7 +153,11 @@ class AddBankScreen extends GetView<ClaimsController> {
           ),
           child: Row(
             children: [
-              Icon(Icons.account_balance_outlined, size: 20.rs, color: AppColors.textSecondary),
+              Icon(
+                Icons.account_balance_outlined,
+                size: 20.rs,
+                color: AppColors.textSecondary,
+              ),
               SizedBox(width: 12.rw),
               Expanded(
                 child: CommonText(
@@ -120,7 +169,11 @@ class AddBankScreen extends GetView<ClaimsController> {
                       : AppColors.textPrimary,
                 ),
               ),
-              Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary, size: 24.rs),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: AppColors.textSecondary,
+                size: 24.rs,
+              ),
             ],
           ),
         ),
@@ -129,7 +182,7 @@ class AddBankScreen extends GetView<ClaimsController> {
   }
 
   void _showBankSearchSheet() {
-    final searchQuery = ''.obs;
+    controller.prepareBankPicker();
     Get.bottomSheet(
       Container(
         height: Get.height * 0.7,
@@ -143,20 +196,35 @@ class AddBankScreen extends GetView<ClaimsController> {
               margin: EdgeInsets.only(top: 12.rh),
               width: 40.rw,
               height: 4.rh,
-              decoration: BoxDecoration(color: AppColors.borderLight, borderRadius: BorderRadius.circular(2.rs)),
+              decoration: BoxDecoration(
+                color: AppColors.borderLight,
+                borderRadius: BorderRadius.circular(2.rs),
+              ),
             ),
             Padding(
               padding: EdgeInsets.all(16.rs),
               child: Row(
                 children: [
-                  CommonText(AppString.kSelectBank, fontSize: 18.rf, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  CommonText(
+                    AppString.kSelectBank,
+                    fontSize: 18.rf,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
                   const Spacer(),
                   GestureDetector(
                     onTap: () => Get.back(),
                     child: Container(
                       padding: EdgeInsets.all(6.rs),
-                      decoration: BoxDecoration(color: AppColors.backgroundTertiary, shape: BoxShape.circle),
-                      child: Icon(Icons.close, size: 20.rs, color: AppColors.textSecondary),
+                      decoration: BoxDecoration(
+                        color: AppColors.backgroundTertiary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.close,
+                        size: 20.rs,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ),
                 ],
@@ -165,49 +233,130 @@ class AddBankScreen extends GetView<ClaimsController> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.rw),
               child: TextField(
-                onChanged: (v) => searchQuery.value = v.toLowerCase(),
+                onChanged: controller.scheduleBankSearch,
                 style: TextStyle(fontSize: 14.rf, color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'Search bank...',
-                  hintStyle: TextStyle(fontSize: 13.rf, color: AppColors.textSecondary),
-                  prefixIcon: Icon(Icons.search, size: 20.rs, color: AppColors.textSecondary),
+                  hintStyle: TextStyle(
+                    fontSize: 13.rf,
+                    color: AppColors.textSecondary,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    size: 20.rs,
+                    color: AppColors.textSecondary,
+                  ),
                   filled: true,
                   fillColor: AppColors.surfaceLight,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 12.rh),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.rs), borderSide: BorderSide(color: AppColors.borderLight)),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.rs), borderSide: BorderSide(color: AppColors.borderLight)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.rs), borderSide: BorderSide(color: AppColors.primary, width: 1.5)),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16.rw,
+                    vertical: 12.rh,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.rs),
+                    borderSide: BorderSide(color: AppColors.borderLight),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.rs),
+                    borderSide: BorderSide(color: AppColors.borderLight),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.rs),
+                    borderSide: BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
             ),
             SizedBox(height: 8.rh),
             Expanded(
               child: Obx(() {
-                final filtered = ClaimsController.bankNames
-                    .where((b) => b.toLowerCase().contains(searchQuery.value))
-                    .toList();
-                return ListView.builder(
-                  itemCount: filtered.length,
-                  itemBuilder: (_, i) {
-                    final bank = filtered[i];
-                    return ListTile(
-                      leading: Container(
-                        width: 38.rs,
-                        height: 38.rs,
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundTertiary,
-                          borderRadius: BorderRadius.circular(10.rs),
-                        ),
-                        child: Icon(Icons.account_balance_outlined, size: 18.rs, color: AppColors.textSecondary),
-                      ),
-                      title: CommonText(bank, fontSize: 14.rf, color: AppColors.textPrimary),
-                      onTap: () {
-                        controller.bankNameController.text = bank;
-                        controller.selectedBankName.value = bank;
-                        Get.back();
-                      },
-                    );
+                if (controller.banksLoading.value &&
+                    controller.bankDirectory.isEmpty) {
+                  return Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  );
+                }
+                if (!controller.banksLoading.value &&
+                    controller.bankDirectory.isEmpty) {
+                  return Center(
+                    child: CommonText(
+                      'No banks found',
+                      fontSize: 14.rf,
+                      color: AppColors.textSecondary,
+                    ),
+                  );
+                }
+                return NotificationListener<ScrollNotification>(
+                  onNotification: (n) {
+                    if (n.metrics.pixels >= n.metrics.maxScrollExtent - 80) {
+                      controller.loadBanks(reset: false);
+                    }
+                    return false;
                   },
+                  child: ListView.builder(
+                    itemCount:
+                        controller.bankDirectory.length +
+                        (controller.banksHasMore.value ? 1 : 0),
+                    itemBuilder: (_, i) {
+                      if (i >= controller.bankDirectory.length) {
+                        return Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16.rh),
+                          child: Center(
+                            child: controller.banksLoading.value
+                                ? CircularProgressIndicator(
+                                    color: AppColors.primary,
+                                    strokeWidth: 2,
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        );
+                      }
+                      final item = controller.bankDirectory[i];
+                      final label =
+                          item['value']?.toString() ??
+                          item['name']?.toString() ??
+                          item['label']?.toString() ??
+                          item['bank_name']?.toString() ??
+                          '';
+                      final bankKey =
+                          item['key']?.toString() ??
+                          item['id']?.toString() ??
+                          '';
+                      return ListTile(
+                        leading: Container(
+                          width: 38.rs,
+                          height: 38.rs,
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundTertiary,
+                            borderRadius: BorderRadius.circular(10.rs),
+                          ),
+                          child: Icon(
+                            Icons.account_balance_outlined,
+                            size: 18.rs,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        title: CommonText(
+                          label.isEmpty ? bankKey : label,
+                          fontSize: 14.rf,
+                          color: AppColors.textPrimary,
+                        ),
+                        onTap: () {
+                          controller.selectedBankKey.value = bankKey;
+                          controller.selectedBankName.value = label.isEmpty
+                              ? bankKey
+                              : label;
+                          controller.bankNameController.text = label.isEmpty
+                              ? bankKey
+                              : label;
+                          Get.back();
+                        },
+                      );
+                    },
+                  ),
                 );
               }),
             ),
@@ -230,10 +379,19 @@ class AddBankScreen extends GetView<ClaimsController> {
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.rs),
               ),
-              child: Icon(Icons.image_outlined, size: 18.rs, color: AppColors.primary),
+              child: Icon(
+                Icons.image_outlined,
+                size: 18.rs,
+                color: AppColors.primary,
+              ),
             ),
             SizedBox(width: 10.rw),
-            CommonText(AppString.kCancelledCheque, fontSize: 14.rf, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            CommonText(
+              '${AppString.kCancelledCheque} *',
+              fontSize: 14.rf,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ],
         ),
         SizedBox(height: 12.rh),
@@ -247,15 +405,31 @@ class AddBankScreen extends GetView<ClaimsController> {
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(14.rs),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), style: BorderStyle.solid),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    style: BorderStyle.solid,
+                  ),
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.cloud_upload_outlined, size: 36.rs, color: AppColors.primary),
+                    Icon(
+                      Icons.cloud_upload_outlined,
+                      size: 36.rs,
+                      color: AppColors.primary,
+                    ),
                     SizedBox(height: 8.rh),
-                    CommonText(AppString.kUploadChequePhoto, fontSize: 13.rf, color: AppColors.primary, fontWeight: FontWeight.w500),
+                    CommonText(
+                      AppString.kUploadChequePhoto,
+                      fontSize: 13.rf,
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
                     SizedBox(height: 4.rh),
-                    CommonText('JPG, PNG or PDF', fontSize: 11.rf, color: AppColors.textSecondary),
+                    CommonText(
+                      'JPG, PNG or PDF',
+                      fontSize: 11.rf,
+                      color: AppColors.textSecondary,
+                    ),
                   ],
                 ),
               ),
@@ -266,8 +440,10 @@ class AddBankScreen extends GetView<ClaimsController> {
             runSpacing: 10.rh,
             children: controller.chequeFiles.asMap().entries.map((entry) {
               final file = entry.value;
+              final isNetwork = file['isNetwork'] == true;
               final isImage = file['isImage'] == true;
               final path = file['path'] as String? ?? '';
+              final isPdf = path.toLowerCase().endsWith('.pdf');
               return Stack(
                 children: [
                   Container(
@@ -278,13 +454,39 @@ class AddBankScreen extends GetView<ClaimsController> {
                       border: Border.all(color: AppColors.borderLight),
                       color: AppColors.backgroundTertiary,
                     ),
-                    child: isImage && path.isNotEmpty
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(12.rs),
-                            child: Image.file(File(path), fit: BoxFit.cover, width: 100.rs, height: 100.rs,
-                              errorBuilder: (_, __, ___) => _fileFallback(file)),
-                          )
-                        : _fileFallback(file),
+                    child: isNetwork
+                        ? (isPdf
+                            ? Center(
+                                child: Icon(
+                                  Icons.picture_as_pdf,
+                                  size: 40.rs,
+                                  color: AppColors.primary,
+                                ),
+                              )
+                            : (isImage && path.isNotEmpty
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(12.rs),
+                                    child: Image.network(
+                                      path,
+                                      fit: BoxFit.cover,
+                                      width: 100.rs,
+                                      height: 100.rs,
+                                      errorBuilder: (_, __, ___) => _fileFallback(file),
+                                    ),
+                                  )
+                                : _fileFallback(file)))
+                        : (isImage && path.isNotEmpty
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12.rs),
+                                child: Image.file(
+                                  File(path),
+                                  fit: BoxFit.cover,
+                                  width: 100.rs,
+                                  height: 100.rs,
+                                  errorBuilder: (_, __, ___) => _fileFallback(file),
+                                ),
+                              )
+                            : _fileFallback(file)),
                   ),
                   Positioned(
                     top: 4,
@@ -294,8 +496,15 @@ class AddBankScreen extends GetView<ClaimsController> {
                       child: Container(
                         width: 22.rs,
                         height: 22.rs,
-                        decoration: const BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
-                        child: Icon(Icons.close, color: Colors.white, size: 14.rs),
+                        decoration: const BoxDecoration(
+                          color: AppColors.error,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 14.rs,
+                        ),
                       ),
                     ),
                   ),
@@ -313,11 +522,22 @@ class AddBankScreen extends GetView<ClaimsController> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.insert_drive_file_outlined, size: 28.rs, color: AppColors.textSecondary),
+          Icon(
+            Icons.insert_drive_file_outlined,
+            size: 28.rs,
+            color: AppColors.textSecondary,
+          ),
           SizedBox(height: 4.rh),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 6.rw),
-            child: CommonText(file['name'] ?? '', fontSize: 8.rf, color: AppColors.textSecondary, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
+            child: CommonText(
+              file['name'] ?? '',
+              fontSize: 8.rf,
+              color: AppColors.textSecondary,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
       ),
@@ -328,16 +548,45 @@ class AddBankScreen extends GetView<ClaimsController> {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20.rs),
-      child: ElevatedButton(
-        onPressed: controller.addBankAccount,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          padding: EdgeInsets.symmetric(vertical: 16.rh),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.rs)),
+      child: Obx(
+        () => ElevatedButton(
+          onPressed: controller.isAddingBank.value
+              ? null
+              : () {
+                  if (controller.editingBankId.value != null) {
+                    controller.updateBankAccount();
+                  } else {
+                    controller.addBankAccount();
+                  }
+                },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: EdgeInsets.symmetric(vertical: 16.rh),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14.rs),
+            ),
+            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
+          ),
+          child: controller.isAddingBank.value
+              ? SizedBox(
+                  height: 22.rs,
+                  width: 22.rs,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.white,
+                  ),
+                )
+              : CommonText(
+                  controller.editingBankId.value != null
+                      ? AppString.kUpdateBankAccount
+                      : AppString.kSaveBankAccount,
+                  fontSize: 15.rf,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
         ),
-        child: CommonText(AppString.kSaveBankAccount, fontSize: 15.rf, fontWeight: FontWeight.w600, color: Colors.white),
       ),
     );
   }

@@ -7,7 +7,6 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/model/claims%20models/claim_model.dart';
-import 'package:flip_health/views/claims/claim_detail_screen.dart';
 import 'package:flip_health/views/claims/add_claim_screen.dart';
 
 class ClaimsListScreen extends GetView<ClaimsController> {
@@ -202,10 +201,38 @@ class ClaimsListScreen extends GetView<ClaimsController> {
         );
       }
 
-      return ListView.builder(
-        padding: EdgeInsets.only(top: 4.rh, bottom: 80.rh, left: 16.rw, right: 16.rw),
-        itemCount: controller.filteredClaims.length,
-        itemBuilder: (context, index) => _buildClaimCard(controller.filteredClaims[index]),
+      return RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: () => controller.refreshClaims(),
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (n) {
+            if (n.metrics.pixels >= n.metrics.maxScrollExtent - 120) {
+              controller.loadMoreClaims();
+            }
+            return false;
+          },
+          child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.only(top: 4.rh, bottom: 80.rh, left: 16.rw, right: 16.rw),
+            itemCount: controller.filteredClaims.length +
+                (controller.isClaimsLoadingMore.value ? 1 : 0), // ignore: unnecessary_statements
+            itemBuilder: (context, index) {
+              if (index >= controller.filteredClaims.length) {
+                return Padding(
+                  padding: EdgeInsets.all(16.rs),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24.rs,
+                      height: 24.rs,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                    ),
+                  ),
+                );
+              }
+              return _buildClaimCard(controller.filteredClaims[index]);
+            },
+          ),
+        ),
       );
     });
   }
@@ -214,10 +241,7 @@ class ClaimsListScreen extends GetView<ClaimsController> {
     final config = ClaimStatusConfig.fromStatus(claim.status);
 
     return GestureDetector(
-      onTap: () {
-        controller.selectClaimDetail(claim);
-        Get.to(() => const ClaimDetailScreen());
-      },
+      onTap: () => controller.openClaimDetail(claim),
       child: Container(
         margin: EdgeInsets.only(bottom: 12.rh),
         decoration: BoxDecoration(

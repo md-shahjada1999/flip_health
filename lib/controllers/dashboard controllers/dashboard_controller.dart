@@ -3,10 +3,78 @@ import 'package:get/get.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_bottom_sheet.dart';
+import 'package:flip_health/data/repositories/dashboard_repository.dart';
+import 'package:flip_health/data/repositories/wallet_repository.dart';
 import 'package:flip_health/model/dashboard%20models/service_model.dart';
 import 'package:flip_health/routes/app_routes.dart';
 
 class DashboardController extends GetxController {
+  DashboardController({
+    required DashboardRepository dashboardRepository,
+    required WalletRepository walletRepository,
+  })  : _dashboardRepository = dashboardRepository,
+        _walletRepository = walletRepository;
+
+  final DashboardRepository _dashboardRepository;
+  final WalletRepository _walletRepository;
+
+  final isLoadingDashboard = true.obs;
+  final dashboardLoaded = false.obs;
+  final dashboardData = <String, dynamic>{}.obs;
+
+  final isLoadingWalletPreview = true.obs;
+  final walletPreview = <String, dynamic>{}.obs;
+
+  /// Short label for header — same validity as patient_app dashboard wallet strip.
+  String? get walletAvailableShortLabel {
+    if (isLoadingWalletPreview.value) return null;
+    if (walletPreview.isEmpty) return null;
+    final sub = walletPreview['subscription_id'];
+    final totalRaw = walletPreview['total'];
+    final totalNum = totalRaw is num
+        ? totalRaw.toDouble()
+        : (double.tryParse(totalRaw?.toString() ?? '') ?? 0);
+    if (sub == 0 || sub == '0') return null;
+    if (totalNum <= 1) return null;
+    final a = walletPreview['available'];
+    if (a == null) return null;
+    return '₹$a';
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    _loadDashboard();
+    _loadWalletPreview();
+  }
+
+  Future<void> _loadDashboard() async {
+    isLoadingDashboard.value = true;
+    try {
+      dashboardData.value = await _dashboardRepository.fetchDashboard();
+      dashboardLoaded.value = true;
+    } catch (_) {
+      dashboardLoaded.value = false;
+    } finally {
+      isLoadingDashboard.value = false;
+    }
+  }
+
+  Future<void> _loadWalletPreview() async {
+    isLoadingWalletPreview.value = true;
+    try {
+      walletPreview.value = await _walletRepository.getWalletData();
+    } catch (_) {
+      walletPreview.value = {};
+    } finally {
+      isLoadingWalletPreview.value = false;
+    }
+  }
+
+  Future<void> refreshDashboard() => _loadDashboard();
+
+  Future<void> refreshWalletPreview() => _loadWalletPreview();
+
 //all text editing controllers
   final TextEditingController _searchController = TextEditingController();
   TextEditingController get searchController => _searchController;

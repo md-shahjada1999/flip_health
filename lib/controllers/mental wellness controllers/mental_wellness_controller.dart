@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flip_health/core/helpers/app_toasts.dart';
+import 'package:flip_health/core/services/app_exception.dart';
+import 'package:flip_health/core/services/secure%20storage/secure_storage.dart';
 import 'package:flip_health/data/repositories/mental_wellness_repository.dart';
 import 'package:flip_health/routes/app_routes.dart';
 
+/// `from`: `wellness` (default) | `nutritionist` — matches patient_app TRIJOG arguments.
 class MentalWellnessController extends GetxController {
   final MentalWellnessRepository _repository;
 
@@ -13,10 +17,13 @@ class MentalWellnessController extends GetxController {
   final phoneController = TextEditingController();
   final emailController = TextEditingController();
 
+  /// Dashboard / search entry: `wellness` or `nutritionist`.
+  final fromWhere = 'wellness'.obs;
+
   final service = ''.obs;
   final consultation = ''.obs;
   final language = ''.obs;
-  final isLoading = false.obs;
+  final isSubmitting = false.obs;
   final connectEnabled = false.obs;
 
   final categories = <String>[].obs;
@@ -33,27 +40,87 @@ class MentalWellnessController extends GetxController {
     'Gujarati',
   ];
 
+  static const String kFromNutritionist = 'nutritionist';
+
+  bool get isNutritionEntry => fromWhere.value == kFromNutritionist;
+
   @override
   void onInit() {
     super.onInit();
-    _loadProfileData();
-    _loadCategories();
+    _readRouteArguments();
+    _loadProfileFields();
+    if (isNutritionEntry) {
+      service.value = 'Diet & Nutrition';
+    }
     nameController.addListener(_validateFields);
     phoneController.addListener(_validateFields);
     emailController.addListener(_validateFields);
+    _loadCategoriesIfNeeded();
   }
 
-  Future<void> _loadProfileData() async {
-    final data = await _repository.getProfileData();
-    nameController.text = data['name'] ?? '';
-    phoneController.text = data['phone'] ?? '';
-    emailController.text = data['email'] ?? '';
-    language.value = data['language'] ?? '';
-    service.value = data['service'] ?? '';
+  void _readRouteArguments() {
+    final args = Get.arguments;
+    if (args is Map) {
+      final f = args['from']?.toString();
+      if (f == kFromNutritionist) {
+        fromWhere.value = kFromNutritionist;
+      } else {
+        fromWhere.value = 'wellness';
+      }
+    }
   }
 
-  Future<void> _loadCategories() async {
-    categories.value = await _repository.getCategories();
+  void _loadProfileFields() {
+    final user = AppSecureStorage.getSavedUser();
+    if (user != null) {
+      nameController.text = user.name;
+      phoneController.text = user.phone;
+      emailController.text = user.email;
+      if (user.language != null && user.language!.isNotEmpty) {
+        language.value = user.language!;
+      }
+    } else {
+      nameController.text =
+          AppSecureStorage.getStringFromSharedPref(
+                variableName: AppSecureStorage.kUserName,
+              ) ??
+              '';
+      phoneController.text =
+          AppSecureStorage.getStringFromSharedPref(
+                variableName: AppSecureStorage.kUserPhone,
+              ) ??
+              '';
+      emailController.text =
+          AppSecureStorage.getStringFromSharedPref(
+                variableName: AppSecureStorage.kUserEmail,
+              ) ??
+              '';
+      final lang = AppSecureStorage.getStringFromSharedPref(
+        variableName: AppSecureStorage.kUserLanguage,
+      );
+      if (lang != null && lang.isNotEmpty) {
+        language.value = lang;
+      }
+    }
+    _validateFields();
+  }
+
+  Future<void> _loadCategoriesIfNeeded() async {
+    if (isNutritionEntry) return;
+
+    try {
+      final list = await _repository.fetchMentalWellnessCategories();
+      categories.assignAll(list.map((e) => e.value).toList());
+    } on AppException catch (e) {
+      AppToast.error(title: 'Could not load categories', message: e.message);
+      categories.clear();
+    } catch (_) {
+      AppToast.error(
+        title: 'Error',
+        message: 'Could not load categories. Please try again.',
+      );
+      categories.clear();
+    }
   }
 
   void setService(String value) {
@@ -80,69 +147,110 @@ class MentalWellnessController extends GetxController {
     final emailOk = GetUtils.isEmail(emailController.text.trim());
     final serviceOk = service.value.isNotEmpty;
     final langOk = language.value.isNotEmpty;
-    final consultOk = service.value != 'Mental Wellness' || consultation.value.isNotEmpty;
+    final consultOk = service.value != 'Mental Wellness' ||
+        consultation.value.isNotEmpty;
 
-    connectEnabled.value = nameOk && phoneOk && emailOk && serviceOk && langOk && consultOk;
+    connectEnabled.value =
+        nameOk && phoneOk && emailOk && serviceOk && langOk && consultOk;
+  }
+
+  /// Shows validation toasts (patient_app parity) then opens confirm + submit.
+  Future<void> onConnectPressed() async {
+    if (isSubmitting.value) return;
+
+    if (nameController.text.trim().isEmpty) {
+      AppToast.warning(title: 'Required', message: 'Please enter your name');
+      return;
+    }
+    if (phoneController.text.trim().length != 10) {
+      AppToast.warning(
+        title: 'Required',
+        message: 'Please enter a valid 10-digit mobile number',
+      );
+      return;
+    }
+    if (!GetUtils.isEmail(emailController.text.trim())) {
+      AppToast.warning(
+        title: 'Required',
+        message: 'Please enter a valid email address',
+      );
+      return;
+    }
+    if (service.value.isEmpty) {
+      AppToast.warning(title: 'Required', message: 'Please select a service');
+      return;
+    }
+    if (language.value.isEmpty) {
+      AppToast.warning(title: 'Required', message: 'Please select a language');
+      return;
+    }
+    if (service.value == 'Mental Wellness' && consultation.value.isEmpty) {
+      AppToast.warning(
+        title: 'Required',
+        message: 'Please select a consultation category',
+      );
+      return;
+    }
+
+    await submitRequest();
   }
 
   Future<void> submitRequest() async {
-    if (!connectEnabled.value) return;
+    if (!connectEnabled.value || isSubmitting.value) return;
 
-    isLoading.value = true;
-
-    try {
-      await _repository.submitRequest(data: {
-        'name': nameController.text.trim(),
-        'phone': phoneController.text.trim(),
-        'email': emailController.text.trim(),
-        'service': service.value,
-        'consultation': consultation.value,
-        'language': language.value,
-      });
-
-      await Future.delayed(const Duration(seconds: 2));
-      isLoading.value = false;
-      Get.dialog(
-        _buildSuccessDialog(),
-        barrierDismissible: false,
+    if (service.value == 'Mental Wellness' && categories.isEmpty) {
+      AppToast.warning(
+        title: 'Categories unavailable',
+        message: 'Please try again after categories load, or open the screen again.',
       );
-    } catch (_) {
-      isLoading.value = false;
+      return;
     }
-  }
 
-  Widget _buildSuccessDialog() {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.check_circle, color: Colors.green, size: 64),
-          const SizedBox(height: 16),
-          const Text(
-            'Thank you for your request!\n\nOur team will call you within 20 minutes to schedule your session.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                Get.back();
-                Get.offAllNamed(AppRoutes.dashboard);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              child: const Text('Done', style: TextStyle(color: Colors.white)),
-            ),
-          ),
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Confirm'),
+        content: Text(
+          isNutritionEntry
+              ? 'You want to raise a request with our Nutritionist?'
+              : 'You want to raise a request with our specialist for ${service.value}?',
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(result: false), child: const Text('No')),
+          TextButton(onPressed: () => Get.back(result: true), child: const Text('Yes')),
         ],
       ),
     );
+    if (confirmed != true) return;
+
+    isSubmitting.value = true;
+    try {
+      await _repository.submitWellnessSession(
+        phone: phoneController.text.trim(),
+        email: emailController.text.trim(),
+        service: service.value,
+        language: language.value,
+        serviceArea:
+            service.value == 'Mental Wellness' ? consultation.value : null,
+      );
+
+      Get.offNamed(
+        AppRoutes.wellnessRequestSuccess,
+        arguments: {
+          'service': service.value,
+          'nutrition': isNutritionEntry ||
+              service.value == 'Diet & Nutrition',
+        },
+      );
+    } on AppException catch (e) {
+      AppToast.error(title: 'Request failed', message: e.message);
+    } catch (_) {
+      AppToast.error(
+        title: 'Error',
+        message: 'Something went wrong. Please try again.',
+      );
+    } finally {
+      isSubmitting.value = false;
+    }
   }
 
   @override

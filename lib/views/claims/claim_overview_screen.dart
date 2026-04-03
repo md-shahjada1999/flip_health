@@ -267,16 +267,29 @@ class ClaimOverviewScreen extends GetView<ClaimsController> {
             SizedBox(width: 12.rw),
             Expanded(
               flex: 2,
-              child: ElevatedButton(
-                onPressed: () => _showSuccessDialog(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: EdgeInsets.symmetric(vertical: 16.rh),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.rs)),
-                  elevation: 0,
-                ),
-                child: CommonText(AppString.kSubmitClaim, fontSize: 15.rf, fontWeight: FontWeight.w600, color: Colors.white),
-              ),
+              child: Obx(() {
+                final busy = controller.isSubmittingClaim.value;
+                return ElevatedButton(
+                  onPressed: busy
+                      ? null
+                      : () async {
+                          await controller.submitClaimToServer();
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: EdgeInsets.symmetric(vertical: 16.rh),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.rs)),
+                    elevation: 0,
+                  ),
+                  child: busy
+                      ? SizedBox(
+                          height: 22.rs,
+                          width: 22.rs,
+                          child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : CommonText(AppString.kSubmitClaim, fontSize: 15.rf, fontWeight: FontWeight.w600, color: Colors.white),
+                );
+              }),
             ),
           ],
         ),
@@ -284,54 +297,4 @@ class ClaimOverviewScreen extends GetView<ClaimsController> {
     );
   }
 
-  void _showSuccessDialog() {
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.rs)),
-        child: Padding(
-          padding: EdgeInsets.all(28.rs),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: EdgeInsets.all(16.rs),
-                decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.1), shape: BoxShape.circle),
-                child: Icon(Icons.check_circle_outline, size: 56.rs, color: AppColors.success),
-              ),
-              SizedBox(height: 20.rh),
-              CommonText(AppString.kClaimSubmitted, fontSize: 20.rf, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-              SizedBox(height: 8.rh),
-              CommonText(
-                AppString.kClaimSubmittedMsg,
-                fontSize: 13.rf,
-                color: AppColors.textSecondary,
-                textAlign: TextAlign.center,
-                height: 1.4,
-              ),
-              SizedBox(height: 24.rh),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Get.back();
-                    Get.back();
-                    controller.resetAddClaim();
-                    controller.filterByStatus(0);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: EdgeInsets.symmetric(vertical: 14.rh),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.rs)),
-                    elevation: 0,
-                  ),
-                  child: CommonText(AppString.kDone, fontSize: 15.rf, fontWeight: FontWeight.w600, color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      barrierDismissible: false,
-    );
-  }
 }

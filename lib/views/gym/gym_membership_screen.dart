@@ -14,42 +14,50 @@ class GymMembershipScreen extends GetView<GymController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: CommonAppBar.build(title: AppString.kGymMembership),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          );
-        }
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: CommonAppBar.build(title: AppString.kGymMembership),
+        body: Obx(() {
+          if (controller.isLoading.value) {
+            return Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
+          }
 
-        return Column(
-          children: [
-            Expanded(
-              child: controller.membershipPlans.isEmpty
-                  ? Center(
-                      child: CircularProgressIndicator(color: AppColors.primary),
-                    )
-                  : ListView.builder(
-                      padding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 10.rh),
-                      itemCount: controller.membershipPlans.length,
-                      itemBuilder: (context, index) {
-                        return _MembershipCard(
-                          plan: controller.membershipPlans[index],
-                          index: index,
-                        );
-                      },
-                    ),
-            ),
-            if (controller.selectedPlanIndex.value >= 0)
-              ActionButton(
-                text: AppString.kContinue,
-                onPressed: () => Get.to(() => const GymMemberSelectionScreen()),
+          return Column(
+            children: [
+              Expanded(
+                child: controller.membershipPlans.isEmpty
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.rw,
+                          vertical: 10.rh,
+                        ),
+                        itemCount: controller.membershipPlans.length,
+                        itemBuilder: (context, index) {
+                          return _MembershipCard(
+                            plan: controller.membershipPlans[index],
+                            index: index,
+                          );
+                        },
+                      ),
               ),
-          ],
-        );
-      }),
+              if (controller.selectedPlanIndex.value >= 0)
+                ActionButton(
+                  text: AppString.kContinue,
+                  onPressed: () =>
+                      Get.to(() => const GymMemberSelectionScreen()),
+                ),
+            ],
+          );
+        }),
+      ),
     );
   }
 }
@@ -77,17 +85,11 @@ class _MembershipCardState extends State<_MembershipCard>
       vsync: this,
       duration: Duration(milliseconds: 500 + (widget.index * 100)),
     );
-    _fadeAnim = CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOut,
-    );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.25),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOutCubic,
-    ));
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.25), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+        );
     _animController.forward();
   }
 
@@ -132,16 +134,24 @@ class _MembershipCardState extends State<_MembershipCard>
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(18.rs),
                         topRight: Radius.circular(18.rs),
-                        bottomLeft: isExpanded ? Radius.zero : Radius.circular(18.rs),
-                        bottomRight: isExpanded ? Radius.zero : Radius.circular(18.rs),
+                        bottomLeft: isExpanded
+                            ? Radius.zero
+                            : Radius.circular(18.rs),
+                        bottomRight: isExpanded
+                            ? Radius.zero
+                            : Radius.circular(18.rs),
                       ),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(17.rs),
                         topRight: Radius.circular(17.rs),
-                        bottomLeft: isExpanded ? Radius.zero : Radius.circular(17.rs),
-                        bottomRight: isExpanded ? Radius.zero : Radius.circular(17.rs),
+                        bottomLeft: isExpanded
+                            ? Radius.zero
+                            : Radius.circular(17.rs),
+                        bottomRight: isExpanded
+                            ? Radius.zero
+                            : Radius.circular(17.rs),
                       ),
                       child: Stack(
                         children: [
@@ -156,7 +166,10 @@ class _MembershipCardState extends State<_MembershipCard>
                                     gradient: LinearGradient(
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
-                                      colors: [Colors.grey[900]!, Colors.grey[800]!],
+                                      colors: [
+                                        Colors.grey[900]!,
+                                        Colors.grey[800]!,
+                                      ],
                                     ),
                                   ),
                                 );
@@ -182,7 +195,10 @@ class _MembershipCardState extends State<_MembershipCard>
                           ),
                           // Content
                           Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 14.rh),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16.rw,
+                              vertical: 14.rh,
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -192,49 +208,62 @@ class _MembershipCardState extends State<_MembershipCard>
                                   children: [
                                     Expanded(
                                       child: RichText(
-                                        text: TextSpan(children: [
-                                          TextSpan(
-                                            text: '${plan.type} ',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 18.rf,
-                                              fontWeight: FontWeight.w300,
-                                              fontFamily: 'Poppins',
+                                        text: TextSpan(
+                                          children: [
+                                            TextSpan(
+                                              text: '${plan.type} ',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18.rf,
+                                                fontWeight: FontWeight.w300,
+                                                fontFamily: 'Poppins',
+                                              ),
                                             ),
-                                          ),
-                                          TextSpan(
-                                            text: plan.tier,
-                                            style: TextStyle(
-                                              color: plan.tierColor,
-                                              fontSize: 18.rf,
-                                              fontWeight: FontWeight.bold,
-                                              fontFamily: 'Poppins',
+                                            TextSpan(
+                                              text: plan.tier,
+                                              style: TextStyle(
+                                                color: plan.tierColor,
+                                                fontSize: 18.rf,
+                                                fontWeight: FontWeight.bold,
+                                                fontFamily: 'Poppins',
+                                              ),
                                             ),
-                                          ),
-                                          TextSpan(
-                                            text: ' ${AppString.kMembership}',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 18.rf,
-                                              fontWeight: FontWeight.w400,
-                                              fontFamily: 'Poppins',
+                                            TextSpan(
+                                              text: ' ${AppString.kMembership}',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 18.rf,
+                                                fontWeight: FontWeight.w400,
+                                                fontFamily: 'Poppins',
+                                              ),
                                             ),
-                                          ),
-                                        ]),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                     SizedBox(width: 8.rw),
                                     AnimatedContainer(
-                                      duration: const Duration(milliseconds: 250),
+                                      duration: const Duration(
+                                        milliseconds: 250,
+                                      ),
                                       width: 26.rs,
                                       height: 26.rs,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        border: Border.all(color: Colors.white, width: 2),
-                                        color: isSelected ? Colors.white : Colors.transparent,
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 2,
+                                        ),
+                                        color: isSelected
+                                            ? Colors.white
+                                            : Colors.transparent,
                                       ),
                                       child: isSelected
-                                          ? Icon(Icons.check, color: Colors.black, size: 16.rs)
+                                          ? Icon(
+                                              Icons.check,
+                                              color: Colors.black,
+                                              size: 16.rs,
+                                            )
                                           : const SizedBox.shrink(),
                                     ),
                                   ],
@@ -244,71 +273,85 @@ class _MembershipCardState extends State<_MembershipCard>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     RichText(
-                                      text: TextSpan(children: [
-                                        TextSpan(
-                                          text: '${plan.months}',
-                                          style: TextStyle(
-                                            color: plan.tierColor,
-                                            fontSize: 26.rf,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: 'Poppins',
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: '${plan.months}',
+                                            style: TextStyle(
+                                              color: plan.tierColor,
+                                              fontSize: 26.rf,
+                                              fontWeight: FontWeight.bold,
+                                              fontFamily: 'Poppins',
+                                            ),
                                           ),
-                                        ),
-                                        TextSpan(
-                                          text: ' ${AppString.kMonths}',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 13.rf,
-                                            fontWeight: FontWeight.w400,
-                                            fontFamily: 'Poppins',
+                                          TextSpan(
+                                            text: ' ${AppString.kMonths}',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 13.rf,
+                                              fontWeight: FontWeight.w400,
+                                              fontFamily: 'Poppins',
+                                            ),
                                           ),
-                                        ),
-                                      ]),
+                                        ],
+                                      ),
                                     ),
                                     SizedBox(height: 6.rh),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Flexible(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 '₹ ${plan.originalPrice.toInt()}+',
                                                 style: TextStyle(
-                                                  color: Colors.white.withValues(alpha: 0.6),
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.6),
                                                   fontSize: 11.rf,
                                                   fontFamily: 'Poppins',
-                                                  decoration: TextDecoration.lineThrough,
-                                                  decorationColor: Colors.white.withValues(alpha: 0.6),
+                                                  decoration: TextDecoration
+                                                      .lineThrough,
+                                                  decorationColor: Colors.white
+                                                      .withValues(alpha: 0.6),
                                                 ),
                                               ),
                                               RichText(
-                                                text: TextSpan(children: [
-                                                  TextSpan(
-                                                    text: '₹ ${plan.discountedPrice.toInt()}',
-                                                    style: TextStyle(
-                                                      color: plan.tierColor,
-                                                      fontSize: 18.rf,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontFamily: 'Poppins',
+                                                text: TextSpan(
+                                                  children: [
+                                                    TextSpan(
+                                                      text:
+                                                          '₹ ${plan.discountedPrice.toInt()}',
+                                                      style: TextStyle(
+                                                        color: plan.tierColor,
+                                                        fontSize: 18.rf,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontFamily: 'Poppins',
+                                                      ),
                                                     ),
-                                                  ),
-                                                  TextSpan(
-                                                    text: '/${AppString.kPerMember}',
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 11.rf,
-                                                      fontWeight: FontWeight.w400,
-                                                      fontFamily: 'Poppins',
+                                                    TextSpan(
+                                                      text:
+                                                          '/${AppString.kPerMember}',
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 11.rf,
+                                                        fontWeight:
+                                                            FontWeight.w400,
+                                                        fontFamily: 'Poppins',
+                                                      ),
                                                     ),
-                                                  ),
-                                                ]),
+                                                  ],
+                                                ),
                                               ),
                                               Text(
                                                 '(+$gstAmount ${AppString.kTaxesAndFees})',
                                                 style: TextStyle(
-                                                  color: Colors.white.withValues(alpha: 0.6),
+                                                  color: Colors.white
+                                                      .withValues(alpha: 0.6),
                                                   fontSize: 8.rf,
                                                   fontFamily: 'Poppins',
                                                 ),
@@ -317,16 +360,20 @@ class _MembershipCardState extends State<_MembershipCard>
                                           ),
                                         ),
                                         GestureDetector(
-                                          onTap: () => controller.toggleExpanded(widget.index),
+                                          onTap: () => controller
+                                              .toggleExpanded(widget.index),
                                           child: Padding(
-                                            padding: EdgeInsets.only(left: 8.rw),
+                                            padding: EdgeInsets.only(
+                                              left: 8.rw,
+                                            ),
                                             child: Text(
                                               AppString.kViewBenefits,
                                               style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 11.rf,
                                                 fontFamily: 'Poppins',
-                                                decoration: TextDecoration.underline,
+                                                decoration:
+                                                    TextDecoration.underline,
                                                 decorationColor: Colors.white,
                                               ),
                                             ),
@@ -368,43 +415,51 @@ class _MembershipCardState extends State<_MembershipCard>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: EdgeInsets.fromLTRB(20.rw, 16.rh, 20.rw, 12.rh),
+                          padding: EdgeInsets.fromLTRB(
+                            20.rw,
+                            16.rh,
+                            20.rw,
+                            12.rh,
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               RichText(
-                                text: TextSpan(children: [
-                                  TextSpan(
-                                    text: '${plan.type} ',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 16.rf,
-                                      fontWeight: FontWeight.w400,
-                                      fontFamily: 'Poppins',
+                                text: TextSpan(
+                                  children: [
+                                    TextSpan(
+                                      text: '${plan.type} ',
+                                      style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 16.rf,
+                                        fontWeight: FontWeight.w400,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
-                                  ),
-                                  TextSpan(
-                                    text: plan.tier,
-                                    style: TextStyle(
-                                      color: plan.tierColor,
-                                      fontSize: 16.rf,
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Poppins',
+                                    TextSpan(
+                                      text: plan.tier,
+                                      style: TextStyle(
+                                        color: plan.tierColor,
+                                        fontSize: 16.rf,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
-                                  ),
-                                  TextSpan(
-                                    text: ' ${AppString.kBenefits}',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 16.rf,
-                                      fontWeight: FontWeight.w400,
-                                      fontFamily: 'Poppins',
+                                    TextSpan(
+                                      text: ' ${AppString.kBenefits}',
+                                      style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 16.rf,
+                                        fontWeight: FontWeight.w400,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
-                                  ),
-                                ]),
+                                  ],
+                                ),
                               ),
                               GestureDetector(
-                                onTap: () => controller.toggleExpanded(widget.index),
+                                onTap: () =>
+                                    controller.toggleExpanded(widget.index),
                                 child: Container(
                                   width: 28.rs,
                                   height: 28.rs,
@@ -412,7 +467,11 @@ class _MembershipCardState extends State<_MembershipCard>
                                     color: AppColors.backgroundTertiary,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Icon(Icons.close, size: 18.rs, color: AppColors.textSecondary),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 18.rs,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
                               ),
                             ],
@@ -422,36 +481,44 @@ class _MembershipCardState extends State<_MembershipCard>
                           padding: EdgeInsets.fromLTRB(20.rw, 0, 20.rw, 16.rh),
                           child: Column(
                             children: plan.benefits
-                                .map((benefit) => Padding(
-                                      padding: EdgeInsets.only(bottom: 12.rh),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 24.rs,
-                                            height: 24.rs,
-                                            decoration: const BoxDecoration(
-                                              color: AppColors.success,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Icon(Icons.check, color: Colors.white, size: 16.rs),
+                                .map(
+                                  (benefit) => Padding(
+                                    padding: EdgeInsets.only(bottom: 12.rh),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 24.rs,
+                                          height: 24.rs,
+                                          decoration: const BoxDecoration(
+                                            color: AppColors.success,
+                                            shape: BoxShape.circle,
                                           ),
-                                          SizedBox(width: 12.rw),
-                                          CommonText(
-                                            benefit,
-                                            fontSize: 15.rf,
-                                            fontWeight: FontWeight.w400,
-                                            color: AppColors.textPrimary,
+                                          child: Icon(
+                                            Icons.check,
+                                            color: Colors.white,
+                                            size: 16.rs,
                                           ),
-                                        ],
-                                      ),
-                                    ))
+                                        ),
+                                        SizedBox(width: 12.rw),
+                                        CommonText(
+                                          benefit,
+                                          fontSize: 15.rf,
+                                          fontWeight: FontWeight.w400,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
                                 .toList(),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  crossFadeState: isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                  crossFadeState: isExpanded
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
                   duration: const Duration(milliseconds: 300),
                   sizeCurve: Curves.easeInOut,
                 ),

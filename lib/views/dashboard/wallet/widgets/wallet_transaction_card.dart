@@ -3,10 +3,11 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/model/wallet%20models/opd_wallet_transaction_model.dart';
 import 'package:intl/intl.dart';
 
 class WalletTransactionCard extends StatelessWidget {
-  final Map<String, dynamic> transaction;
+  final OpdWalletTransaction transaction;
   final int index;
   final Animation<double>? animation;
 
@@ -18,9 +19,9 @@ class WalletTransactionCard extends StatelessWidget {
   }) : super(key: key);
 
   Color get _statusColor {
-    switch (transaction['status']) {
+    switch (transaction.status) {
       case 'success':
-        return transaction['type'] == 'CREDIT'
+        return transaction.type == 'CREDIT'
             ? AppColors.success
             : AppColors.primary;
       case 'refunded':
@@ -31,9 +32,9 @@ class WalletTransactionCard extends StatelessWidget {
   }
 
   IconData get _statusIcon {
-    switch (transaction['status']) {
+    switch (transaction.status) {
       case 'success':
-        return transaction['type'] == 'CREDIT'
+        return transaction.type == 'CREDIT'
             ? Icons.arrow_downward_rounded
             : Icons.arrow_upward_rounded;
       case 'refunded':
@@ -44,22 +45,22 @@ class WalletTransactionCard extends StatelessWidget {
   }
 
   String get _statusLabel {
-    switch (transaction['status']) {
+    switch (transaction.status) {
       case 'success':
         return AppString.kSuccess;
       case 'refunded':
         return AppString.kRefunded;
       default:
-        return transaction['status'] ?? '';
+        return transaction.status;
     }
   }
 
   String get _formattedDate {
     try {
-      final dt = DateTime.parse(transaction['payment_date']);
+      final dt = DateTime.parse(transaction.paymentDate);
       return DateFormat('dd MMM yyyy, hh:mm a').format(dt);
     } catch (_) {
-      return transaction['payment_date'] ?? '';
+      return transaction.paymentDate;
     }
   }
 
@@ -97,7 +98,7 @@ class WalletTransactionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CommonText(
-                  transaction['ref_type'] ?? '',
+                  transaction.refType,
                   fontSize: 13.rf,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
@@ -120,10 +121,10 @@ class WalletTransactionCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               CommonText(
-                '${transaction['type'] == 'CREDIT' ? '+' : '-'} ₹${transaction['amount']}',
+                '${transaction.type == 'CREDIT' ? '+' : '-'} ₹${transaction.amount}',
                 fontSize: 13.rf,
                 fontWeight: FontWeight.w700,
-                color: transaction['type'] == 'CREDIT'
+                color: transaction.type == 'CREDIT'
                     ? AppColors.success
                     : AppColors.textPrimary,
               ),

@@ -8,6 +8,7 @@ import 'package:flip_health/core/services/secure%20storage/secure_storage.dart';
 import 'package:flip_health/controllers/help%20controllers/help_controller.dart';
 import 'package:flip_health/data/repositories/help_repository.dart';
 import 'package:flip_health/views/help/help_screen.dart';
+import 'package:flip_health/controllers/mental%20wellness%20controllers/mental_wellness_controller.dart';
 import 'package:flip_health/routes/app_routes.dart';
 
 class SearchAction {
@@ -330,7 +331,10 @@ class AppSearchController extends GetxController {
         iconPath: AppString.kIconNutrition,
         category: 'Health',
         keywords: ['nutrition', 'diet', 'dietician', 'weight loss', 'meal plan', 'calories', 'protein', 'food'],
-        onTap: () => Get.toNamed(AppRoutes.allServices),
+        onTap: () => Get.toNamed(
+          AppRoutes.mentalWellness,
+          arguments: {'from': MentalWellnessController.kFromNutritionist},
+        ),
       ),
 
       // Wallet

@@ -170,9 +170,9 @@ class _WalletScreenState extends State<WalletScreen>
   }
 
   Widget _buildBalanceHeroCard() {
-    final data = controller.opdWalletData;
-    final available = data['available'] ?? 0;
-    final total = data['total'] ?? 1;
+    final data = controller.wallet.value;
+    final available = data.available;
+    final total = data.total > 0 ? data.total : 1;
     final progress = total > 0 ? (available / total).clamp(0.0, 1.0) : 0.0;
 
     return Transform.translate(
@@ -268,7 +268,7 @@ class _WalletScreenState extends State<WalletScreen>
                   ),
                   _buildHeroStat(
                     AppString.kValidTill,
-                    data['expiresAt'] ?? '---',
+                    data.expiresAt,
                   ),
                 ],
               ),
@@ -296,9 +296,7 @@ class _WalletScreenState extends State<WalletScreen>
   }
 
   Widget _buildModuleBreakup() {
-    final moduleMap =
-        controller.opdWalletData['module'] as Map<String, dynamic>? ?? {};
-    final moduleEntries = moduleMap.entries.toList();
+    final moduleEntries = controller.wallet.value.module.entries.toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,9 +329,9 @@ class _WalletScreenState extends State<WalletScreen>
               itemCount: moduleEntries.length,
               itemBuilder: (context, index) {
                 final entry = moduleEntries[index];
-                final mod = entry.value as Map<String, dynamic>;
-                final avail = mod['available_limit'] ?? 0;
-                final total = mod['total_limit'] ?? 1;
+                final mod = entry.value;
+                final avail = mod.availableInt;
+                final total = mod.totalInt;
                 final color = _moduleColors[index % _moduleColors.length];
 
                 final icon = _moduleIcons[entry.key] ??
@@ -377,7 +375,7 @@ class _WalletScreenState extends State<WalletScreen>
   }
 
   Widget _buildRecentTransactions() {
-    final txList = controller.transactions.take(10).toList();
+    final txList = controller.transactions.take(10).toList(growable: false);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -468,7 +466,9 @@ class _WalletScreenState extends State<WalletScreen>
 
   String _formatCurrency(dynamic value) {
     if (value == null) return '0';
-    final amount = value is int ? value : (value as int);
+    final num? n = value is num ? value : num.tryParse(value.toString());
+    if (n == null) return '0';
+    final amount = n.round();
     if (amount >= 100000) {
       return '${(amount / 100000).toStringAsFixed(1)}L';
     }

@@ -7,7 +7,7 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
-import 'package:flip_health/views/claims/add_bank_screen.dart';
+import 'package:flip_health/routes/app_routes.dart';
 
 class AddClaimStep1 extends GetView<ClaimsController> {
   const AddClaimStep1({Key? key}) : super(key: key);
@@ -300,7 +300,8 @@ class AddClaimStep1 extends GetView<ClaimsController> {
               child: GestureDetector(
                 onTap: () {
                   Get.back();
-                  Get.to(() => const AddBankScreen());
+                  controller.clearEditBankMode();
+                  Get.toNamed(AppRoutes.addBank);
                 },
                 child: Container(
                   width: double.infinity,

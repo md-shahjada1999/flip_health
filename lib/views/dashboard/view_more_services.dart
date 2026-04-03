@@ -9,6 +9,7 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/controllers/mental%20wellness%20controllers/mental_wellness_controller.dart';
 import 'package:flip_health/routes/app_routes.dart';
 import 'package:flip_health/core/utils/service_type_sheet.dart';
 import 'package:flip_health/controllers/help%20controllers/help_controller.dart';
@@ -410,7 +411,12 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconNutrition,
                     title: AppString.kNutritionServices,
                     subtitle: AppString.kNutritionServicesSubtitle,
-                    onTap: () {},
+                    onTap: () => Get.toNamed(
+                      AppRoutes.mentalWellness,
+                      arguments: {
+                        'from': MentalWellnessController.kFromNutritionist,
+                      },
+                    ),
                   ),
                 ),
                 _buildAnimatedCard(

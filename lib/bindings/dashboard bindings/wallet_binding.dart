@@ -9,8 +9,11 @@ class WalletBinding extends Bindings {
     if (!Get.isRegistered<ApiService>()) {
       Get.lazyPut<ApiService>(() => ApiService(), fenix: true);
     }
-    Get.lazyPut<WalletRepository>(
-        () => WalletRepository(apiService: Get.find()));
+    if (!Get.isRegistered<WalletRepository>()) {
+      Get.lazyPut<WalletRepository>(
+          () => WalletRepository(apiService: Get.find()),
+          fenix: true);
+    }
     Get.lazyPut<WalletController>(
         () => WalletController(repository: Get.find()));
   }

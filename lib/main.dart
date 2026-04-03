@@ -15,6 +15,7 @@ Future<void> main() async {
   await AppSecureStorage.getInstance();
 
   final savedToken = AppSecureStorage.getToken();
+  print("savedToken: $savedToken");
   if (savedToken != null && savedToken.isNotEmpty) {
     accessToken = savedToken;
   }
@@ -34,10 +35,7 @@ class MyApp extends StatelessWidget {
       getPages: AppPages.routes,
       customTransition: AppPageTransition(),
       transitionDuration: const Duration(milliseconds: 350),
-      theme: ThemeData(
-        primarySwatch: Colors.red,
-        fontFamily: 'Poppins',
-      ),
+      theme: ThemeData(primarySwatch: Colors.red, fontFamily: 'Poppins'),
     );
   }
 }
