@@ -213,7 +213,6 @@ class LoginController extends GetxController {
 
   /// Password login via POST /patient/login
   Future<void> loginWithEmail() async {
-    PrintLog.printLog('loginWithEmail');
     final email = emailController.text.trim();
     final password = passwordController.text;
 
