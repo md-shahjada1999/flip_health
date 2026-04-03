@@ -9,6 +9,7 @@ import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
+import 'package:flip_health/views/common/family_member_dropdown.dart';
 
 class MentalWellnessScreen extends GetView<MentalWellnessController> {
   const MentalWellnessScreen({Key? key}) : super(key: key);
@@ -41,6 +42,15 @@ class MentalWellnessScreen extends GetView<MentalWellnessController> {
                           SizedBox(height: 20.rh),
                           _buildDescription(),
                           SizedBox(height: 20.rh),
+                          Obx(
+                            () => FamilyMemberDropdown(
+                              members: controller.members,
+                              isLoading: controller.membersLoading.value,
+                              selectedMemberId: controller.selectedMemberId.value,
+                              onSelected: controller.selectMember,
+                            ),
+                          ),
+                          SizedBox(height: 16.rh),
                           if (!controller.isNutritionEntry) _buildServiceChips(),
                           if (!controller.isNutritionEntry)
                             SizedBox(height: 20.rh),
@@ -48,7 +58,6 @@ class MentalWellnessScreen extends GetView<MentalWellnessController> {
                             label: AppString.kName,
                             hint: AppString.kName,
                             controller: controller.nameController,
-                            readOnly: true,
                             keyboardType: TextInputType.name,
                             inputFormatters: [
                               FilteringTextInputFormatter.allow(

@@ -203,6 +203,8 @@ class AppString {
 
   static const String kFamilyAccounts = 'Family Accounts';
   static const String kFamilyAccountsSubtitle = 'Manage family members';
+  static const String kSelectFamilyMember = 'Select family member';
+  static const String kOrderingFor = 'Ordering for';
 
   static const String kAddressBook = 'Address Book';
   static const String kAddressBookSubtitle = 'Manage address details';

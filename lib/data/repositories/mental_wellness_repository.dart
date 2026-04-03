@@ -53,6 +53,8 @@ class MentalWellnessRepository {
     required String service,
     required String language,
     String? serviceArea,
+    /// Family member profile id from `/patient/member` (optional; backend may use for Trijog).
+    String? userId,
   }) async {
     try {
       final body = <String, dynamic>{
@@ -61,6 +63,9 @@ class MentalWellnessRepository {
         'service': service,
         'language': language,
       };
+      if (userId != null && userId.isNotEmpty) {
+        body['user_id'] = userId;
+      }
       if (service == 'Mental Wellness' &&
           serviceArea != null &&
           serviceArea.isNotEmpty) {

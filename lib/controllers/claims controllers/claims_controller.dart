@@ -7,6 +7,8 @@ import 'package:flip_health/core/utils/file_picker_helper.dart';
 import 'package:flip_health/core/utils/print_log.dart';
 import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/data/repositories/claims_repository.dart';
+import 'package:flip_health/data/repositories/member_repository.dart';
+import 'package:flip_health/model/heath%20checkup%20models/family_member_data_model.dart';
 import 'package:flip_health/model/claims%20models/bank_account_model.dart';
 import 'package:flip_health/model/claims%20models/claim_model.dart';
 import 'package:flip_health/routes/app_routes.dart';
@@ -15,9 +17,13 @@ import 'package:flip_health/views/claims/claim_detail_screen.dart';
 
 class ClaimsController extends GetxController {
   final ClaimsRepository _repository;
+  final MemberRepository _memberRepository;
 
-  ClaimsController({required ClaimsRepository repository})
-    : _repository = repository;
+  ClaimsController({
+    required ClaimsRepository repository,
+    required MemberRepository memberRepository,
+  })  : _repository = repository,
+        _memberRepository = memberRepository;
   final isLoading = false.obs;
   final allClaims = <ClaimModel>[].obs;
   final filteredClaims = <ClaimModel>[].obs;
@@ -51,7 +57,8 @@ class ClaimsController extends GetxController {
   final emailController = TextEditingController();
   final alternatePhoneController = TextEditingController();
   final termsAccepted = false.obs;
-  final members = <Map<String, dynamic>>[].obs;
+  final familyMembers = <FamilyMember>[].obs;
+  final membersLoading = true.obs;
 
   // Bank Details
   final bankAccounts = <BankAccount>[].obs;
@@ -176,11 +183,34 @@ class ClaimsController extends GetxController {
     return {'key': 'general_opd', 'value': null};
   }
 
+  static String _digits10(String? raw) {
+    final d = (raw ?? '').replaceAll(RegExp(r'\D'), '');
+    if (d.length >= 10) return d.substring(d.length - 10);
+    return d;
+  }
+
   Map<String, dynamic>? _selectedMemberMap() {
     final id = selectedMemberId.value;
-    for (final m in members) {
-      if (m['id']?.toString() == id) {
-        return Map<String, dynamic>.from(m);
+    for (final m in familyMembers) {
+      if (m.id == id) {
+        return {
+          'id': m.id,
+          'name': m.name,
+          'first_name': m.firstName,
+          'last_name': m.lastName,
+          'relationship': m.relationship,
+          'relation': m.relationship ?? '',
+          'gender': m.gender,
+          'age': m.age,
+          'phone': m.phone,
+          'email': m.email,
+          'dob': m.dob,
+          'bloodGroup': m.bloodGroup,
+          'empId': m.empId,
+          'image': m.image,
+          'corporate_id': m.corporateId,
+          'isSubscribed': m.isSubscribed,
+        };
       }
     }
     return null;
@@ -307,9 +337,33 @@ class ClaimsController extends GetxController {
   }
 
   Future<void> _loadMembers() async {
+    membersLoading.value = true;
     try {
-      members.value = await _repository.getMembers();
-    } catch (_) {}
+      final list = await _memberRepository.getMembers();
+      familyMembers.assignAll(list);
+      if (list.isNotEmpty) {
+        FamilyMember pick = list.first;
+        for (final m in list) {
+          if ((m.relationship ?? '').toLowerCase() == 'self') {
+            pick = m;
+            break;
+          }
+        }
+        selectMember(pick);
+      }
+    } catch (_) {
+      familyMembers.clear();
+    } finally {
+      membersLoading.value = false;
+    }
+  }
+
+  /// Family member dropdown (same pattern as nutrition / mental wellness).
+  void selectMember(FamilyMember m) {
+    selectedMemberId.value = m.id;
+    selectedMemberName.value = m.name;
+    phoneController.text = _digits10(m.phone);
+    emailController.text = (m.email ?? '').trim();
   }
 
   Future<void> _loadBankAccounts() async {
@@ -343,11 +397,6 @@ class ClaimsController extends GetxController {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
-  }
-
-  void selectMember(String id, String name) {
-    selectedMemberId.value = id;
-    selectedMemberName.value = name;
   }
 
   // Bank methods
@@ -1017,6 +1066,16 @@ class ClaimsController extends GetxController {
     selectedMemberName.value = '';
     phoneController.clear();
     emailController.clear();
+    if (familyMembers.isNotEmpty) {
+      FamilyMember pick = familyMembers.first;
+      for (final m in familyMembers) {
+        if ((m.relationship ?? '').toLowerCase() == 'self') {
+          pick = m;
+          break;
+        }
+      }
+      selectMember(pick);
+    }
     alternatePhoneController.clear();
     selectedBankName.value = '';
     selectedBankKey.value = '';

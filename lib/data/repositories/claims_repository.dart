@@ -139,28 +139,45 @@ class ClaimsRepository {
   Future<List<Map<String, dynamic>>> getMembers() async {
     try {
       final response = await apiService.get(ApiUrl.GET_MEMBERS);
-      if (response.statusCode == 200 && response.data is Map) {
-        final map = Map<String, dynamic>.from(response.data as Map);
-        final raw = map['members'];
-        if (raw is List) {
-          return raw
-              .map((e) {
-                if (e is Map<String, dynamic>) return e;
-                if (e is Map) return Map<String, dynamic>.from(e);
-                return <String, dynamic>{};
-              })
-              .where((m) => m.isNotEmpty)
-              .toList();
-        }
-        return [];
+      final code = response.statusCode ?? 0;
+      final ok = code == 200 || code == 201;
+      if (!ok || response.data is! Map) {
+        throw AppException(
+          message: response.data is Map
+              ? (response.data as Map)['message']?.toString() ??
+                    'Failed to load members'
+              : 'Failed to load members',
+          statusCode: response.statusCode,
+        );
       }
-      throw AppException(
-        message: response.data is Map
-            ? (response.data as Map)['message']?.toString() ??
-                  'Failed to load members'
-            : 'Failed to load members',
-        statusCode: response.statusCode,
-      );
+      final root = Map<String, dynamic>.from(response.data as Map);
+      if (root['status'] == false) {
+        throw AppException(
+          message: root['message']?.toString() ?? 'Failed to load members',
+          statusCode: response.statusCode,
+        );
+      }
+      Map<String, dynamic> payload = root;
+      if (root['status'] == true && root['data'] != null) {
+        final d = root['data'];
+        if (d is Map<String, dynamic>) {
+          payload = d;
+        } else if (d is Map) {
+          payload = Map<String, dynamic>.from(d);
+        }
+      }
+      final raw = payload['members'];
+      if (raw is List) {
+        return raw
+            .map((e) {
+              if (e is Map<String, dynamic>) return e;
+              if (e is Map) return Map<String, dynamic>.from(e);
+              return <String, dynamic>{};
+            })
+            .where((m) => m.isNotEmpty)
+            .toList();
+      }
+      return [];
     } on AppException {
       rethrow;
     } catch (e) {

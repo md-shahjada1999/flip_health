@@ -3,15 +3,21 @@ import 'package:get/get.dart';
 import 'package:flip_health/core/helpers/app_toasts.dart';
 import 'package:flip_health/core/services/app_exception.dart';
 import 'package:flip_health/core/services/secure%20storage/secure_storage.dart';
+import 'package:flip_health/data/repositories/member_repository.dart';
 import 'package:flip_health/data/repositories/mental_wellness_repository.dart';
+import 'package:flip_health/model/heath%20checkup%20models/family_member_data_model.dart';
 import 'package:flip_health/routes/app_routes.dart';
 
 /// `from`: `wellness` (default) | `nutritionist` — matches patient_app TRIJOG arguments.
 class MentalWellnessController extends GetxController {
   final MentalWellnessRepository _repository;
+  final MemberRepository _memberRepository;
 
-  MentalWellnessController({required MentalWellnessRepository repository})
-      : _repository = repository;
+  MentalWellnessController({
+    required MentalWellnessRepository repository,
+    required MemberRepository memberRepository,
+  })  : _repository = repository,
+        _memberRepository = memberRepository;
 
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
@@ -27,6 +33,10 @@ class MentalWellnessController extends GetxController {
   final connectEnabled = false.obs;
 
   final categories = <String>[].obs;
+
+  final members = <FamilyMember>[].obs;
+  final membersLoading = true.obs;
+  final selectedMemberId = ''.obs;
 
   static const List<String> availableLanguages = [
     'English',
@@ -44,37 +54,68 @@ class MentalWellnessController extends GetxController {
 
   bool get isNutritionEntry => fromWhere.value == kFromNutritionist;
 
+  static String normalizePhone10(String? raw) {
+    final d = (raw ?? '').replaceAll(RegExp(r'\D'), '');
+    if (d.length >= 10) return d.substring(d.length - 10);
+    return d;
+  }
+
   @override
   void onInit() {
     super.onInit();
     _readRouteArguments();
-    _loadProfileFields();
     if (isNutritionEntry) {
       service.value = 'Diet & Nutrition';
     }
     nameController.addListener(_validateFields);
     phoneController.addListener(_validateFields);
     emailController.addListener(_validateFields);
+    _bootstrapMembersAndCategories();
+  }
+
+  Future<void> _bootstrapMembersAndCategories() async {
+    await _loadMembers();
     _loadCategoriesIfNeeded();
   }
 
-  void _readRouteArguments() {
-    final args = Get.arguments;
-    if (args is Map) {
-      final f = args['from']?.toString();
-      if (f == kFromNutritionist) {
-        fromWhere.value = kFromNutritionist;
+  Future<void> _loadMembers() async {
+    membersLoading.value = true;
+    try {
+      final list = await _memberRepository.getMembers();
+      members.assignAll(list);
+      if (list.isNotEmpty) {
+        FamilyMember pick = list.first;
+        for (final m in list) {
+          if ((m.relationship ?? '').toLowerCase() == 'self') {
+            pick = m;
+            break;
+          }
+        }
+        selectMember(pick);
       } else {
-        fromWhere.value = 'wellness';
+        _loadProfileFieldsFallback();
       }
+    } catch (_) {
+      _loadProfileFieldsFallback();
+    } finally {
+      membersLoading.value = false;
+      _validateFields();
     }
   }
 
-  void _loadProfileFields() {
+  void selectMember(FamilyMember m) {
+    selectedMemberId.value = m.id;
+    nameController.text = m.name;
+    phoneController.text = normalizePhone10(m.phone);
+    emailController.text = (m.email ?? '').trim();
+    _validateFields();
+  }
+
+  void _loadProfileFieldsFallback() {
     final user = AppSecureStorage.getSavedUser();
     if (user != null) {
       nameController.text = user.name;
-      phoneController.text = user.phone;
+      phoneController.text = normalizePhone10(user.phone);
       emailController.text = user.email;
       if (user.language != null && user.language!.isNotEmpty) {
         language.value = user.language!;
@@ -85,11 +126,11 @@ class MentalWellnessController extends GetxController {
                 variableName: AppSecureStorage.kUserName,
               ) ??
               '';
-      phoneController.text =
-          AppSecureStorage.getStringFromSharedPref(
-                variableName: AppSecureStorage.kUserPhone,
-              ) ??
-              '';
+      phoneController.text = normalizePhone10(
+        AppSecureStorage.getStringFromSharedPref(
+          variableName: AppSecureStorage.kUserPhone,
+        ),
+      );
       emailController.text =
           AppSecureStorage.getStringFromSharedPref(
                 variableName: AppSecureStorage.kUserEmail,
@@ -102,7 +143,18 @@ class MentalWellnessController extends GetxController {
         language.value = lang;
       }
     }
-    _validateFields();
+  }
+
+  void _readRouteArguments() {
+    final args = Get.arguments;
+    if (args is Map) {
+      final f = args['from']?.toString();
+      if (f == kFromNutritionist) {
+        fromWhere.value = kFromNutritionist;
+      } else {
+        fromWhere.value = 'wellness';
+      }
+    }
   }
 
   Future<void> _loadCategoriesIfNeeded() async {
@@ -147,17 +199,30 @@ class MentalWellnessController extends GetxController {
     final emailOk = GetUtils.isEmail(emailController.text.trim());
     final serviceOk = service.value.isNotEmpty;
     final langOk = language.value.isNotEmpty;
+    final memberOk =
+        members.isEmpty || selectedMemberId.value.isNotEmpty;
     final consultOk = service.value != 'Mental Wellness' ||
         consultation.value.isNotEmpty;
 
-    connectEnabled.value =
-        nameOk && phoneOk && emailOk && serviceOk && langOk && consultOk;
+    connectEnabled.value = nameOk &&
+        phoneOk &&
+        emailOk &&
+        serviceOk &&
+        langOk &&
+        memberOk &&
+        consultOk;
   }
 
-  /// Shows validation toasts (patient_app parity) then opens confirm + submit.
   Future<void> onConnectPressed() async {
     if (isSubmitting.value) return;
 
+    if (members.isNotEmpty && selectedMemberId.value.isEmpty) {
+      AppToast.warning(
+        title: 'Required',
+        message: 'Please select a family member',
+      );
+      return;
+    }
     if (nameController.text.trim().isEmpty) {
       AppToast.warning(title: 'Required', message: 'Please enter your name');
       return;
@@ -201,7 +266,8 @@ class MentalWellnessController extends GetxController {
     if (service.value == 'Mental Wellness' && categories.isEmpty) {
       AppToast.warning(
         title: 'Categories unavailable',
-        message: 'Please try again after categories load, or open the screen again.',
+        message:
+            'Please try again after categories load, or open the screen again.',
       );
       return;
     }
@@ -215,8 +281,10 @@ class MentalWellnessController extends GetxController {
               : 'You want to raise a request with our specialist for ${service.value}?',
         ),
         actions: [
-          TextButton(onPressed: () => Get.back(result: false), child: const Text('No')),
-          TextButton(onPressed: () => Get.back(result: true), child: const Text('Yes')),
+          TextButton(
+              onPressed: () => Get.back(result: false), child: const Text('No')),
+          TextButton(
+              onPressed: () => Get.back(result: true), child: const Text('Yes')),
         ],
       ),
     );
@@ -231,14 +299,15 @@ class MentalWellnessController extends GetxController {
         language: language.value,
         serviceArea:
             service.value == 'Mental Wellness' ? consultation.value : null,
+        userId:
+            selectedMemberId.value.isNotEmpty ? selectedMemberId.value : null,
       );
 
       Get.offNamed(
         AppRoutes.wellnessRequestSuccess,
         arguments: {
           'service': service.value,
-          'nutrition': isNutritionEntry ||
-              service.value == 'Diet & Nutrition',
+          'nutrition': isNutritionEntry || service.value == 'Diet & Nutrition',
         },
       );
     } on AppException catch (e) {

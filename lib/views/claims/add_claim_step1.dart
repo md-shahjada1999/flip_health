@@ -8,6 +8,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
 import 'package:flip_health/routes/app_routes.dart';
+import 'package:flip_health/views/common/family_member_dropdown.dart';
 
 class AddClaimStep1 extends GetView<ClaimsController> {
   const AddClaimStep1({Key? key}) : super(key: key);
@@ -19,9 +20,15 @@ class AddClaimStep1 extends GetView<ClaimsController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle(AppString.kSelectPatient, Icons.person_outline),
-          SizedBox(height: 12.rh),
-          _buildMemberSelector(),
+          Obx(
+            () => FamilyMemberDropdown(
+              label: AppString.kSelectPatient,
+              members: controller.familyMembers,
+              isLoading: controller.membersLoading.value,
+              selectedMemberId: controller.selectedMemberId.value,
+              onSelected: controller.selectMember,
+            ),
+          ),
           SizedBox(height: 28.rh),
           _buildSectionTitle(AppString.kContactDetails, Icons.phone_outlined),
           SizedBox(height: 12.rh),
@@ -79,74 +86,6 @@ class AddClaimStep1 extends GetView<ClaimsController> {
         CommonText(title, fontSize: 16.rf, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
       ],
     );
-  }
-
-  Widget _buildMemberSelector() {
-    return Obx(() => Column(
-          children: controller.members.map((member) {
-            final isSelected = controller.selectedMemberId.value == member['id'];
-            return GestureDetector(
-              onTap: () => controller.selectMember(member['id'], member['name']),
-              child: Container(
-                margin: EdgeInsets.only(bottom: 10.rh),
-                padding: EdgeInsets.all(14.rs),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary.withValues(alpha: 0.06) : AppColors.surface,
-                  borderRadius: BorderRadius.circular(14.rs),
-                  border: Border.all(
-                    color: isSelected ? AppColors.primary : AppColors.borderLight,
-                    width: isSelected ? 1.5 : 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 42.rs,
-                      height: 42.rs,
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : AppColors.backgroundTertiary,
-                        borderRadius: BorderRadius.circular(12.rs),
-                      ),
-                      child: Center(
-                        child: CommonText(
-                          (member['name'] as String)[0].toUpperCase(),
-                          fontSize: 16.rf,
-                          fontWeight: FontWeight.w700,
-                          color: isSelected ? Colors.white : AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 12.rw),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CommonText(member['name'], fontSize: 14.rf, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                          SizedBox(height: 2.rh),
-                          CommonText(
-                            '${member['relation']} • ${member['gender']} • ${member['age']} yrs',
-                            fontSize: 11.rf,
-                            color: AppColors.textSecondary,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: 22.rs,
-                      height: 22.rs,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isSelected ? AppColors.primary : Colors.transparent,
-                        border: Border.all(color: isSelected ? AppColors.primary : AppColors.borderLight, width: 2),
-                      ),
-                      child: isSelected ? Icon(Icons.check, size: 14.rs, color: Colors.white) : null,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ));
   }
 
   Widget _buildBankSelector() {

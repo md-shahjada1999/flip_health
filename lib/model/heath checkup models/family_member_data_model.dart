@@ -59,13 +59,20 @@ class FamilyMember {
       relationship: rel.isNotEmpty ? rel : 'self',
       empId: json['empId'],
       image: json['image'],
-      age: json['age'] ?? 0,
+      age: _parseInt(json['age']),
       isSponsored: isPrimary,
       sponsoredBy: isPrimary ? 'your company' : null,
       hasPackages: subscribed || (json['canActivate'] == 1),
-      corporateId: json['corporate_id'] ?? 0,
+      corporateId: _parseInt(json['corporate_id']),
       isSubscribed: subscribed,
     );
+  }
+
+  static int _parseInt(dynamic v) {
+    if (v == null) return 0;
+    if (v is int) return v;
+    if (v is double) return v.round();
+    return int.tryParse(v.toString()) ?? 0;
   }
 
   Map<String, dynamic> toJson() => {
@@ -89,11 +96,21 @@ class FamilyMember {
         'isSubscribed': isSubscribed,
       };
 
-  /// Parse the full members API response: { "members": [...] }
+  /// Parse the full members API response: `{ "members": [...] }` (often nested under `data`).
   static List<FamilyMember> fromMembersResponse(Map<String, dynamic> json) {
     final list = json['members'] as List<dynamic>? ?? [];
-    return list
-        .map((e) => FamilyMember.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final out = <FamilyMember>[];
+    for (final e in list) {
+      try {
+        if (e is Map<String, dynamic>) {
+          out.add(FamilyMember.fromJson(e));
+        } else if (e is Map) {
+          out.add(FamilyMember.fromJson(Map<String, dynamic>.from(e)));
+        }
+      } catch (_) {
+        // Skip malformed rows so the rest of the list still loads.
+      }
+    }
+    return out;
   }
 }

@@ -24,6 +24,49 @@ class PharmacyPrescriptionScreen extends GetView<PharmacyController> {
       ),
       body: Column(
         children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(20.rs, 12.rs, 20.rs, 0),
+            child: Obx(() {
+              final m = controller.selectedMember;
+              if (m == null) return const SizedBox.shrink();
+              return Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(horizontal: 14.rs, vertical: 10.rh),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(12.rs),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.person_outline_rounded,
+                        size: 22.rs, color: AppColors.primary),
+                    SizedBox(width: 10.rw),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CommonText(
+                            AppString.kOrderingFor,
+                            fontSize: 11.rf,
+                            color: AppColors.textSecondary,
+                          ),
+                          CommonText(
+                            m.name,
+                            fontSize: 14.rf,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ),
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.all(20.rs),

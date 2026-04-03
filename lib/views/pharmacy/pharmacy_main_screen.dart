@@ -7,6 +7,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
 import 'package:flip_health/views/pharmacy/pharmacy_prescription_screen.dart';
+import 'package:flip_health/views/common/family_member_dropdown.dart';
 
 class PharmacyMainScreen extends GetView<PharmacyController> {
   const PharmacyMainScreen({Key? key}) : super(key: key);
@@ -33,6 +34,20 @@ class PharmacyMainScreen extends GetView<PharmacyController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 10.rh),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.rw),
+              child: Obx(
+                () => FamilyMemberDropdown(
+                  label: AppString.kOrderingFor,
+                  showRequiredMark: false,
+                  members: controller.members,
+                  isLoading: controller.membersLoading.value,
+                  selectedMemberId: controller.selectedMemberId.value,
+                  onSelected: controller.selectMember,
+                ),
+              ),
+            ),
+            SizedBox(height: 16.rh),
             _buildHeroSection(),
             _buildDeliveryNote(),
             _buildUploadPrescriptionSection(),
