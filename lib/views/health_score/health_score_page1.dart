@@ -34,18 +34,23 @@ class HealthScorePage1 extends GetView<HealthScoreController> {
                   color: AppColors.textSecondary,
                 ),
                 SizedBox(height: 24.rh),
-                CustomTextField(
-                  label: 'Full Name *',
-                  hint: 'Enter your full name',
-                  controller: controller.nameController,
-                  keyboardType: TextInputType.name,
-                  textCapitalization: TextCapitalization.words,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp('[a-zA-Z ]')),
-                  ],
-                  prefixIcon: Icon(Icons.person_outline,
-                      size: 20.rs, color: AppColors.textSecondary),
-                ),
+                Obx(() => CustomTextField(
+                      label: 'Full Name *',
+                      hint: 'Enter your full name',
+                      controller: controller.nameController,
+                      readOnly: controller.isNameLocked.value,
+                      keyboardType: TextInputType.name,
+                      textCapitalization: TextCapitalization.words,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp('[a-zA-Z ]')),
+                      ],
+                      prefixIcon: Icon(Icons.person_outline,
+                          size: 20.rs, color: AppColors.textSecondary),
+                      suffixIcon: controller.isNameLocked.value
+                          ? Icon(Icons.lock_outline,
+                              size: 16.rs, color: AppColors.textTertiary)
+                          : null,
+                    )),
                 SizedBox(height: 20.rh),
                 _buildDateOfBirth(context),
                 SizedBox(height: 20.rh),
@@ -117,15 +122,21 @@ class HealthScorePage1 extends GetView<HealthScoreController> {
           color: AppColors.textPrimary,
         ),
         SizedBox(height: 8.rh),
-        Obx(() => GestureDetector(
-              onTap: () => _pickDate(context),
+        Obx(() {
+          final locked = controller.isDobLocked.value;
+          return GestureDetector(
+            onTap: locked ? null : () => _pickDate(context),
+            child: Opacity(
+              opacity: locked ? 0.7 : 1.0,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: double.infinity,
                 padding:
                     EdgeInsets.symmetric(horizontal: 16.rw, vertical: 16.rh),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: locked
+                      ? AppColors.backgroundTertiary
+                      : AppColors.surface,
                   borderRadius: BorderRadius.circular(12.rs),
                   border: Border.all(
                     color: controller.dob.value != null
@@ -165,12 +176,18 @@ class HealthScorePage1 extends GetView<HealthScoreController> {
                         ),
                       ),
                     SizedBox(width: 8.rw),
-                    Icon(Icons.keyboard_arrow_down_rounded,
-                        size: 22.rs, color: AppColors.textSecondary),
+                    if (locked)
+                      Icon(Icons.lock_outline,
+                          size: 16.rs, color: AppColors.textTertiary)
+                    else
+                      Icon(Icons.keyboard_arrow_down_rounded,
+                          size: 22.rs, color: AppColors.textSecondary),
                   ],
                 ),
               ),
-            )),
+            ),
+          );
+        }),
       ],
     );
   }
@@ -210,15 +227,21 @@ class HealthScorePage1 extends GetView<HealthScoreController> {
           color: AppColors.textPrimary,
         ),
         SizedBox(height: 8.rh),
-        Obx(() => GestureDetector(
-              onTap: _showLanguageSheet,
+        Obx(() {
+          final locked = controller.isLanguageLocked.value;
+          return GestureDetector(
+            onTap: locked ? null : _showLanguageSheet,
+            child: Opacity(
+              opacity: locked ? 0.7 : 1.0,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 width: double.infinity,
                 padding:
                     EdgeInsets.symmetric(horizontal: 16.rw, vertical: 16.rh),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: locked
+                      ? AppColors.backgroundTertiary
+                      : AppColors.surface,
                   borderRadius: BorderRadius.circular(12.rs),
                   border: Border.all(
                     color: controller.language.value.isNotEmpty
@@ -242,12 +265,18 @@ class HealthScorePage1 extends GetView<HealthScoreController> {
                             : AppColors.textSecondary,
                       ),
                     ),
-                    Icon(Icons.keyboard_arrow_down_rounded,
-                        size: 22.rs, color: AppColors.textSecondary),
+                    if (locked)
+                      Icon(Icons.lock_outline,
+                          size: 16.rs, color: AppColors.textTertiary)
+                    else
+                      Icon(Icons.keyboard_arrow_down_rounded,
+                          size: 22.rs, color: AppColors.textSecondary),
                   ],
                 ),
               ),
-            )),
+            ),
+          );
+        }),
       ],
     );
   }
@@ -316,6 +345,7 @@ class HealthScorePage1 extends GetView<HealthScoreController> {
           noSelected: controller.isDiabetic.value == false,
           onYes: () => controller.setDiabetic(true),
           onNo: () => controller.setDiabetic(false),
+          locked: controller.isDiabeticLocked.value,
         ));
   }
 
@@ -326,6 +356,7 @@ class HealthScorePage1 extends GetView<HealthScoreController> {
           noSelected: controller.hasBloodPressure.value == false,
           onYes: () => controller.setBP(true),
           onNo: () => controller.setBP(false),
+          locked: controller.isBPLocked.value,
         ));
   }
 
@@ -335,32 +366,51 @@ class HealthScorePage1 extends GetView<HealthScoreController> {
     required bool noSelected,
     required VoidCallback onYes,
     required VoidCallback onNo,
+    bool locked = false,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CommonText(
-          title,
-          fontSize: 13.rf,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
-        ),
-        SizedBox(height: 10.rh),
-        Row(
-          children: [
-            _buildChip(label: 'Yes', isSelected: yesSelected, onTap: onYes),
-            SizedBox(width: 12.rw),
-            _buildChip(label: 'No', isSelected: noSelected, onTap: onNo),
-          ],
-        ),
-      ],
+    return Opacity(
+      opacity: locked ? 0.7 : 1.0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CommonText(
+                title,
+                fontSize: 13.rf,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+              if (locked) ...[
+                SizedBox(width: 6.rw),
+                Icon(Icons.lock_outline,
+                    size: 14.rs, color: AppColors.textTertiary),
+              ],
+            ],
+          ),
+          SizedBox(height: 10.rh),
+          Row(
+            children: [
+              _buildChip(
+                  label: 'Yes',
+                  isSelected: yesSelected,
+                  onTap: locked ? null : onYes),
+              SizedBox(width: 12.rw),
+              _buildChip(
+                  label: 'No',
+                  isSelected: noSelected,
+                  onTap: locked ? null : onNo),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildChip({
     required String label,
     required bool isSelected,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
     return GestureDetector(
       onTap: onTap,

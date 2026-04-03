@@ -98,6 +98,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen> {
       child: Scaffold(
         body: IndexedStack(index: _currentIndex, children: _screens),
         floatingActionButton: FloatingActionButton(
+          heroTag: null,
           shape: const CircleBorder(),
           backgroundColor: AppColors.primary,
           elevation: 2,

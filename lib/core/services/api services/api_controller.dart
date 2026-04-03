@@ -77,6 +77,20 @@ class ApiService {
     }
   }
 
+  /// PATCH
+  Future<Response> patch(
+    String path, {
+    dynamic data,
+  }) async {
+    try {
+      final response = await dio.patch(path, data: data);
+      _checkHtmlError(response);
+      return response;
+    } on DioException catch (e) {
+      throw _mapDioException(e);
+    }
+  }
+
   /// DELETE
   Future<Response> delete(
     String path, {

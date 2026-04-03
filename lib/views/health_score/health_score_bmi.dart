@@ -5,6 +5,7 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/custom_toast.dart';
 import 'package:flip_health/views/health_score/health_score_result.dart';
 
 class HealthScoreBmiPage extends GetView<HealthScoreController> {
@@ -38,24 +39,33 @@ class HealthScoreBmiPage extends GetView<HealthScoreController> {
   }
 
   Widget _buildGenderSelector() {
-    return Obx(() => Container(
+    return Obx(() {
+      final locked = controller.isGenderLocked.value;
+      return Opacity(
+        opacity: locked ? 0.7 : 1.0,
+        child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(40.rs),
             border: Border.all(color: AppColors.borderLight, width: 1.5),
           ),
           child: Row(
             children: [
-              Expanded(child: _buildGenderTab(0, Icons.male, 'Male')),
-              Expanded(child: _buildGenderTab(1, Icons.female, 'Female')),
+              Expanded(
+                  child: _buildGenderTab(0, Icons.male, 'Male', locked)),
+              Expanded(
+                  child: _buildGenderTab(1, Icons.female, 'Female', locked)),
             ],
           ),
-        ));
+        ),
+      );
+    });
   }
 
-  Widget _buildGenderTab(int gender, IconData icon, String label) {
+  Widget _buildGenderTab(
+      int gender, IconData icon, String label, bool locked) {
     final isSelected = controller.selectedGender.value == gender;
     return GestureDetector(
-      onTap: () => controller.selectGenderInt(gender),
+      onTap: locked ? null : () => controller.selectGenderInt(gender),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(vertical: 14.rh),
@@ -78,6 +88,12 @@ class HealthScoreBmiPage extends GetView<HealthScoreController> {
               fontWeight: FontWeight.w500,
               color: isSelected ? Colors.white : AppColors.textSecondary,
             ),
+            if (locked && isSelected) ...[
+              SizedBox(width: 6.rw),
+              Icon(Icons.lock_outline,
+                  size: 14.rs,
+                  color: isSelected ? Colors.white70 : AppColors.textTertiary),
+            ],
           ],
         ),
       ),
@@ -294,14 +310,24 @@ class HealthScoreBmiPage extends GetView<HealthScoreController> {
   }
 
   Widget _buildCalculateButton() {
-    return ActionButton(
-      text: 'Calculate BMI',
-      backgroundColor: AppColors.primary,
-      icon: Icons.calculate,
-      onPressed: () {
-        controller.calculateBMI();
-        Get.to(() => const HealthScoreResult());
-      },
-    );
+    return Obx(() => ActionButton(
+          text: 'Calculate BMI',
+          backgroundColor: AppColors.primary,
+          icon: Icons.calculate,
+          isLoading: controller.isSubmitting.value,
+          onPressed: () async {
+            if (controller.isSubmitting.value) return;
+            final success = await controller.submitHealthScore();
+            if (success) {
+              Get.to(() => const HealthScoreResult());
+            } else {
+              ToastCustom.showSnackBar(
+                subtitle: controller.apiError.value.isNotEmpty
+                    ? controller.apiError.value
+                    : 'Failed to calculate BMI. Please try again.',
+              );
+            }
+          },
+        ));
   }
 }

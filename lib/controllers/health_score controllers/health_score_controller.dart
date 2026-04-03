@@ -1,9 +1,15 @@
 import 'dart:math';
+import 'package:flip_health/core/services/secure%20storage/secure_storage.dart';
+import 'package:flip_health/core/utils/print_log.dart';
+import 'package:flip_health/data/repositories/health_score_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class HealthScoreController extends GetxController
     with GetTickerProviderStateMixin {
+  final HealthScoreRepository repository;
+
+  HealthScoreController({required this.repository});
   final pageController = PageController();
   final currentPage = 0.obs;
 
@@ -15,10 +21,89 @@ class HealthScoreController extends GetxController
   final isDiabetic = RxnBool();
   final hasBloodPressure = RxnBool();
 
+  // Lock flags -- true when field is pre-filled from saved user data
+  final isNameLocked = false.obs;
+  final isDobLocked = false.obs;
+  final isLanguageLocked = false.obs;
+  final isDiabeticLocked = false.obs;
+  final isBPLocked = false.obs;
+  final isGenderLocked = false.obs;
+
   @override
   void onInit() {
     super.onInit();
     nameController.addListener(() => nameText.value = nameController.text);
+    _prefillFromUser();
+  }
+
+  void _prefillFromUser() {
+    final user = AppSecureStorage.getSavedUser();
+    if (user == null) return;
+
+    // Name
+    if (user.name.isNotEmpty) {
+      nameController.text = user.name;
+      nameText.value = user.name;
+      isNameLocked.value = true;
+    }
+
+    // DOB (format: "1995-10-04")
+    if (user.dob != null && user.dob!.isNotEmpty) {
+      final parsed = DateTime.tryParse(user.dob!);
+      if (parsed != null) {
+        dob.value = parsed;
+        isDobLocked.value = true;
+      }
+    }
+
+    // Language
+    if (user.language != null && user.language!.isNotEmpty) {
+      language.value = user.language!;
+      isLanguageLocked.value = true;
+    }
+
+    // Diabetic ("yes" / "no")
+    if (user.isDiabetic != null && user.isDiabetic!.isNotEmpty) {
+      final val = user.isDiabetic!.toLowerCase();
+      if (val == 'yes' || val == 'no') {
+        isDiabetic.value = val == 'yes';
+        isDiabeticLocked.value = true;
+      }
+    }
+
+    // Blood Pressure ("yes" / "no")
+    if (user.isBloodPressure != null && user.isBloodPressure!.isNotEmpty) {
+      final val = user.isBloodPressure!.toLowerCase();
+      if (val == 'yes' || val == 'no') {
+        hasBloodPressure.value = val == 'yes';
+        isBPLocked.value = true;
+      }
+    }
+
+    // Gender ("male" -> 0, "female" -> 1)
+    if (user.gender != null && user.gender!.isNotEmpty) {
+      final g = user.gender!.toLowerCase();
+      if (g == 'male' || g == 'female') {
+        selectedGender.value = g == 'male' ? 0 : 1;
+        isGenderLocked.value = true;
+      }
+    }
+
+    // Height & Weight from health_score details
+    if (user.healthScore?.details != null) {
+      final details = user.healthScore!.details!;
+      final h = _parseDouble(details['height']);
+      final w = _parseDouble(details['weight']);
+      if (h != null && h > 0) bmiHeightCm.value = h;
+      if (w != null && w > 0) bmiWeightKg.value = w;
+    }
+  }
+
+  static double? _parseDouble(dynamic v) {
+    if (v is double) return v;
+    if (v is int) return v.toDouble();
+    if (v is String) return double.tryParse(v);
+    return null;
   }
 
   static const List<String> availableLanguages = [
@@ -43,6 +128,11 @@ class HealthScoreController extends GetxController
   final bmiValue = 0.0.obs;
   final bmiCategory = ''.obs;
   final bmiColor = const Color(0xFF4CAF50).obs;
+  final nutritionSuggestion = false.obs;
+
+  // API state
+  final isSubmitting = false.obs;
+  final apiError = ''.obs;
 
   // Auto-calculated age from DOB
   int get calculatedAge {
@@ -133,19 +223,61 @@ class HealthScoreController extends GetxController
   void setDiabetic(bool val) => isDiabetic.value = val;
   void setBP(bool val) => hasBloodPressure.value = val;
 
-  void calculateBMI() {
-    final heightM = bmiHeightCm.value / 100;
-    if (heightM <= 0 || bmiWeightKg.value <= 0) return;
+  /// Submit health score to backend and receive BMI from API response
+  Future<bool> submitHealthScore() async {
+    try {
+      isSubmitting.value = true;
+      apiError.value = '';
 
-    bmiValue.value = bmiWeightKg.value / pow(heightM, 2);
+      final dobStr = dob.value != null
+          ? '${dob.value!.year}-${dob.value!.month.toString().padLeft(2, '0')}-${dob.value!.day.toString().padLeft(2, '0')}'
+          : '';
 
-    if (bmiValue.value < 18.5) {
+      final result = await repository.submitHealthScore(
+        name: nameText.value.trim(),
+        gender: selectedGender.value == 0 ? 'male' : 'female',
+        dob: dobStr,
+        height: _heightInFeetInches(),
+        weight: bmiWeightKg.value,
+        isDiabetic: isDiabetic.value == true ? 'yes' : 'no',
+        language: language.value,
+        isBloodPressure: hasBloodPressure.value == true ? 'yes' : 'no',
+      );
+
+      PrintLog.printLog('HealthScore API BMI: ${result.healthScore.bmi}');
+
+      bmiValue.value = result.healthScore.bmi;
+      nutritionSuggestion.value = result.healthScore.nutritionSuggestion;
+      _setCategoryFromBmi(result.healthScore.bmi);
+
+      await AppSecureStorage.setHealthStatus(1);
+
+      return true;
+    } catch (e) {
+      PrintLog.printLog('submitHealthScore error: $e');
+      apiError.value = e.toString();
+      return false;
+    } finally {
+      isSubmitting.value = false;
+    }
+  }
+
+  /// Convert internal height (cm) to "feet.inches" format, e.g. "5.7"
+  String _heightInFeetInches() {
+    final totalInches = bmiHeightCm.value / 2.54;
+    final feet = totalInches ~/ 12;
+    final inches = (totalInches % 12).round();
+    return '$feet.$inches';
+  }
+
+  void _setCategoryFromBmi(double bmi) {
+    if (bmi < 18.5) {
       bmiCategory.value = 'Underweight';
       bmiColor.value = const Color(0xFF42A5F5);
-    } else if (bmiValue.value < 25) {
+    } else if (bmi < 25) {
       bmiCategory.value = 'Healthy';
       bmiColor.value = const Color(0xFF4CAF50);
-    } else if (bmiValue.value < 30) {
+    } else if (bmi < 30) {
       bmiCategory.value = 'Overweight';
       bmiColor.value = const Color(0xFFFF9800);
     } else {
@@ -153,6 +285,7 @@ class HealthScoreController extends GetxController
       bmiColor.value = const Color(0xFFF44336);
     }
   }
+
 
   String get idealWeightRange {
     final heightM = bmiHeightCm.value / 100;

@@ -8,7 +8,8 @@ class ApiUrl {
   ApiUrl._internal();
 
   /// Dev server base URL
-  static const kDomain = "http://192.168.1.88:2017";
+  static const kDomain = "http://122.175.52.41:2017";
+  //"http://192.168.1.88:2017";
   static const kBaseUrlDomain = "";
 
   static const BASE_URL = kDomain + kBaseUrlDomain;
@@ -35,6 +36,9 @@ class ApiUrl {
 
   // Address
   static const String ADDRESS = "/patient/address";
+
+  // Health Score
+  static const String HEALTH_SCORE = "/patient/healthscore";
 
   // Static pages
   static const TERMS_AND_CONDITIONS_URL = "${kDomain}/terms-and-conditions";

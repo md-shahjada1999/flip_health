@@ -94,13 +94,26 @@ class LoginScreen extends GetView<LoginController> {
   }
 
   Widget _buildPhoneField() {
+    final isLinkPhone = controller.loginMode.value == LoginMode.linkPhone;
     return Obx(() => CustomTextField(
-          label: 'Phone Number or Email',
-          hint: 'Enter phone number or email',
+          label: isLinkPhone ? 'Phone Number' : 'Phone Number or Email',
+          hint: isLinkPhone
+              ? 'Enter phone number to link'
+              : 'Enter phone number or email',
           controller: controller.phoneController,
-          keyboardType: TextInputType.emailAddress,
+          keyboardType: isLinkPhone
+              ? TextInputType.phone
+              : TextInputType.emailAddress,
+          prefixIcon: isLinkPhone
+              ? Icon(Icons.phone_outlined,
+                  size: 20, color: AppColors.textSecondary)
+              : null,
           suffixIcon: controller.phoneText.isNotEmpty &&
-                  AppValidator.isValidPhoneOrEmail(controller.phoneText.value)
+                  (isLinkPhone
+                      ? AppValidator.isValidPhoneNumber(
+                          controller.phoneText.value)
+                      : AppValidator.isValidPhoneOrEmail(
+                          controller.phoneText.value))
               ? const Icon(Icons.check, color: AppColors.success)
               : null,
         ));
@@ -108,8 +121,8 @@ class LoginScreen extends GetView<LoginController> {
 
   Widget _buildLinkEmailField() {
     return Obx(() => CustomTextField(
-          label: AppString.kEmailLabel,
-          hint: AppString.kEmailHint,
+          label: 'Email Address',
+          hint: 'Enter email to link',
           controller: controller.emailController,
           keyboardType: TextInputType.emailAddress,
           prefixIcon: const Icon(Icons.email_outlined,
