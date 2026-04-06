@@ -110,26 +110,35 @@ class MentalWellnessController extends GetxController {
     }
   }
 
- void selectMember(FamilyMember m) {
-  selectedMemberId.value = m.id;
-  nameController.text = m.name;
-  
-  final phone = normalizePhone10(m.phone);
-  if (phone.isNotEmpty) {
-    phoneController.text = phone;
-  } else {
-    phoneController.clear();
+  FamilyMember? get _primaryMember {
+    for (final m in members) {
+      final rel = (m.relationship ?? '').toLowerCase().trim();
+      if (rel.isEmpty || rel == 'self' || rel == 'employee') return m;
+    }
+    return members.isNotEmpty ? members.first : null;
   }
 
-  final email = (m.email ?? '').trim();
-  if (email.isNotEmpty) {
-    emailController.text = email;
-  } else {
-    emailController.clear();
-  }
+  void selectMember(FamilyMember m) {
+    selectedMemberId.value = m.id;
+    nameController.text = m.name;
 
-  _validateFields();
-}
+    final phone = normalizePhone10(m.phone);
+    if (phone.isNotEmpty) {
+      phoneController.text = phone;
+    } else {
+      final primaryPhone = normalizePhone10(_primaryMember?.phone);
+      phoneController.text = primaryPhone;
+    }
+
+    final email = (m.email ?? '').trim();
+    if (email.isNotEmpty) {
+      emailController.text = email;
+    } else {
+      emailController.text = (_primaryMember?.email ?? '').trim();
+    }
+
+    _validateFields();
+  }
   void _loadProfileFieldsFallback() {
     final user = AppSecureStorage.getSavedUser();
     if (user != null) {

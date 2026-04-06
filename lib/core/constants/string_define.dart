@@ -567,6 +567,7 @@ class AppString {
   // Actions
   static const String kViewBookingDetails = 'View Booking Details';
   static const String kBackToHome = 'Back to Home';
+  static const String kAlright = 'Alright';
 
   /// Images
   static const String logo = "assets/png/logo.png";

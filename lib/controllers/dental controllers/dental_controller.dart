@@ -206,7 +206,7 @@ class DentalController extends GetxController {
         alternatePhone: alternatePhoneController.text.trim(),
         center: _centerPayload(vendor),
       );
-      Get.to(() => const PaymentSuccessScreen());
+      Get.to(() => PaymentSuccessScreen());
     } on AppException catch (e) {
       AppToast.error(title: 'Booking', message: e.message);
     } catch (e) {

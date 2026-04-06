@@ -31,6 +31,7 @@ class VaccineSlotSelectionScreen extends GetView<VaccineController> {
                     onTimeSlotSelected: controller.selectTimeSlot,
                     morningSlots: controller.morningSlots.toList(),
                     afternoonSlots: controller.afternoonSlots.toList(),
+                    eveningSlots: controller.eveningSlots.toList(),
                   )),
             ),
           ),

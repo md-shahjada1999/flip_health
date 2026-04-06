@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flip_health/controllers/vaccine%20controllers/vaccine_controller.dart';
+import 'package:flip_health/model/vvd%20models/vaccine_type_model.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
@@ -9,7 +10,7 @@ import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
-import 'package:flip_health/views/vaccine/vaccine_vendors_screen.dart';
+import 'package:flip_health/views/vaccine/vaccine_slot_selection_screen.dart';
 
 class VaccineTypesScreen extends GetView<VaccineController> {
   const VaccineTypesScreen({Key? key}) : super(key: key);
@@ -71,8 +72,8 @@ class VaccineTypesScreen extends GetView<VaccineController> {
                   child: ActionButton(
                     text: AppString.kContinue,
                     onPressed: () {
-                      controller.continueToVendors();
-                      Get.to(() => const VaccineVendorsScreen());
+                      controller.continueToSlots();
+                      Get.to(() => const VaccineSlotSelectionScreen());
                     },
                   ),
                 ),
@@ -194,7 +195,7 @@ class _VaccineTypeCardState extends State<_VaccineTypeCard>
                         ),
                         SizedBox(height: 2.rh),
                         CommonText(
-                          widget.vaccine.description,
+                          widget.vaccine.serviceType,
                           fontSize: 12.rf,
                           color: AppColors.textTertiary,
                         ),

@@ -46,6 +46,12 @@ class ApiUrl {
   /// Dental service booking request
   static const String DENTAL_SERVICE_REQUEST = "/patient/service/dental/request";
 
+  /// Vaccine service types — `GET ?search=service_type:vaccine`
+  static const String NETWORK_SERVICES = "/patient/services";
+
+  /// Vaccine service booking request
+  static const String VACCINE_SERVICE_REQUEST = "/patient/service/vaccine/request";
+
   // Health Score
   static const String HEALTH_SCORE = "/patient/healthscore";
 
