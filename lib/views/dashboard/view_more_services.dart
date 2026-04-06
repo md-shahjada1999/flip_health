@@ -4,7 +4,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
-import 'package:flip_health/core/constants/font_style.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
@@ -62,9 +61,7 @@ class _ServicesScreenState extends State<ServicesScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: CommonAppBar.build(
-        title: "",
-      ),
+      appBar: CommonAppBar.build(title: ""),
       body: Column(
         children: [
           // Modern Tab Bar
@@ -90,7 +87,7 @@ class _ServicesScreenState extends State<ServicesScreen>
 
   // Modern Tab Bar with Pill Design
 
-// Modern Tab Bar matching the design
+  // Modern Tab Bar matching the design
   Widget _buildModernTabBar() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.rs),
@@ -110,20 +107,14 @@ class _ServicesScreenState extends State<ServicesScreen>
         isScrollable: true,
         tabAlignment: TabAlignment.start,
         indicator: UnderlineTabIndicator(
-          borderSide: BorderSide(
-            color: Colors.black,
-            width: 1,
-          ),
+          borderSide: BorderSide(color: Colors.black, width: 1),
           insets: EdgeInsets.symmetric(horizontal: 12.rs),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelColor: AppColors.textPrimary,
         unselectedLabelColor: AppColors.textSecondary,
-        labelStyle: TextStyle(
-          fontSize: 10.rf,
-          fontWeight: FontWeight.w600,
-        ),
+        labelStyle: TextStyle(fontSize: 10.rf, fontWeight: FontWeight.w600),
         unselectedLabelStyle: TextStyle(
           fontSize: 10.rf,
           fontWeight: FontWeight.w500,
@@ -225,13 +216,16 @@ class _ServicesScreenState extends State<ServicesScreen>
             FadeTransition(
               opacity: _animationController,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, -0.3),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: _animationController,
-                  curve: Curves.easeOutCubic,
-                )),
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0, -0.3),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: _animationController,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
                 child: RText(
                   AppString.kServices,
                   fontSize: 28,
@@ -290,13 +284,19 @@ class _ServicesScreenState extends State<ServicesScreen>
                           title: AppString.kAtHospitalConsultation,
                           subtitle: AppString.kAtHospitalDesc,
                           svgPath: AppString.kIconConsultation,
-                          onTap: () => Get.toNamed(AppRoutes.consultation, arguments: 'hospital'),
+                          onTap: () => Get.toNamed(
+                            AppRoutes.consultation,
+                            arguments: 'hospital',
+                          ),
                         ),
                         ServiceOption(
                           title: AppString.kVirtualConsultation,
                           subtitle: AppString.kVirtualDesc,
                           svgPath: AppString.kVirtualIcon,
-                          onTap: () => Get.toNamed(AppRoutes.consultation, arguments: 'virtual'),
+                          onTap: () => Get.toNamed(
+                            AppRoutes.consultation,
+                            arguments: 'virtual',
+                          ),
                         ),
                       ],
                     ),
@@ -315,13 +315,19 @@ class _ServicesScreenState extends State<ServicesScreen>
                           title: AppString.kAtHospitalDental,
                           subtitle: AppString.kAtHospitalDentalDesc,
                           svgPath: AppString.kIconDental,
-                          onTap: () => Get.toNamed(AppRoutes.dental, arguments: 'hospital'),
+                          onTap: () => Get.toNamed(
+                            AppRoutes.dental,
+                            arguments: 'hospital',
+                          ),
                         ),
                         ServiceOption(
                           title: AppString.kVirtualDental,
                           subtitle: AppString.kVirtualDentalDesc,
                           svgPath: AppString.kVirtualIcon,
-                          onTap: () => Get.toNamed(AppRoutes.dental, arguments: 'virtual'),
+                          onTap: () => Get.toNamed(
+                            AppRoutes.dental,
+                            arguments: 'virtual',
+                          ),
                         ),
                       ],
                     ),
@@ -340,13 +346,17 @@ class _ServicesScreenState extends State<ServicesScreen>
                           title: AppString.kPrescribedPharmacyOption,
                           subtitle: AppString.kPrescribedPharmacyDesc,
                           svgPath: AppString.kIconPrescribedPharmacy,
-                          onTap: () => Get.toNamed(AppRoutes.pharmacy, arguments: 'prescribed'),
+                          onTap: () => Get.toNamed(
+                            AppRoutes.pharmacy,
+                            arguments: 'prescribed',
+                          ),
                         ),
                         ServiceOption(
                           title: AppString.kOTCProducts,
                           subtitle: AppString.kOTCProductsDesc,
                           svgPath: AppString.kIconPrescribedPharmacy,
-                          onTap: () => Get.toNamed(AppRoutes.pharmacy, arguments: 'otc'),
+                          onTap: () =>
+                              Get.toNamed(AppRoutes.pharmacy, arguments: 'otc'),
                         ),
                       ],
                     ),
@@ -374,27 +384,38 @@ class _ServicesScreenState extends State<ServicesScreen>
                           title: AppString.kEyeCheckup,
                           subtitle: AppString.kEyeCheckupDesc,
                           svgPath: 'assets/svg/eyecheck.svg',
-                          onTap: () => Get.toNamed(AppRoutes.vision, arguments: 'eye_checkup'),
+                          onTap: () => Get.toNamed(
+                            AppRoutes.vision,
+                            arguments: 'eye_checkup',
+                          ),
                         ),
                         ServiceOption(
                           title: AppString.kGlassesLens,
                           subtitle: AppString.kGlassesLensDesc,
                           svgPath: 'assets/svg/Lens.svg',
-                          onTap: () => Get.toNamed(AppRoutes.vision, arguments: 'glasses_lens'),
+                          onTap: () => Get.toNamed(
+                            AppRoutes.vision,
+                            arguments: 'glasses_lens',
+                          ),
                         ),
                       ],
                     ),
                   ),
                 ),
                 _buildAnimatedCard(
-                 index: 6,
-                 child: ServiceCard(
-                   icon: AppString.kIconMentalWellness,
-                   title: AppString.kMentalWellness,
-                   subtitle: AppString.kMentalWellnessSubtitle,
-                   onTap: () => Get.toNamed(AppRoutes.mentalWellness),
-                 ),
-               ),
+                  index: 6,
+                  child: ServiceCard(
+                    icon: AppString.kIconMentalWellness,
+                    title: AppString.kMentalWellness,
+                    subtitle: AppString.kMentalWellnessSubtitle,
+                    onTap: () => Get.toNamed(
+                      AppRoutes.mentalWellness,
+                      arguments: {
+                        'from': MentalWellnessController.kFromWellness,
+                      },
+                    ),
+                  ),
+                ),
                 _buildAnimatedCard(
                   index: 7,
                   child: ServiceCard(
@@ -449,13 +470,16 @@ class _ServicesScreenState extends State<ServicesScreen>
             FadeTransition(
               opacity: _animationController,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, -0.3),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: _animationController,
-                  curve: Curves.easeOutCubic,
-                )),
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0, -0.3),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: _animationController,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
                 child: RText(
                   AppString.kOPDClaims,
                   fontSize: 28,
@@ -483,14 +507,14 @@ class _ServicesScreenState extends State<ServicesScreen>
                   ),
                 ),
                 _buildAnimatedCard(
-                 index: 1,
-                 child: ServiceCard(
-                   icon: AppString.kIconBankDetails,
-                   title: AppString.kBankDetails,
-                   subtitle: AppString.kBankDetailsSubtitle,
-                   onTap: () => Get.toNamed(AppRoutes.bankDetails),
-                 ),
-               ),
+                  index: 1,
+                  child: ServiceCard(
+                    icon: AppString.kIconBankDetails,
+                    title: AppString.kBankDetails,
+                    subtitle: AppString.kBankDetailsSubtitle,
+                    onTap: () => Get.toNamed(AppRoutes.bankDetails),
+                  ),
+                ),
                 _buildAnimatedCard(
                   index: 2,
                   child: ServiceCard(
@@ -520,13 +544,16 @@ class _ServicesScreenState extends State<ServicesScreen>
             FadeTransition(
               opacity: _animationController,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, -0.3),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: _animationController,
-                  curve: Curves.easeOutCubic,
-                )),
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0, -0.3),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: _animationController,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
                 child: RText(
                   AppString.kAccountManagement,
                   fontSize: 28,
@@ -638,13 +665,16 @@ class _ServicesScreenState extends State<ServicesScreen>
             FadeTransition(
               opacity: _animationController,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, -0.3),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: _animationController,
-                  curve: Curves.easeOutCubic,
-                )),
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0, -0.3),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: _animationController,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
                 child: RText(
                   AppString.kHelpSupport,
                   fontSize: 28,
@@ -673,10 +703,14 @@ class _ServicesScreenState extends State<ServicesScreen>
                         Get.lazyPut<ApiService>(() => ApiService());
                       }
                       if (!Get.isRegistered<HelpRepository>()) {
-                        Get.lazyPut<HelpRepository>(() => HelpRepository(apiService: Get.find()));
+                        Get.lazyPut<HelpRepository>(
+                          () => HelpRepository(apiService: Get.find()),
+                        );
                       }
                       if (!Get.isRegistered<HelpController>()) {
-                        Get.lazyPut<HelpController>(() => HelpController(repository: Get.find()));
+                        Get.lazyPut<HelpController>(
+                          () => HelpController(repository: Get.find()),
+                        );
                       }
                       Get.to(() => const HelpScreen());
                     },
@@ -729,13 +763,16 @@ class _ServicesScreenState extends State<ServicesScreen>
             FadeTransition(
               opacity: _animationController,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, -0.3),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: _animationController,
-                  curve: Curves.easeOutCubic,
-                )),
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0, -0.3),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: _animationController,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
                 child: RText(
                   AppString.kMedicalRecords,
                   fontSize: 28,
@@ -812,10 +849,7 @@ class _ServicesScreenState extends State<ServicesScreen>
 
         return Transform.translate(
           offset: Offset(0, 30 * (1 - delayedValue)),
-          child: Opacity(
-            opacity: delayedValue,
-            child: child,
-          ),
+          child: Opacity(opacity: delayedValue, child: child),
         );
       },
       child: child,
@@ -932,14 +966,13 @@ class _ServiceCardState extends State<ServiceCard>
                             Container(
                               padding: EdgeInsets.symmetric(
                                 horizontal: 6.rs,
-                                vertical:1.rs,
+                                vertical: 1.rs,
                               ),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
                                     AppColors.primary,
                                     AppColors.textPrimary,
-                                   
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(8.rs),

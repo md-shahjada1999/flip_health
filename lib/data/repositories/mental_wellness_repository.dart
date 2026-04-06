@@ -12,37 +12,57 @@ class MentalWellnessRepository {
   MentalWellnessRepository({required this.apiService});
 
   /// GET `/patient/mental_wellness/type` — categories for Mental Wellness (`value` per item).
-  Future<List<MentalWellnessCategoryModel>> fetchMentalWellnessCategories() async {
+  Future<List<MentalWellnessCategoryModel>>
+  fetchMentalWellnessCategories() async {
     try {
-      final Response response =
-          await apiService.get(ApiUrl.MENTAL_WELLNESS_TYPES);
-      final data = response.data;
-      if (data is! Map<String, dynamic>) {
-        throw AppException(message: 'Invalid categories response');
-      }
-      if (data['status'] == true && data['data'] is List) {
-        final list = data['data'] as List<dynamic>;
-        return list.map((e) {
-          if (e is Map<String, dynamic>) {
-            return MentalWellnessCategoryModel.fromJson(e);
-          }
-          if (e is Map) {
-            return MentalWellnessCategoryModel.fromJson(
-              Map<String, dynamic>.from(e),
-            );
-          }
-          return const MentalWellnessCategoryModel(value: '');
-        }).where((c) => c.value.isNotEmpty).toList();
-      }
-      throw AppException(
-        message: data['message']?.toString() ?? 'Failed to load categories',
-        statusCode: response.statusCode,
+      final Response response = await apiService.get(
+        ApiUrl.MENTAL_WELLNESS_TYPES,
       );
+      final raw = response.data;
+      final Map<String, dynamic> root = raw is Map<String, dynamic>
+          ? raw
+          : raw is Map
+              ? Map<String, dynamic>.from(raw)
+              : throw AppException(message: 'Invalid categories response');
+
+      if (root['status'] == false) {
+        throw AppException(
+          message: root['message']?.toString() ?? 'Failed to load categories',
+          statusCode: response.statusCode,
+        );
+      }
+
+      // `{ "data": [...] }` or `{ "status": true, "data": [...] }` — do not require `status`.
+      final listRaw = root['data'];
+      if (listRaw is! List) {
+        throw AppException(
+          message: root['message']?.toString() ?? 'Failed to load categories',
+          statusCode: response.statusCode,
+        );
+      }
+
+      final list = listRaw;
+      return list
+          .map((e) {
+            if (e is Map<String, dynamic>) {
+              return MentalWellnessCategoryModel.fromJson(e);
+            }
+            if (e is Map) {
+              return MentalWellnessCategoryModel.fromJson(
+                Map<String, dynamic>.from(e),
+              );
+            }
+            return const MentalWellnessCategoryModel(value: '');
+          })
+          .where((c) => c.value.isNotEmpty)
+          .toList();
     } on AppException {
       rethrow;
     } catch (e) {
       PrintLog.printLog('fetchMentalWellnessCategories: $e');
-      throw AppException(message: 'Could not load categories. Please try again.');
+      throw AppException(
+        message: 'Could not load categories. Please try again.',
+      );
     }
   }
 
@@ -53,6 +73,7 @@ class MentalWellnessRepository {
     required String service,
     required String language,
     String? serviceArea,
+
     /// Family member profile id from `/patient/member` (optional; backend may use for Trijog).
     String? userId,
   }) async {
@@ -73,8 +94,10 @@ class MentalWellnessRepository {
       }
 
       PrintLog.printLog('Wellness session body: $body');
-      final Response response =
-          await apiService.post(ApiUrl.WELLNESS_SESSION, data: body);
+      final Response response = await apiService.post(
+        ApiUrl.WELLNESS_SESSION,
+        data: body,
+      );
       final data = response.data;
 
       if (data is Map<String, dynamic>) {
@@ -96,7 +119,9 @@ class MentalWellnessRepository {
       rethrow;
     } catch (e) {
       PrintLog.printLog('submitWellnessSession: $e');
-      throw AppException(message: 'Failed to submit request. Please try again.');
+      throw AppException(
+        message: 'Failed to submit request. Please try again.',
+      );
     }
   }
 }

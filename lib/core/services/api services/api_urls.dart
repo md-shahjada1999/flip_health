@@ -8,8 +8,8 @@ class ApiUrl {
   ApiUrl._internal();
 
   /// Dev server base URL
-  static const kDomain = "http://122.175.52.41:2017";
-  //"http://192.168.1.88:2017";
+  // static const kDomain = "http://122.175.52.41:2017";
+  static const kDomain = "http://192.168.1.88:2017";
   static const kBaseUrlDomain = "";
 
   static const kImageUrl =
@@ -48,7 +48,8 @@ class ApiUrl {
 
   /// OPD wallet — same paths as patient_app `Apis.OPDwallet` / `OPDwalletTransactions`.
   static const String OPD_WALLET = "/patient/opd/wallet";
-  static const String OPD_WALLET_TRANSACTIONS = "/patient/opd/wallet/transactions";
+  static const String OPD_WALLET_TRANSACTIONS =
+      "/patient/opd/wallet/transactions";
 
   /// Flip Cash / app wallet (recharge flow) — patient_app `Apis.wallet`, `create_wallet`.
   static const String WALLET = "/patient/wallet";
@@ -78,7 +79,8 @@ class ApiUrl {
   /// `PATCH /patient/reimbursement/status/{id}` — dispute / status updates
   static const String REIMBURSEMENT_STATUS = "/patient/reimbursement/status/";
 
-  static const String REIMBURSEMENT_BILL_TYPES = "/patient/reimbursement/service_types";
+  static const String REIMBURSEMENT_BILL_TYPES =
+      "/patient/reimbursement/service_types";
 
   /// Resolve attachment path from API (relative or absolute) for [Image.network] / PDF viewer.
   static String? publicFileUrl(String? path) {

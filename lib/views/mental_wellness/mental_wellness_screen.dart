@@ -51,9 +51,6 @@ class MentalWellnessScreen extends GetView<MentalWellnessController> {
                             ),
                           ),
                           SizedBox(height: 16.rh),
-                          if (!controller.isNutritionEntry) _buildServiceChips(),
-                          if (!controller.isNutritionEntry)
-                            SizedBox(height: 20.rh),
                           CustomTextField(
                             label: AppString.kName,
                             hint: AppString.kName,
@@ -85,8 +82,7 @@ class MentalWellnessScreen extends GetView<MentalWellnessController> {
                           ),
                           SizedBox(height: 16.rh),
                           Obx(
-                            () => !controller.isNutritionEntry &&
-                                    controller.service.value == 'Mental Wellness'
+                            () => controller.isMentalWellnessEntry
                                 ? _buildCategorySelector()
                                 : const SizedBox.shrink(),
                           ),
@@ -138,62 +134,6 @@ class MentalWellnessScreen extends GetView<MentalWellnessController> {
       fontSize: 14.rf,
       color: AppColors.textTertiary,
       height: 1.5,
-    );
-  }
-
-  Widget _buildServiceChips() {
-    const services = [
-      'Mental Wellness',
-      'Diet & Nutrition',
-      'Meditation & Healing',
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CommonText(
-          AppString.kSelectService,
-          fontSize: 13.rf,
-          fontWeight: FontWeight.w500,
-          color: AppColors.primary,
-        ),
-        SizedBox(height: 10.rh),
-        Obx(
-          () => Wrap(
-            spacing: 10.rw,
-            runSpacing: 8.rh,
-            children: services.map((s) {
-              final selected = controller.service.value == s;
-              return GestureDetector(
-                onTap: () => controller.setService(s),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16.rw,
-                    vertical: 10.rh,
-                  ),
-                  decoration: BoxDecoration(
-                    color: selected
-                        ? AppColors.primary
-                        : AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(50.rs),
-                    border: Border.all(
-                      color: selected
-                          ? AppColors.primary
-                          : AppColors.primary.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: CommonText(
-                    s,
-                    fontSize: 13.rf,
-                    fontWeight: FontWeight.w500,
-                    color: selected ? Colors.white : AppColors.primary,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-      ],
     );
   }
 

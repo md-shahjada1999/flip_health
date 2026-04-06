@@ -51,8 +51,12 @@ class MentalWellnessController extends GetxController {
   ];
 
   static const String kFromNutritionist = 'nutritionist';
+  static const String kFromWellness = 'wellness';
 
   bool get isNutritionEntry => fromWhere.value == kFromNutritionist;
+
+  /// Trijog mental wellness flow (categories + `service_area`); not nutrition.
+  bool get isMentalWellnessEntry => fromWhere.value == kFromWellness;
 
   static String normalizePhone10(String? raw) {
     final d = (raw ?? '').replaceAll(RegExp(r'\D'), '');
@@ -66,6 +70,8 @@ class MentalWellnessController extends GetxController {
     _readRouteArguments();
     if (isNutritionEntry) {
       service.value = 'Diet & Nutrition';
+    } else {
+      service.value = 'Mental Wellness';
     }
     nameController.addListener(_validateFields);
     phoneController.addListener(_validateFields);
@@ -152,8 +158,10 @@ class MentalWellnessController extends GetxController {
       if (f == kFromNutritionist) {
         fromWhere.value = kFromNutritionist;
       } else {
-        fromWhere.value = 'wellness';
+        fromWhere.value = kFromWellness;
       }
+    } else {
+      fromWhere.value = kFromWellness;
     }
   }
 
@@ -173,14 +181,6 @@ class MentalWellnessController extends GetxController {
       );
       categories.clear();
     }
-  }
-
-  void setService(String value) {
-    service.value = value;
-    if (value != 'Mental Wellness') {
-      consultation.value = '';
-    }
-    _validateFields();
   }
 
   void setConsultation(String value) {
@@ -239,10 +239,6 @@ class MentalWellnessController extends GetxController {
         title: 'Required',
         message: 'Please enter a valid email address',
       );
-      return;
-    }
-    if (service.value.isEmpty) {
-      AppToast.warning(title: 'Required', message: 'Please select a service');
       return;
     }
     if (language.value.isEmpty) {

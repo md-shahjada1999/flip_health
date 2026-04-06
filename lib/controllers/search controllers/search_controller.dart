@@ -321,7 +321,10 @@ class AppSearchController extends GetxController {
         iconPath: AppString.kIconMentalWellness,
         category: 'Services',
         keywords: ['mental', 'wellness', 'counselling', 'therapy', 'stress', 'anxiety', 'depression', 'psychologist', 'mental health'],
-        onTap: () => Get.toNamed(AppRoutes.mentalWellness),
+        onTap: () => Get.toNamed(
+          AppRoutes.mentalWellness,
+          arguments: {'from': MentalWellnessController.kFromWellness},
+        ),
       ),
 
       // Nutrition
