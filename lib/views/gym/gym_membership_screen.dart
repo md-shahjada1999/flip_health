@@ -7,6 +7,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/gym/gym_member_selection_screen.dart';
 
 class GymMembershipScreen extends GetView<GymController> {
@@ -14,50 +15,50 @@ class GymMembershipScreen extends GetView<GymController> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: CommonAppBar.build(title: AppString.kGymMembership),
-        body: Obx(() {
-          if (controller.isLoading.value) {
-            return Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          }
+    return SafeScreenWrapper(
+      bottomSafe: false,
+      appBar: CommonAppBar.build(title: AppString.kGymMembership),
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
 
-          return Column(
-            children: [
-              Expanded(
-                child: controller.membershipPlans.isEmpty
-                    ? Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.primary,
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16.rw,
-                          vertical: 10.rh,
-                        ),
-                        itemCount: controller.membershipPlans.length,
-                        itemBuilder: (context, index) {
-                          return _MembershipCard(
-                            plan: controller.membershipPlans[index],
-                            index: index,
-                          );
-                        },
+        return Column(
+          children: [
+            Expanded(
+              child: controller.membershipPlans.isEmpty
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
                       ),
-              ),
-              if (controller.selectedPlanIndex.value >= 0)
-                ActionButton(
+                    )
+                  : ListView.builder(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.rw,
+                        vertical: 10.rh,
+                      ),
+                      itemCount: controller.membershipPlans.length,
+                      itemBuilder: (context, index) {
+                        return _MembershipCard(
+                          plan: controller.membershipPlans[index],
+                          index: index,
+                        );
+                      },
+                    ),
+            ),
+            if (controller.selectedPlanIndex.value >= 0)
+              SafeBottomPadding(
+                child: ActionButton(
                   text: AppString.kContinue,
                   onPressed: () =>
                       Get.to(() => const GymMemberSelectionScreen()),
                 ),
-            ],
-          );
-        }),
-      ),
+              ),
+          ],
+        );
+      }),
     );
   }
 }

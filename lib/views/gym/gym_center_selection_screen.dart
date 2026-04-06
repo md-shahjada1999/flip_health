@@ -7,6 +7,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/gym/gym_overview_screen.dart';
 
 class GymCenterSelectionScreen extends GetView<GymController> {
@@ -14,8 +15,8 @@ class GymCenterSelectionScreen extends GetView<GymController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar: CommonAppBar.build(title: AppString.kSelectCityAndCenter),
       body: Column(
         children: [
@@ -89,9 +90,11 @@ class GymCenterSelectionScreen extends GetView<GymController> {
             ),
           ),
           Obx(() => controller.selectedCenterId.value.isNotEmpty
-              ? ActionButton(
-                  text: AppString.kContinue,
-                  onPressed: () => Get.to(() => const GymOverviewScreen()),
+              ? SafeBottomPadding(
+                  child: ActionButton(
+                    text: AppString.kContinue,
+                    onPressed: () => Get.to(() => const GymOverviewScreen()),
+                  ),
                 )
               : const SizedBox.shrink()),
         ],

@@ -8,6 +8,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/model/heath%20checkup%20models/lab_test_model.dart';
 import 'package:flip_health/views/daignostics/widgets/collection_type_tabs.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
@@ -58,9 +59,11 @@ class LabSelectionScreen extends GetView<LabTestController> {
           ),
           Padding(
             padding: EdgeInsets.all(16.rs),
-            child: ActionButton(
-              text: 'Confirm',
-              onPressed: controller.confirmLabSelection,
+            child: SafeBottomPadding(
+              child: ActionButton(
+                text: 'Confirm',
+                onPressed: controller.confirmLabSelection,
+              ),
             ),
           ),
         ],

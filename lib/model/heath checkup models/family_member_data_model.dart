@@ -12,8 +12,6 @@ class FamilyMember {
   final String? empId;
   final String? image;
   final int age;
-  final bool isSponsored;
-  final String? sponsoredBy;
   final bool hasPackages;
   final int corporateId;
   final bool isSubscribed;
@@ -32,49 +30,40 @@ class FamilyMember {
     this.empId,
     this.image,
     this.age = 0,
-    this.isSponsored = false,
-    this.sponsoredBy,
     this.hasPackages = false,
     this.corporateId = 0,
     this.isSubscribed = false,
   });
+factory FamilyMember.fromJson(Map<String, dynamic> json) {
+  final rel = (json['relationship'] ?? '').toString().trim();
+  final subscribed = json['isSubscribed'] == true || json['isSubscribed'] == 1;
 
-  /// Parse from the /patient/member API response item
-  factory FamilyMember.fromJson(Map<String, dynamic> json) {
-    final rel = (json['relationship'] ?? '').toString().trim();
-    final isPrimary = rel.isEmpty || rel == 'employee';
-    final subscribed =
-        json['isSubscribed'] == true || json['isSubscribed'] == 1;
+  return FamilyMember(
+    id: (json['id'] ?? '').toString(),
+    name: (json['name'] ?? '').toString(),
+    firstName: (json['first_name'] ?? json['name'] ?? '').toString(),
+    lastName: (json['last_name'] ?? '').toString(),
+    email: json['email']?.toString(),
+    phone: json['phone']?.toString(),
+    dob: json['dob']?.toString(),
+    gender: json['gender']?.toString(),
+    bloodGroup: json['bloodGroup']?.toString(),
+    relationship: rel.isNotEmpty ? rel : 'self',
+    empId: json['empId']?.toString(),
+    image: json['image']?.toString(),
+    age: _safeInt(json['age']),
+    hasPackages: subscribed || json['canActivate'] == 1,
+    corporateId: _safeInt(json['corporate_id']),
+    isSubscribed: subscribed,
+  );
+}
 
-    return FamilyMember(
-      id: (json['id'] ?? '').toString(),
-      name: json['name'] ?? '',
-      firstName: json['first_name'] ?? json['name'] ?? '',
-      lastName: json['last_name'] ?? '',
-      email: json['email'],
-      phone: json['phone'],
-      dob: json['dob'],
-      gender: json['gender'],
-      bloodGroup: json['bloodGroup'],
-      relationship: rel.isNotEmpty ? rel : 'self',
-      empId: json['empId'],
-      image: json['image'],
-      age: _parseInt(json['age']),
-      isSponsored: isPrimary,
-      sponsoredBy: isPrimary ? 'your company' : null,
-      hasPackages: subscribed || (json['canActivate'] == 1),
-      corporateId: _parseInt(json['corporate_id']),
-      isSubscribed: subscribed,
-    );
-  }
-
-  static int _parseInt(dynamic v) {
-    if (v == null) return 0;
-    if (v is int) return v;
-    if (v is double) return v.round();
-    return int.tryParse(v.toString()) ?? 0;
-  }
-
+static int _safeInt(dynamic v) {
+  if (v == null) return 0;
+  if (v is int) return v;
+  if (v is double) return v.round();
+  return int.tryParse(v.toString()) ?? 0;
+}
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
@@ -89,28 +78,16 @@ class FamilyMember {
         'empId': empId,
         'image': image,
         'age': age,
-        'isSponsored': isSponsored,
-        'sponsoredBy': sponsoredBy,
         'hasPackages': hasPackages,
         'corporate_id': corporateId,
         'isSubscribed': isSubscribed,
       };
 
-  /// Parse the full members API response: `{ "members": [...] }` (often nested under `data`).
-  static List<FamilyMember> fromMembersResponse(Map<String, dynamic> json) {
-    final list = json['members'] as List<dynamic>? ?? [];
-    final out = <FamilyMember>[];
-    for (final e in list) {
-      try {
-        if (e is Map<String, dynamic>) {
-          out.add(FamilyMember.fromJson(e));
-        } else if (e is Map) {
-          out.add(FamilyMember.fromJson(Map<String, dynamic>.from(e)));
-        }
-      } catch (_) {
-        // Skip malformed rows so the rest of the list still loads.
-      }
-    }
-    return out;
-  }
+static List<FamilyMember> fromMembersResponse(Map<String, dynamic> json) {
+  final list = json['members'] as List<dynamic>? ?? [];
+  return list
+      .whereType<Map>()
+      .map((e) => FamilyMember.fromJson(Map<String, dynamic>.from(e)))
+      .toList();
+}
 }

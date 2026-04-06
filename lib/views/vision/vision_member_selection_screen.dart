@@ -20,8 +20,7 @@ class VisionMemberSelectionScreen extends GetView<VisionController> {
 
     return CommonMemberSelectionScreen(
       title: controller.appBarTitle,
-      sponsoredSubtitle: AppString.kBookVisionServices,
-      familySubtitle: AppString.kBookVisionForFamily,
+
       onContinue: (selected) {
         if (selected.isEmpty) return;
         mc.selectUser(selected.first.id);

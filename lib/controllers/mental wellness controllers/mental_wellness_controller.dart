@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flip_health/core/helpers/app_toasts.dart';
@@ -109,14 +110,26 @@ class MentalWellnessController extends GetxController {
     }
   }
 
-  void selectMember(FamilyMember m) {
-    selectedMemberId.value = m.id;
-    nameController.text = m.name;
-    phoneController.text = normalizePhone10(m.phone);
-    emailController.text = (m.email ?? '').trim();
-    _validateFields();
+ void selectMember(FamilyMember m) {
+  selectedMemberId.value = m.id;
+  nameController.text = m.name;
+  
+  final phone = normalizePhone10(m.phone);
+  if (phone.isNotEmpty) {
+    phoneController.text = phone;
+  } else {
+    phoneController.clear();
   }
 
+  final email = (m.email ?? '').trim();
+  if (email.isNotEmpty) {
+    emailController.text = email;
+  } else {
+    emailController.clear();
+  }
+
+  _validateFields();
+}
   void _loadProfileFieldsFallback() {
     final user = AppSecureStorage.getSavedUser();
     if (user != null) {
@@ -295,8 +308,8 @@ class MentalWellnessController extends GetxController {
         language: language.value,
         serviceArea:
             service.value == 'Mental Wellness' ? consultation.value : null,
-        userId:
-            selectedMemberId.value.isNotEmpty ? selectedMemberId.value : null,
+        patient_id:
+            selectedMemberId.value.isNotEmpty ?  selectedMemberId.value : null,
       );
 
       Get.offNamed(
@@ -306,9 +319,7 @@ class MentalWellnessController extends GetxController {
           'nutrition': isNutritionEntry || service.value == 'Diet & Nutrition',
         },
       );
-    } on AppException catch (e) {
-      AppToast.error(title: 'Request failed', message: e.message);
-    } catch (_) {
+    }  catch (_) {
       AppToast.error(
         title: 'Error',
         message: 'Something went wrong. Please try again.',

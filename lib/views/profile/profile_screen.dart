@@ -6,6 +6,7 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/views/profile/widgets/profile_action_card.dart';
 import 'package:flip_health/views/profile/widgets/profile_info_tile.dart';
@@ -81,8 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   @override
   Widget build(BuildContext context) {
     return ResponsiveWidget(builder: (context, screenType) {
-      return Scaffold(
-        backgroundColor: AppColors.background,
+      return SafeScreenWrapper(
         appBar: CommonAppBar.build(title: AppString.kProfileTitle),
         body: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),

@@ -4,6 +4,7 @@ import 'package:flip_health/controllers/health_score%20controllers/health_score_
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/routes/app_routes.dart';
 
 class HealthScoreResult extends StatefulWidget {
@@ -57,50 +58,48 @@ class _HealthScoreResultState extends State<HealthScoreResult>
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 20.rw),
-                  child: Column(
-                    children: [
-                      SizedBox(height: 20.rh),
-                      Transform.translate(
-                        offset: Offset(0, _slideUp.value),
-                        child: Opacity(
-                          opacity: _fadeIn.value,
-                          child: _buildHeroCard(),
-                        ),
-                      ),
-                      SizedBox(height: 24.rh),
-                      Opacity(
+      child: SafeScreenWrapper(
+        bottomSafe: false,
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 20.rw),
+                child: Column(
+                  children: [
+                    SizedBox(height: 20.rh),
+                    Transform.translate(
+                      offset: Offset(0, _slideUp.value),
+                      child: Opacity(
                         opacity: _fadeIn.value,
-                        child: _buildBmiAxis(),
+                        child: _buildHeroCard(),
                       ),
-                      SizedBox(height: 24.rh),
-                      Transform.scale(
-                        scale: _scaleIn.value,
-                        child: Opacity(
-                          opacity: _fadeIn.value,
-                          child: _buildStatusMessage(),
-                        ),
-                      ),
-                      SizedBox(height: 24.rh),
-                      Opacity(
+                    ),
+                    SizedBox(height: 24.rh),
+                    Opacity(
+                      opacity: _fadeIn.value,
+                      child: _buildBmiAxis(),
+                    ),
+                    SizedBox(height: 24.rh),
+                    Transform.scale(
+                      scale: _scaleIn.value,
+                      child: Opacity(
                         opacity: _fadeIn.value,
-                        child: _buildInfoCards(),
+                        child: _buildStatusMessage(),
                       ),
-                      SizedBox(height: 100.rh),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: 24.rh),
+                    Opacity(
+                      opacity: _fadeIn.value,
+                      child: _buildInfoCards(),
+                    ),
+                    SizedBox(height: 100.rh),
+                  ],
                 ),
               ),
-              _buildBottomButton(),
-            ],
-          ),
+            ),
+            SafeBottomPadding(child: _buildBottomButton()),
+          ],
         ),
       ),
     );

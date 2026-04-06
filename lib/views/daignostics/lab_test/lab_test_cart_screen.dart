@@ -4,6 +4,7 @@ import 'package:flip_health/controllers/health%20checkup%20controllers/lab_test_
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/model/heath%20checkup%20models/lab_test_model.dart';
 import 'package:flip_health/views/daignostics/widgets/cart_bottom_bar.dart';
@@ -13,8 +14,8 @@ class LabTestCartScreen extends GetView<LabTestController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar: CommonAppBar.build(
         title: 'Cart Overview',
         showBackButton: true,
@@ -58,12 +59,14 @@ class LabTestCartScreen extends GetView<LabTestController> {
               );
             }),
           ),
-          Obx(() => CartBottomBar(
-                itemCount: controller.cartTests.length,
-                actionLabel: 'Continue',
-                actionIcon: Icons.arrow_forward_ios,
-                onActionTap: controller.goToLabSelection,
-              )),
+          SafeBottomPadding(
+            child: Obx(() => CartBottomBar(
+                  itemCount: controller.cartTests.length,
+                  actionLabel: 'Continue',
+                  actionIcon: Icons.arrow_forward_ios,
+                  onActionTap: controller.goToLabSelection,
+                )),
+          ),
         ],
       ),
     );

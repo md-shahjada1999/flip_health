@@ -5,6 +5,7 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/model/claims%20models/claim_model.dart';
 import 'package:flip_health/views/claims/add_claim_screen.dart';
@@ -14,7 +15,7 @@ class ClaimsListScreen extends GetView<ClaimsController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeScreenWrapper(
       backgroundColor: AppColors.surfaceLight,
       appBar: CommonAppBar.build(title: AppString.kMyClaims),
       body: Column(

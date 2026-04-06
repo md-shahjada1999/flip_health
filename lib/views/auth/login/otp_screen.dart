@@ -3,6 +3,7 @@ import 'package:flip_health/core/constants/font_style.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -15,20 +16,18 @@ class OTPScreen extends GetView<OTPController> {
   Widget build(BuildContext context) {
     final OTPController c = controller;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height -
-                  MediaQuery.of(context).padding.top -
-                  MediaQuery.of(context).padding.bottom,
-            ),
-            child: IntrinsicHeight(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
+    return SafeScreenWrapper(
+      body: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: MediaQuery.of(context).size.height -
+                MediaQuery.of(context).padding.top -
+                MediaQuery.of(context).padding.bottom,
+          ),
+          child: IntrinsicHeight(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 120),
@@ -209,7 +208,6 @@ class OTPScreen extends GetView<OTPController> {
             ),
           ),
         ),
-      ),
     );
   }
 }

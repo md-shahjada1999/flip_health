@@ -10,6 +10,7 @@ import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_slot_selector.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
 
 class VaccineOverviewScreen extends GetView<VaccineController> {
@@ -17,8 +18,8 @@ class VaccineOverviewScreen extends GetView<VaccineController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar: CommonAppBar.build(title: AppString.kVaccineOverview),
       body: Column(
         children: [
@@ -51,9 +52,11 @@ class VaccineOverviewScreen extends GetView<VaccineController> {
               ),
             ),
           ),
-          ActionButton(
-            text: AppString.kConfirmAndPay,
-            onPressed: controller.confirmBooking,
+          SafeBottomPadding(
+            child: ActionButton(
+              text: AppString.kConfirmAndPay,
+              onPressed: controller.confirmBooking,
+            ),
           ),
         ],
       ),

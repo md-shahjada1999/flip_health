@@ -7,18 +7,7 @@ class LabTestRepository {
   final ApiService apiService;
   LabTestRepository({required this.apiService});
 
-  Future<List<FamilyMember>> getFamilyMembers() async {
-    try {
-      // TODO: Replace with actual API call
-      await Future.delayed(const Duration(seconds: 1));
-      return [
-        FamilyMember(id: '1', name: 'Gundari Abhinay', isSponsored: true, sponsoredBy: 'your company'),
-        FamilyMember(id: '2', name: 'Gundari Abhinaya', isSponsored: false, hasPackages: true),
-      ];
-    } catch (e) {
-      throw AppException(message: e.toString());
-    }
-  }
+
 
   Future<List<LabTestModel>> getAllTests() async {
     try {

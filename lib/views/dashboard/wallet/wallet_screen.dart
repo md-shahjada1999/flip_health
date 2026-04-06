@@ -5,6 +5,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/controllers/dashboard%20controllers/wallet_controller.dart';
 import 'package:flip_health/views/dashboard/wallet/wallet_all_transactions_screen.dart';
 import 'package:flip_health/views/dashboard/wallet/widgets/wallet_module_card.dart';
@@ -101,8 +102,7 @@ class _WalletScreenState extends State<WalletScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
       appBar: CommonAppBar.build(title: AppString.kOPDWallet),
       body: Obx(() {
         if (!controller.walletDataFetched.value) {

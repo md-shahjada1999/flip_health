@@ -8,14 +8,15 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 
 class GymOverviewScreen extends GetView<GymController> {
   const GymOverviewScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar: CommonAppBar.build(title: AppString.kGymOverview),
       body: Column(
         children: [
@@ -42,24 +43,26 @@ class GymOverviewScreen extends GetView<GymController> {
               ),
             ),
           ),
-          Obx(() => controller.termsAccepted.value
-              ? ActionButton(
-                  text: AppString.kClickToPay,
-                  onPressed: controller.confirmBooking,
-                )
-              : ActionButton(
-                  text: AppString.kClickToPay,
-                  backgroundColor: AppColors.border,
-                  onPressed: () {
-                    Get.snackbar(
-                      'Required',
-                      AppString.kAcceptTermsGym,
-                      snackPosition: SnackPosition.BOTTOM,
-                      backgroundColor: AppColors.warningLight,
-                      colorText: AppColors.textPrimary,
-                    );
-                  },
-                )),
+          Obx(() => SafeBottomPadding(
+                child: controller.termsAccepted.value
+                    ? ActionButton(
+                        text: AppString.kClickToPay,
+                        onPressed: controller.confirmBooking,
+                      )
+                    : ActionButton(
+                        text: AppString.kClickToPay,
+                        backgroundColor: AppColors.border,
+                        onPressed: () {
+                          Get.snackbar(
+                            'Required',
+                            AppString.kAcceptTermsGym,
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: AppColors.warningLight,
+                            colorText: AppColors.textPrimary,
+                          );
+                        },
+                      ),
+              )),
         ],
       ),
     );
@@ -217,12 +220,7 @@ class GymOverviewScreen extends GetView<GymController> {
                                         fontWeight: FontWeight.w600,
                                         color: AppColors.textPrimary,
                                       ),
-                                      if (m.isSponsored)
-                                        CommonText(
-                                          AppString.kSponsoredByCompany(m.sponsoredBy ?? ''),
-                                          fontSize: 11.rf,
-                                          color: AppColors.success,
-                                        ),
+                                     
                                     ],
                                   ),
                                 ),

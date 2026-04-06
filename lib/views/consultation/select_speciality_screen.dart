@@ -5,6 +5,7 @@ import 'package:flip_health/controllers/consultation%20controllers/consultation_
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/model/consultation%20models/consultation_model.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
@@ -14,8 +15,7 @@ class SelectSpecialityScreen extends GetView<ConsultationController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
       appBar: CommonAppBar.build(title: controller.appBarTitle),
       body: Column(
         children: [

@@ -51,19 +51,6 @@ class GymRepository {
     }
   }
 
-  Future<List<FamilyMember>> getFamilyMembers() async {
-    try {
-      // TODO: Replace with actual API call
-      await Future.delayed(const Duration(seconds: 1));
-      return [
-        FamilyMember(id: '1', name: 'Kalyan', isSponsored: true, sponsoredBy: 'Acme Corp'),
-        FamilyMember(id: '2', name: 'Priya', isSponsored: false, hasPackages: true),
-        FamilyMember(id: '3', name: 'Rahul', isSponsored: false, hasPackages: false),
-      ];
-    } catch (e) {
-      throw AppException(message: e.toString());
-    }
-  }
 
   Future<List<String>> getCities() async {
     try {

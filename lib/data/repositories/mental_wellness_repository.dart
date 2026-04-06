@@ -75,7 +75,7 @@ class MentalWellnessRepository {
     String? serviceArea,
 
     /// Family member profile id from `/patient/member` (optional; backend may use for Trijog).
-    String? userId,
+    String? patient_id,
   }) async {
     try {
       final body = <String, dynamic>{
@@ -84,8 +84,8 @@ class MentalWellnessRepository {
         'service': service,
         'language': language,
       };
-      if (userId != null && userId.isNotEmpty) {
-        body['user_id'] = userId;
+      if (patient_id != null && patient_id.isNotEmpty) {
+        body['patient_id'] = int.parse(patient_id);
       }
       if (service == 'Mental Wellness' &&
           serviceArea != null &&
@@ -102,7 +102,7 @@ class MentalWellnessRepository {
 
       if (data is Map<String, dynamic>) {
         final parsed = WellnessSessionResponse.fromJson(data);
-        if (parsed.status &&
+        if (
             (response.statusCode == 200 || response.statusCode == 201)) {
           return parsed;
         }

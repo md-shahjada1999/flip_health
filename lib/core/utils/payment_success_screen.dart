@@ -5,6 +5,7 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/routes/app_routes.dart';
 
@@ -148,14 +149,9 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-    
-      body: SafeArea(
-        child: Stack(
-          children: [
-            
-
+    return SafeScreenWrapper(
+      body: Stack(
+        children: [
             // Main Content
             Column(
               children: [
@@ -230,12 +226,10 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                   ),
                 ),
 
-               
               ],
             ),
           ],
         ),
-      ),
     );
   }
 

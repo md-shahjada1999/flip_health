@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:flip_health/controllers/address%20controllers/address_controller.dart';
 import 'package:flip_health/controllers/dashboard%20controllers/dashboard_controller.dart';
 import 'package:flip_health/controllers/search%20controllers/search_controller.dart';
-import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/address_selection_sheet.dart';
 import 'package:flip_health/controllers/mental%20wellness%20controllers/mental_wellness_controller.dart';
@@ -14,6 +13,7 @@ import 'package:flip_health/views/dashboard/widgets/dashboard_header.dart';
 import 'package:flip_health/views/dashboard/widgets/search_overlay.dart';
 import 'package:flip_health/views/dashboard/widgets/service_grid.dart';
 import 'package:flip_health/views/dashboard/widgets/view_more_button.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 
 class DashboardHomeScreen extends StatefulWidget {
   DashboardHomeScreen({super.key});
@@ -52,8 +52,8 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
   Widget build(BuildContext context) {
     return ResponsiveWidget(
       builder: (context, screenType) {
-        return Scaffold(
-          backgroundColor: AppColors.background,
+        return SafeScreenWrapper(
+          bottomSafe: false,
           body: GestureDetector(
             onTap: () {
               _searchFocusNode.unfocus();

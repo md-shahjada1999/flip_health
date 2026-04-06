@@ -7,6 +7,7 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/controllers/mental%20wellness%20controllers/mental_wellness_controller.dart';
 import 'package:flip_health/routes/app_routes.dart';
@@ -59,8 +60,7 @@ class _ServicesScreenState extends State<ServicesScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
       appBar: CommonAppBar.build(title: ""),
       body: Column(
         children: [
@@ -241,10 +241,10 @@ class _ServicesScreenState extends State<ServicesScreen>
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: ResponsiveHelper.isSmallScreen ? 2 : 3,
-              crossAxisSpacing: 10.rs,
-              mainAxisSpacing: 10.rs,
-              childAspectRatio: ResponsiveHelper.isSmallScreen ? 1.0 : 0.86,
+              crossAxisCount: ResponsiveHelper.isExtraLargeScreen ? 4 : 3,
+              crossAxisSpacing: 8.rs,
+              mainAxisSpacing: 8.rs,
+              childAspectRatio: ResponsiveHelper.isExtraLargeScreen ? 1.0 : 0.78,
               children: [
                 _buildAnimatedCard(
                   index: 0,
@@ -492,10 +492,10 @@ class _ServicesScreenState extends State<ServicesScreen>
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: ResponsiveHelper.isSmallScreen ? 2 : 3,
-              crossAxisSpacing: 12.rs,
-              mainAxisSpacing: 12.rs,
-              childAspectRatio: ResponsiveHelper.isSmallScreen ? 1.0 : 0.86,
+              crossAxisCount: ResponsiveHelper.isExtraLargeScreen ? 4 : 3,
+              crossAxisSpacing: 8.rs,
+              mainAxisSpacing: 8.rs,
+              childAspectRatio: ResponsiveHelper.isExtraLargeScreen ? 1.0 : 0.78,
               children: [
                 _buildAnimatedCard(
                   index: 0,
@@ -566,10 +566,10 @@ class _ServicesScreenState extends State<ServicesScreen>
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: ResponsiveHelper.isSmallScreen ? 2 : 3,
-              crossAxisSpacing: 12.rs,
-              mainAxisSpacing: 12.rs,
-              childAspectRatio: ResponsiveHelper.isSmallScreen ? 1.0 : 0.86,
+              crossAxisCount: ResponsiveHelper.isExtraLargeScreen ? 4 : 3,
+              crossAxisSpacing: 8.rs,
+              mainAxisSpacing: 8.rs,
+              childAspectRatio: ResponsiveHelper.isExtraLargeScreen ? 1.0 : 0.78,
               children: [
                 _buildAnimatedCard(
                   index: 0,
@@ -687,10 +687,10 @@ class _ServicesScreenState extends State<ServicesScreen>
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: ResponsiveHelper.isSmallScreen ? 2 : 3,
-              crossAxisSpacing: 12.rs,
-              mainAxisSpacing: 12.rs,
-              childAspectRatio: 0.9,
+              crossAxisCount: ResponsiveHelper.isExtraLargeScreen ? 4 : 3,
+              crossAxisSpacing: 8.rs,
+              mainAxisSpacing: 8.rs,
+              childAspectRatio: ResponsiveHelper.isExtraLargeScreen ? 1.0 : 0.78,
               children: [
                 _buildAnimatedCard(
                   index: 0,
@@ -785,10 +785,10 @@ class _ServicesScreenState extends State<ServicesScreen>
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: ResponsiveHelper.isSmallScreen ? 2 : 3,
-              crossAxisSpacing: 12.rs,
-              mainAxisSpacing: 12.rs,
-              childAspectRatio: ResponsiveHelper.isSmallScreen ? 1.0 : 0.86,
+              crossAxisCount: ResponsiveHelper.isExtraLargeScreen ? 4 : 3,
+              crossAxisSpacing: 8.rs,
+              mainAxisSpacing: 8.rs,
+              childAspectRatio: ResponsiveHelper.isExtraLargeScreen ? 1.0 : 0.78,
               children: [
                 _buildAnimatedCard(
                   index: 0,
@@ -939,67 +939,61 @@ class _ServiceCardState extends State<ServiceCard>
                   ),
                 ],
               ),
-              padding: EdgeInsets.all(10.rs),
+              padding: EdgeInsets.all(8.rs),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Icon with badge
-                  Stack(
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(10.rs),
-                            decoration: BoxDecoration(
-                              // color: Colors.white,
-                              borderRadius: BorderRadius.circular(12.rs),
-                            ),
-                            child: SvgPicture.asset(
-                              widget.icon,
-                              height: 20.rh,
-                              width: 20.rw,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          Spacer(),
-                          if (widget.showBadge)
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 6.rs,
-                                vertical: 1.rs,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppColors.primary,
-                                    AppColors.textPrimary,
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(8.rs),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primary.withOpacity(0.4),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: CommonText(
-                                'New',
-                                color: Colors.white,
-                                fontSize: 7.rf,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                        ],
+                      Container(
+                        padding: EdgeInsets.all(8.rs),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10.rs),
+                        ),
+                        child: SvgPicture.asset(
+                          widget.icon,
+                          height: 18.rh,
+                          width: 18.rw,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
+                      const Spacer(),
+                      if (widget.showBadge)
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 5.rs,
+                            vertical: 1.rs,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.primary,
+                                AppColors.textPrimary,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(8.rs),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.4),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: CommonText(
+                            'New',
+                            color: Colors.white,
+                            fontSize: 7.rf,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                     ],
                   ),
 
                   const Spacer(),
 
-                  // Title
                   RText(
                     widget.title,
                     fontSize: 10,
@@ -1009,9 +1003,8 @@ class _ServiceCardState extends State<ServiceCard>
                     overflow: TextOverflow.ellipsis,
                   ),
 
-                  RSizedBox.vertical(6),
+                  RSizedBox.vertical(4),
 
-                  // Subtitle
                   RText(
                     widget.subtitle,
                     fontSize: 8,

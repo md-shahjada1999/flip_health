@@ -7,6 +7,7 @@ import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
 import 'package:flip_health/core/utils/action_button.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/controllers/help%20controllers/help_controller.dart';
 import 'package:flip_health/views/help/widgets/quick_action_card.dart';
 import 'package:flip_health/views/help/widgets/ticket_card.dart';
@@ -19,8 +20,7 @@ class HelpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<HelpController>();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
       appBar: CommonAppBar.build(
         title: AppString.kHelpSupport,
         showBackButton: false,

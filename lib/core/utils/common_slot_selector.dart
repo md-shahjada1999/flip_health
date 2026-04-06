@@ -19,6 +19,7 @@ class CommonSlotSelector extends StatelessWidget {
   final ValueChanged<String> onTimeSlotSelected;
   final List<Map<String, dynamic>> morningSlots;
   final List<Map<String, dynamic>> afternoonSlots;
+  final List<Map<String, dynamic>> eveningSlots;
 
   const CommonSlotSelector({
     Key? key,
@@ -30,6 +31,7 @@ class CommonSlotSelector extends StatelessWidget {
     required this.onTimeSlotSelected,
     required this.morningSlots,
     required this.afternoonSlots,
+    this.eveningSlots = const <Map<String, dynamic>>[],
   }) : super(key: key);
 
   @override
@@ -41,17 +43,29 @@ class CommonSlotSelector extends StatelessWidget {
         SizedBox(height: 24.rh),
         _buildDateSelection(),
         SizedBox(height: 24.rh),
+        if (morningSlots.isNotEmpty) ...[
         _buildTimeSlotSection(
           AppString.kMorning,
           Icons.wb_sunny_outlined,
           morningSlots,
         ),
+        ],
+           if (afternoonSlots.isNotEmpty) ...[
         SizedBox(height: 24.rh),
         _buildTimeSlotSection(
           AppString.kAfternoon,
           Icons.wb_twilight_outlined,
           afternoonSlots,
         ),
+        ],
+        if (eveningSlots.isNotEmpty) ...[
+          SizedBox(height: 24.rh),
+          _buildTimeSlotSection(
+            'Evening',
+            Icons.wb_twilight_outlined,
+            eveningSlots,
+          ),
+        ],
       ],
     );
   }
@@ -144,7 +158,7 @@ class CommonSlotSelector extends StatelessWidget {
     IconData icon,
     List<Map<String, dynamic>> slots,
   ) {
-    return Padding(
+    return slots.isNotEmpty ? Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.rw),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,6 +223,6 @@ class CommonSlotSelector extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ) : const SizedBox.shrink();
   }
 }

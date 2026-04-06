@@ -6,6 +6,7 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/model/claims%20models/claim_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -17,7 +18,9 @@ class ClaimDetailScreen extends GetView<ClaimsController> {
     return Obx(() {
       final claim = controller.selectedClaim.value;
       if (claim == null) {
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return const SafeScreenWrapper(
+          body: Center(child: CircularProgressIndicator()),
+        );
       }
 
       final d = controller.claimDetailData.value;
@@ -30,7 +33,7 @@ class ClaimDetailScreen extends GetView<ClaimsController> {
 
       return DefaultTabController(
         length: 3,
-        child: Scaffold(
+        child: SafeScreenWrapper(
           backgroundColor: AppColors.surfaceLight,
           appBar: AppBar(
             elevation: 0,
@@ -211,9 +214,7 @@ class _ClaimSummaryHeader extends StatelessWidget {
           colors: [config.color, config.color.withValues(alpha: 0.85)],
         ),
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -389,7 +390,6 @@ class _ClaimSummaryHeader extends StatelessWidget {
             ],
           ],
         ),
-      ),
     );
   }
 

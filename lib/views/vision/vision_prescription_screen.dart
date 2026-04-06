@@ -8,6 +8,7 @@ import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/views/vision/vision_overview_screen.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'dart:io';
 
 class VisionPrescriptionScreen extends GetView<VisionController> {
@@ -15,8 +16,8 @@ class VisionPrescriptionScreen extends GetView<VisionController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar: CommonAppBar.build(title: AppString.kUploadPrescription),
       body: Column(
         children: [
@@ -120,9 +121,11 @@ class VisionPrescriptionScreen extends GetView<VisionController> {
               ),
             ),
           ),
-          ActionButton(
-            text: AppString.kContinue,
-            onPressed: () => Get.to(() => const VisionOverviewScreen()),
+          SafeBottomPadding(
+            child: ActionButton(
+              text: AppString.kContinue,
+              onPressed: () => Get.to(() => const VisionOverviewScreen()),
+            ),
           ),
         ],
       ),

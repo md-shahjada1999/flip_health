@@ -6,6 +6,7 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/controllers/orders%20controllers/orders_controller.dart';
 
@@ -41,7 +42,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen>
     final order = controller.selectedOrder.value;
 
     if (order == null) {
-      return Scaffold(
+      return SafeScreenWrapper(
         appBar: CommonAppBar.build(title: AppString.kOrderDetails),
         body: Center(
           child: CommonText(
@@ -56,8 +57,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen>
     final dateStr = DateFormat('dd MMM yyyy, hh:mm a').format(order.date);
     final subtotal = order.items.fold<double>(0, (s, i) => s + i.price);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
       appBar: CommonAppBar.build(title: AppString.kOrderDetails),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 12.rh),

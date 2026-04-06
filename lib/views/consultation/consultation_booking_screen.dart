@@ -7,6 +7,7 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 
 class ConsultationBookingScreen extends GetView<ConsultationController> {
@@ -14,8 +15,8 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar: CommonAppBar.build(
         title: AppString.kBookAppointment,
         showBackButton: true,
@@ -44,9 +45,11 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
           ),
           Container(
             padding: EdgeInsets.all(16.rs),
-            child: ActionButton(
-              text: AppString.kConfirm,
-              onPressed: controller.confirmBooking,
+            child: SafeBottomPadding(
+              child: ActionButton(
+                text: AppString.kConfirm,
+                onPressed: controller.confirmBooking,
+              ),
             ),
           ),
         ],

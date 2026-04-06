@@ -1,4 +1,5 @@
 import 'package:flip_health/core/constants/app_colors.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/controllers/splash%20controller/on_boarding_controller.dart';
 import 'package:flutter/material.dart';
@@ -8,31 +9,31 @@ import 'package:get/get.dart';
 class OnboardingView extends GetView<OnboardingController> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeScreenWrapper(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Skip Button
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Align(
-                alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: controller.skipOnboarding,
-                  child: CommonText(
-                    'Skip',
-                    color: AppColors.textTertiary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+      bottomSafe: false,
+      body: Column(
+        children: [
+          // Skip Button
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Align(
+              alignment: Alignment.topRight,
+              child: TextButton(
+                onPressed: controller.skipOnboarding,
+                child: CommonText(
+                  'Skip',
+                  color: AppColors.textTertiary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            
-            // PageView
-            Expanded(
-              child: PageView.builder(
+          ),
+
+          // PageView
+          Expanded(
+            child: PageView.builder(
                 controller: controller.pageController,
                 onPageChanged: (index) => controller.currentPage.value = index,
                 itemCount: controller.onboardingData.length,
@@ -84,9 +85,10 @@ class OnboardingView extends GetView<OnboardingController> {
                 },
               ),
             ),
-            
-            // Bottom Section
-            Padding(
+
+          // Bottom Section
+          SafeBottomPadding(
+            child: Padding(
               padding: const EdgeInsets.all(30),
               child: Column(
                 children: [
@@ -148,8 +150,8 @@ class OnboardingView extends GetView<OnboardingController> {
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

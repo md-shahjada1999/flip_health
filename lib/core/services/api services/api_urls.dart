@@ -40,6 +40,12 @@ class ApiUrl {
   // Address
   static const String ADDRESS = "/patient/address";
 
+  /// VVD network (dental / vision / vaccine clinics) — `GET ?location=lat,lng&service=dental`
+  static const String NETWORK_LIST = "/patient/network/list";
+
+  /// Dental service booking request
+  static const String DENTAL_SERVICE_REQUEST = "/patient/service/dental/request";
+
   // Health Score
   static const String HEALTH_SCORE = "/patient/healthscore";
 

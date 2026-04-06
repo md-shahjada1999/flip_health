@@ -5,6 +5,7 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/app_validators.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -13,31 +14,28 @@ class LoginScreen extends GetView<LoginController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeScreenWrapper(
       resizeToAvoidBottomInset: false,
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Obx(() => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 120),
-                  _buildTitle(),
-                  const SizedBox(height: 8),
-                  _buildSubtitle(),
-                  const SizedBox(height: 40),
-                  _buildInputFields(),
-                  const Spacer(),
-                  _buildTermsCheckbox(),
-                  const SizedBox(height: 24),
-                  _buildConfirmButton(),
-                  const SizedBox(height: 16),
-                  if (!controller.isLinkFlow) _buildLoginModeToggle(),
-                  const SizedBox(height: 24),
-                ],
-              )),
-        ),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Obx(() => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 120),
+                _buildTitle(),
+                const SizedBox(height: 8),
+                _buildSubtitle(),
+                const SizedBox(height: 40),
+                _buildInputFields(),
+                const Spacer(),
+                _buildTermsCheckbox(),
+                const SizedBox(height: 24),
+                _buildConfirmButton(),
+                const SizedBox(height: 16),
+                if (!controller.isLinkFlow) _buildLoginModeToggle(),
+                const SizedBox(height: 24),
+              ],
+            )),
       ),
     );
   }

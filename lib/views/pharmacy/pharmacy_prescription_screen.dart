@@ -7,6 +7,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/pharmacy/pharmacy_order_success_screen.dart';
 import 'dart:io';
 
@@ -76,9 +77,11 @@ class PharmacyPrescriptionScreen extends GetView<PharmacyController> {
             ),
           ),
           Obx(() => controller.selectedFiles.isNotEmpty
-              ? ActionButton(
-                  text: AppString.kPlaceOrder,
-                  onPressed: () => Get.to(() => const PharmacyOrderSuccessScreen()),
+              ? SafeBottomPadding(
+                  child: ActionButton(
+                    text: AppString.kPlaceOrder,
+                    onPressed: () => Get.to(() => const PharmacyOrderSuccessScreen()),
+                  ),
                 )
               : const SizedBox.shrink()),
         ],

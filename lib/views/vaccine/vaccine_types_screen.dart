@@ -7,6 +7,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
 import 'package:flip_health/views/vaccine/vaccine_vendors_screen.dart';
 
@@ -15,8 +16,8 @@ class VaccineTypesScreen extends GetView<VaccineController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar: CommonAppBar.build(title: AppString.kChooseVaccineType),
       body: Column(
         children: [
@@ -66,12 +67,14 @@ class VaccineTypesScreen extends GetView<VaccineController> {
                     ],
                   ),
                 ),
-                ActionButton(
-                  text: AppString.kContinue,
-                  onPressed: () {
-                    controller.continueToVendors();
-                    Get.to(() => const VaccineVendorsScreen());
-                  },
+                SafeBottomPadding(
+                  child: ActionButton(
+                    text: AppString.kContinue,
+                    onPressed: () {
+                      controller.continueToVendors();
+                      Get.to(() => const VaccineVendorsScreen());
+                    },
+                  ),
                 ),
               ],
             );

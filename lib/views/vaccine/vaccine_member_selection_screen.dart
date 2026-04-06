@@ -15,8 +15,7 @@ class VaccineMemberSelectionScreen extends GetView<VaccineController> {
 
     return CommonMemberSelectionScreen(
       title: AppString.kVaccineService,
-      sponsoredSubtitle: AppString.kBookFreeVaccineServices,
-      familySubtitle: AppString.kBookVaccineForFamily,
+     
       onContinue: (selected) {
         if (selected.isEmpty) return;
         mc.selectUser(selected.first.id);

@@ -8,19 +8,7 @@ class VaccineRepository {
   final ApiService apiService;
   VaccineRepository({required this.apiService});
 
-  Future<List<FamilyMember>> getFamilyMembers() async {
-    try {
-      // TODO: Replace with actual API call
-      return [
-        FamilyMember(id: '1', name: 'Kalyan', isSponsored: true, sponsoredBy: 'Acme Corp'),
-        FamilyMember(id: '2', name: 'Priya', isSponsored: false, hasPackages: true),
-        FamilyMember(id: '3', name: 'Rahul', isSponsored: false, hasPackages: false),
-      ];
-    } catch (e) {
-      throw AppException(message: e.toString());
-    }
-  }
-
+ 
   Future<List<VaccineType>> getVaccineTypes() async {
     try {
       // TODO: Replace with actual API call

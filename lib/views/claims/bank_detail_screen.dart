@@ -4,6 +4,7 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/model/claims%20models/bank_account_model.dart';
 
@@ -40,8 +41,7 @@ class BankDetailScreen extends StatelessWidget {
     final chequeUrl = ApiUrl.publicFileUrl(account.chequeImagePath);
     final isPdf = (account.chequeImagePath ?? '').toLowerCase().endsWith('.pdf');
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
       appBar: CommonAppBar.build(title: AppString.kBankDetails),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(20.rs),

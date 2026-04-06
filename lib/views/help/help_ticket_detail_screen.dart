@@ -7,6 +7,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/action_button.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/controllers/help%20controllers/help_controller.dart';
 
 class HelpTicketDetailScreen extends StatefulWidget {
@@ -41,7 +42,7 @@ class _HelpTicketDetailScreenState extends State<HelpTicketDetailScreen>
     final ticket = controller.selectedTicket.value;
 
     if (ticket == null) {
-      return Scaffold(
+      return SafeScreenWrapper(
         appBar: CommonAppBar.build(title: AppString.kTicketDetails),
         body: Center(
           child: CommonText(
@@ -56,8 +57,7 @@ class _HelpTicketDetailScreenState extends State<HelpTicketDetailScreen>
     final isOpen = ticket.status == 'open';
     final dateStr = DateFormat('dd MMM yyyy, hh:mm a').format(ticket.createdAt);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
       appBar: CommonAppBar.build(title: AppString.kTicketDetails),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 12.rh),

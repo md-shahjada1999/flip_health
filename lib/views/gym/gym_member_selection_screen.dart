@@ -15,13 +15,12 @@ class GymMemberSelectionScreen extends GetView<GymController> {
   @override
   Widget build(BuildContext context) {
     final mc = Get.find<MemberController>();
-    mc.resetSelection(multi: true);
+    mc.resetSelection();
 
     return CommonMemberSelectionScreen(
       title: AppString.kSelectMembers,
       allowMultiSelect: true,
-      sponsoredSubtitle: AppString.kBookGymForYou,
-      familySubtitle: AppString.kBookGymForFamily,
+     
       headerWidget: _buildPlanBadge(),
       onContinue: (selected) {
         if (selected.isEmpty) return;

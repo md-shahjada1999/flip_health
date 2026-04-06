@@ -9,6 +9,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 
 class ExploreHealthPackagesPage extends StatelessWidget {
   const ExploreHealthPackagesPage({Key? key}) : super(key: key);
@@ -17,8 +18,8 @@ class ExploreHealthPackagesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<HealthCheckupsController>();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar: CommonAppBar.build(
         title: AppString.kHealthCheckupsTitle,
         showBackButton: true,
@@ -511,13 +512,15 @@ class ExploreHealthPackagesPage extends StatelessWidget {
         
       
       ),
-      child: ActionButton(
-        text: "Continue",
-        onPressed: () {
-          if (controller.selectedPackageIndex.value != -1) {
-            controller.continueWithPackageSelection();
-          }
-        },
+      child: SafeBottomPadding(
+        child: ActionButton(
+          text: "Continue",
+          onPressed: () {
+            if (controller.selectedPackageIndex.value != -1) {
+              controller.continueWithPackageSelection();
+            }
+          },
+        ),
       ),
     );
   }

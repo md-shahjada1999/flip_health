@@ -9,6 +9,7 @@ import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/common/family_member_dropdown.dart';
 
 class MentalWellnessScreen extends GetView<MentalWellnessController> {
@@ -16,22 +17,21 @@ class MentalWellnessScreen extends GetView<MentalWellnessController> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: GestureDetector(
-        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        child: Scaffold(
-          resizeToAvoidBottomInset: true,
-          backgroundColor: AppColors.background,
-          appBar: CommonAppBar.build(
-            title: controller.isNutritionEntry
-                ? AppString.kTalkToNutritionist
-                : AppString.kMentalWellness,
-          ),
-          body: Obx(() {
-            return Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: SafeScreenWrapper(
+        bottomSafe: false,
+        resizeToAvoidBottomInset: true,
+        appBar: CommonAppBar.build(
+          title: controller.isNutritionEntry
+              ? AppString.kTalkToNutritionist
+              : AppString.kMentalWellness,
+        ),
+        body: Obx(() {
+          return Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.rw),
                       child: Column(
@@ -97,20 +97,21 @@ class MentalWellnessScreen extends GetView<MentalWellnessController> {
                   ),
                 ),
                 Obx(
-                  () => ActionButton(
-                    text: AppString.kConnect,
-                    backgroundColor: controller.connectEnabled.value
-                        ? AppColors.textPrimary
-                        : AppColors.textSecondary,
-                    isLoading: controller.isSubmitting.value,
-                    onPressed: controller.onConnectPressed,
-                    icon: Icons.connect_without_contact,
+                  () => SafeBottomPadding(
+                    child: ActionButton(
+                      text: AppString.kConnect,
+                      backgroundColor: controller.connectEnabled.value
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
+                      isLoading: controller.isSubmitting.value,
+                      onPressed: controller.onConnectPressed,
+                      icon: Icons.connect_without_contact,
+                    ),
                   ),
                 ),
               ],
             );
           }),
-        ),
       ),
     );
   }

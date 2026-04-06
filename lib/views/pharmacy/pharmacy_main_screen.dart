@@ -5,6 +5,7 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
 import 'package:flip_health/views/pharmacy/pharmacy_prescription_screen.dart';
 import 'package:flip_health/views/common/family_member_dropdown.dart';
@@ -14,7 +15,7 @@ class PharmacyMainScreen extends GetView<PharmacyController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeScreenWrapper(
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,

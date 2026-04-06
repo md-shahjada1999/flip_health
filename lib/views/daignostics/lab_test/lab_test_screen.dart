@@ -6,6 +6,7 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/model/heath%20checkup%20models/lab_test_model.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
@@ -16,8 +17,7 @@ class LabTestScreen extends GetView<LabTestController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
       appBar: CommonAppBar.build(
         title: 'Lab Tests',
         showBackButton: true,

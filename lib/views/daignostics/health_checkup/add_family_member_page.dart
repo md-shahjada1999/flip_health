@@ -12,6 +12,7 @@ import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/custom_dropdown.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 
 class AddFamilyMemberScreen extends StatelessWidget {
   const AddFamilyMemberScreen({Key? key}) : super(key: key);
@@ -26,8 +27,8 @@ class AddFamilyMemberScreen extends StatelessWidget {
     }
     final controller = Get.put(AddFamilyMemberController(repository: Get.find()));
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar:CommonAppBar.build(
     title: AppString.kAddNewFamilyMemberTitle,
   ),
@@ -126,11 +127,13 @@ class AddFamilyMemberScreen extends StatelessWidget {
             ),
 
             // Bottom button
-            Obx(() => ActionButton(
-                  text: AppString.kSaveAndContinue,
-                  onPressed: controller.saveAndContinue,
-                  isLoading: controller.isLoading.value,
-                )),
+            SafeBottomPadding(
+              child: Obx(() => ActionButton(
+                    text: AppString.kSaveAndContinue,
+                    onPressed: controller.saveAndContinue,
+                    isLoading: controller.isLoading.value,
+                  )),
+            ),
           ],
         ),
       ),

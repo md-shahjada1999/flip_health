@@ -10,6 +10,7 @@ import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_slot_selector.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
 
 class DentalOverviewScreen extends GetView<DentalController> {
@@ -17,8 +18,8 @@ class DentalOverviewScreen extends GetView<DentalController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar: CommonAppBar.build(title: AppString.kDentalOverview),
       body: Column(
         children: [
@@ -51,10 +52,13 @@ class DentalOverviewScreen extends GetView<DentalController> {
               ),
             ),
           ),
-          ActionButton(
-            text: AppString.kConfirm,
-            onPressed: controller.confirmBooking,
-          ),
+          Obx(() => SafeBottomPadding(
+                child: ActionButton(
+                  text: AppString.kConfirm,
+                  onPressed: controller.confirmBooking,
+                  isLoading: controller.confirmBookingLoading.value,
+                ),
+              )),
         ],
       ),
     );
@@ -131,33 +135,40 @@ class DentalOverviewScreen extends GetView<DentalController> {
   }
 
   Widget _buildPhoneSection() {
+    final mc = Get.find<MemberController>();
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.rw),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          RichText(
-            text: TextSpan(children: [
-              TextSpan(
-                text: '${AppString.kPhoneNumber}: ',
-                style: TextStyle(
-                  fontSize: 14.rf,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
+          Obx(() {
+            final raw = mc.selectedMember?.phone?.trim() ?? '';
+            final display = raw.isEmpty
+                ? '—'
+                : (raw.startsWith('+') ? raw : '+91 $raw');
+            return RichText(
+              text: TextSpan(children: [
+                TextSpan(
+                  text: '${AppString.kPhoneNumber}: ',
+                  style: TextStyle(
+                    fontSize: 14.rf,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              TextSpan(
-                text: '+91 9876543210',
-                style: TextStyle(
-                  fontSize: 14.rf,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w400,
-                  color: AppColors.textTertiary,
+                TextSpan(
+                  text: display,
+                  style: TextStyle(
+                    fontSize: 14.rf,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textTertiary,
+                  ),
                 ),
-              ),
-            ]),
-          ),
+              ]),
+            );
+          }),
           SizedBox(height: 4.rh),
           CommonText(
             AppString.kBookingUpdatesNote,
@@ -300,6 +311,7 @@ class DentalOverviewScreen extends GetView<DentalController> {
                   },
                   morningSlots: controller.morningSlots.toList(),
                   afternoonSlots: controller.afternoonSlots.toList(),
+                  eveningSlots: controller.eveningSlots.toList(),
                 )),
             SizedBox(height: 16.rh),
             Obx(() => controller.selectedTimeSlot.value.isNotEmpty

@@ -8,6 +8,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
 import 'package:flip_health/views/daignostics/widgets/my_orders_button.dart';
 
@@ -16,8 +17,8 @@ class LabTestSlotSelectionPage extends GetView<LabTestController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar: CommonAppBar.build(
         title: 'Lab Tests',
         showBackButton: true,
@@ -58,9 +59,11 @@ class LabTestSlotSelectionPage extends GetView<LabTestController> {
           ),
           Container(
             padding: EdgeInsets.all(16.rs),
-            child: ActionButton(
-              text: AppString.kConfirm,
-              onPressed: controller.confirmSlotSelection,
+            child: SafeBottomPadding(
+              child: ActionButton(
+                text: AppString.kConfirm,
+                onPressed: controller.confirmSlotSelection,
+              ),
             ),
           ),
         ],

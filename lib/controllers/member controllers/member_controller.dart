@@ -14,7 +14,7 @@ class MemberController extends GetxController {
   // Single-select
   final selectedUserId = ''.obs;
 
-  // Multi-selectlets 
+  // Multi-select
   final selectedMemberIds = <String>{}.obs;
 
   @override
@@ -31,13 +31,6 @@ class MemberController extends GetxController {
     isLoading.value = true;
     try {
       familyMembers.value = await _repository.getMembers();
-      if (familyMembers.isNotEmpty) {
-        final sponsored = familyMembers.firstWhere(
-          (m) => m.isSponsored,
-          orElse: () => familyMembers.first,
-        );
-        selectedUserId.value = sponsored.id;
-      }
     } catch (e) {
       AppToast.error(title: 'Error', message: 'Failed to load members');
     } finally {
@@ -74,28 +67,12 @@ class MemberController extends GetxController {
   List<FamilyMember> get selectedMembers =>
       familyMembers.where((m) => selectedMemberIds.contains(m.id)).toList();
 
-  // --- Shared getters ---
-
-  List<FamilyMember> get sponsoredMembers =>
-      familyMembers.where((m) => m.isSponsored).toList();
-
-  List<FamilyMember> get nonSponsoredMembers =>
-      familyMembers.where((m) => !m.isSponsored).toList();
-
   void addNewFamilyMember() {
     Get.toNamed(AppRoutes.addFamilyMember);
   }
 
-  /// Reset selection state when navigating to a new module
-  void resetSelection({bool multi = false}) {
+  void resetSelection() {
     selectedUserId.value = '';
     selectedMemberIds.clear();
-    if (!multi && familyMembers.isNotEmpty) {
-      final sponsored = familyMembers.firstWhere(
-        (m) => m.isSponsored,
-        orElse: () => familyMembers.first,
-      );
-      selectedUserId.value = sponsored.id;
-    }
   }
 }

@@ -76,20 +76,18 @@ class DashboardHeader extends StatelessWidget {
             // Action Buttons
             Row(
               children: [
-                if (walletBalanceText != null &&
-                    walletBalanceText!.trim().isNotEmpty) ...[
-                  Flexible(
-                    child: RText(
-                      walletBalanceText!,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  RSizedBox.horizontal(6),
-                ],
+                // if (walletBalanceText != null &&
+                //     walletBalanceText!.trim().isNotEmpty) ...[
+                //   RText(
+                //     walletBalanceText!,
+                //     fontSize: 11,
+                //     fontWeight: FontWeight.w600,
+                //     color: AppColors.primary,
+                //     maxLines: 1,
+                //     overflow: TextOverflow.ellipsis,
+                //   ),
+                //   RSizedBox.horizontal(6),
+                // ],
                 _HeaderIconButton(
                   icon: AppString.kIconCalendar,
                   onPressed: onCalendarPressed,

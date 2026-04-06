@@ -15,8 +15,7 @@ class DentalMemberSelectionScreen extends GetView<DentalController> {
 
     return CommonMemberSelectionScreen(
       title: AppString.kDentalService,
-      sponsoredSubtitle: AppString.kBookFreeDentalServices,
-      familySubtitle: AppString.kBookDentalForFamily,
+   
       onContinue: (selected) {
         if (selected.isEmpty) return;
         mc.selectUser(selected.first.id);

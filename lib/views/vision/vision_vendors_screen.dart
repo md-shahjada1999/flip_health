@@ -9,6 +9,7 @@ import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
 import 'package:flip_health/views/dental/widgets/vendor_card.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/vision/vision_slot_selection_screen.dart';
 
 class VisionVendorsScreen extends GetView<VisionController> {
@@ -16,8 +17,8 @@ class VisionVendorsScreen extends GetView<VisionController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar: CommonAppBar.build(title: controller.vendorListTitle),
       body: Column(
         children: [
@@ -55,12 +56,14 @@ class VisionVendorsScreen extends GetView<VisionController> {
             }),
           ),
           Obx(() => controller.selectedVendorId.value.isNotEmpty
-              ? ActionButton(
-                  text: AppString.kContinue,
-                  onPressed: () {
-                    controller.continueToSlots();
-                    Get.to(() => const VisionSlotSelectionScreen());
-                  },
+              ? SafeBottomPadding(
+                  child: ActionButton(
+                    text: AppString.kContinue,
+                    onPressed: () {
+                      controller.continueToSlots();
+                      Get.to(() => const VisionSlotSelectionScreen());
+                    },
+                  ),
                 )
               : const SizedBox.shrink()),
         ],

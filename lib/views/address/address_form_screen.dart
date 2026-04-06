@@ -6,14 +6,15 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/font_family.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 
 class AddressFormScreen extends GetView<AddAddressController> {
   const AddressFormScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
+    return SafeScreenWrapper(
+      bottomSafe: false,
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
@@ -439,7 +440,7 @@ class AddressFormScreen extends GetView<AddAddressController> {
   // ---------------------------------------------------------------------------
 
   Widget _buildSaveButton() {
-    return SafeArea(
+    return SafeBottomPadding(
       child: Container(
         padding: EdgeInsets.fromLTRB(20.rs, 12.rs, 20.rs, 16.rs),
         decoration: BoxDecoration(

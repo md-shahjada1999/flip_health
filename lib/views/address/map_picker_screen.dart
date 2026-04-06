@@ -6,6 +6,7 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/services/google%20places/place_prediction.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/routes/app_routes.dart';
 
 class MapPickerScreen extends GetView<AddAddressController> {
@@ -13,8 +14,9 @@ class MapPickerScreen extends GetView<AddAddressController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeScreenWrapper(
       resizeToAvoidBottomInset: false,
+      bottomSafe: false,
       body: Stack(
         children: [
           // Google Map
@@ -58,19 +60,17 @@ class MapPickerScreen extends GetView<AddAddressController> {
           ),
 
           // Top bar: back button + search
-          SafeArea(
-            child: Column(
-              children: [
-                _buildTopBar(context),
-                // Search results overlay
-                Obx(() {
-                  if (controller.searchResults.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-                  return _buildSearchResults();
-                }),
-              ],
-            ),
+          Column(
+            children: [
+              _buildTopBar(context),
+              // Search results overlay
+              Obx(() {
+                if (controller.searchResults.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return _buildSearchResults();
+              }),
+            ],
           ),
 
           // Current location FAB
@@ -240,8 +240,7 @@ class MapPickerScreen extends GetView<AddAddressController> {
           ),
         ],
       ),
-      child: SafeArea(
-        top: false,
+      child: SafeBottomPadding(
         child: Padding(
           padding: EdgeInsets.fromLTRB(20.rs, 20.rs, 20.rs, 16.rs),
           child: Column(
