@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:flip_health/core/helpers/app_toasts.dart';
 import 'package:flip_health/core/services/app_exception.dart';
 import 'package:flip_health/core/services/secure%20storage/secure_storage.dart';
+import 'package:flip_health/core/utils/common_dialog.dart';
 import 'package:flip_health/data/repositories/member_repository.dart';
 import 'package:flip_health/data/repositories/mental_wellness_repository.dart';
 import 'package:flip_health/model/heath%20checkup%20models/family_member_data_model.dart';
@@ -290,21 +291,13 @@ class MentalWellnessController extends GetxController {
       return;
     }
 
-    final confirmed = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('Confirm'),
-        content: Text(
-          isNutritionEntry
-              ? 'You want to raise a request with our Nutritionist?'
-              : 'You want to raise a request with our specialist for ${service.value}?',
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Get.back(result: false), child: const Text('No')),
-          TextButton(
-              onPressed: () => Get.back(result: true), child: const Text('Yes')),
-        ],
-      ),
+    final confirmed = await CommonDialog.confirm(
+      title: 'Confirm Request',
+      message: isNutritionEntry
+          ? 'You want to raise a request with our Nutritionist?'
+          : 'You want to raise a request with our specialist for ${service.value}?',
+      confirmText: 'Yes',
+      cancelText: 'No',
     );
     if (confirmed != true) return;
 

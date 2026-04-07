@@ -7,18 +7,18 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
-import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 
 class ConsultationBookingScreen extends GetView<ConsultationController> {
-  const ConsultationBookingScreen({Key? key}) : super(key: key);
+  const ConsultationBookingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return SafeScreenWrapper(
       bottomSafe: false,
       appBar: CommonAppBar.build(
-        title: AppString.kBookAppointment,
+        title: AppString.kConfirmBooking,
         showBackButton: true,
       ),
       body: Column(
@@ -29,13 +29,13 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildDoctorCard(),
-                  SizedBox(height: 20.rh),
-                  _buildFeeBreakdown(),
+                  _buildSummaryCard(),
                   SizedBox(height: 20.rh),
                   _buildPatientSection(),
                   SizedBox(height: 20.rh),
                   _buildDateTimeSection(),
+                  SizedBox(height: 20.rh),
+                  _buildPurposeField(),
                   SizedBox(height: 20.rh),
                   _buildDisclaimerSection(),
                   SizedBox(height: 100.rh),
@@ -46,10 +46,13 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
           Container(
             padding: EdgeInsets.all(16.rs),
             child: SafeBottomPadding(
-              child: ActionButton(
-                text: AppString.kConfirm,
-                onPressed: controller.confirmBooking,
-              ),
+              child: Obx(() => ActionButton(
+                    text: AppString.kConfirmBooking,
+                    isLoading: controller.isBooking.value,
+                    onPressed: controller.isOnline
+                        ? controller.bookOnlineAppointment
+                        : controller.bookOfflineAppointment,
+                  )),
             ),
           ),
         ],
@@ -57,10 +60,7 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
     );
   }
 
-  Widget _buildDoctorCard() {
-    final doctor = controller.selectedDoctor.value;
-    if (doctor == null) return const SizedBox.shrink();
-
+  Widget _buildSummaryCard() {
     return Container(
       padding: EdgeInsets.all(16.rs),
       decoration: BoxDecoration(
@@ -69,23 +69,32 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
         border: Border.all(color: AppColors.borderLight),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          CommonText(
+            AppString.kBookingSummary,
+            fontSize: 15.rf,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+          SizedBox(height: 14.rh),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 56.rs,
-                height: 56.rs,
+                width: 52.rs,
+                height: 52.rs,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12.rs),
                 ),
-                child: doctor.imageUrl != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(12.rs),
-                        child: Image.asset(doctor.imageUrl!, fit: BoxFit.cover),
-                      )
-                    : Icon(Icons.person, color: AppColors.primary, size: 28.rs),
+                child: Icon(
+                  controller.isOnline
+                      ? Icons.videocam_outlined
+                      : Icons.local_hospital_outlined,
+                  color: AppColors.primary,
+                  size: 26.rs,
+                ),
               ),
               SizedBox(width: 12.rw),
               Expanded(
@@ -93,32 +102,24 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CommonText(
-                      doctor.name,
+                      _doctorName,
                       fontSize: 15.rf,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                     SizedBox(height: 2.rh),
                     CommonText(
-                      doctor.qualification,
+                      _doctorQualification,
                       fontSize: 12.rf,
                       color: AppColors.textSecondary,
                     ),
-                    if (doctor.isCashless) ...[
-                      SizedBox(height: 6.rh),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 8.rw, vertical: 3.rh),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6.rs),
-                        ),
-                        child: CommonText(
-                          AppString.kCashlessAvailable,
-                          fontSize: 10.rf,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.success,
-                        ),
+                    if (_specialityDisplay.isNotEmpty) ...[
+                      SizedBox(height: 2.rh),
+                      CommonText(
+                        _specialityDisplay,
+                        fontSize: 11.rf,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w500,
                       ),
                     ],
                   ],
@@ -129,18 +130,34 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
           SizedBox(height: 12.rh),
           Row(
             children: [
-              _buildInfoTag(Icons.work_outline, doctor.experience),
+              _buildInfoChip(
+                Icons.calendar_today_outlined,
+                controller.isOnline
+                    ? controller.formattedSelectedDate
+                    : controller.offlineDayDisplay,
+              ),
               SizedBox(width: 8.rw),
-              _buildInfoTag(
-                  Icons.local_hospital_outlined, doctor.hospitalName),
+              _buildInfoChip(
+                Icons.access_time_outlined,
+                controller.isOnline
+                    ? controller.selectedTimeDisplay
+                    : controller.offlineTimeDisplay,
+              ),
             ],
           ),
+          if (!controller.isOnline && _hospitalName.isNotEmpty) ...[
+            SizedBox(height: 10.rh),
+            Row(children: [
+              _buildInfoChip(Icons.local_hospital_outlined, _hospitalName),
+            ]),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildInfoTag(IconData icon, String label) {
+  Widget _buildInfoChip(IconData icon, String text) {
+    if (text.isEmpty) return const SizedBox.shrink();
     return Flexible(
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 10.rw, vertical: 6.rh),
@@ -155,7 +172,7 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
             SizedBox(width: 4.rw),
             Flexible(
               child: CommonText(
-                label,
+                text,
                 fontSize: 11.rf,
                 fontWeight: FontWeight.w500,
                 color: AppColors.textSecondary,
@@ -166,51 +183,6 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildFeeBreakdown() {
-    final doctor = controller.selectedDoctor.value;
-    final fee = doctor?.consultationFee ?? 0;
-
-    return Container(
-      padding: EdgeInsets.all(16.rs),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.rs),
-        border: Border.all(color: AppColors.borderLight),
-      ),
-      child: Column(
-        children: [
-          _buildFeeRow(AppString.kDoctorsFee, '₹${fee.toStringAsFixed(0)}'),
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 12.rh),
-            child: Divider(height: 1, color: AppColors.borderLight),
-          ),
-          _buildFeeRow(AppString.kTotalAmount, '₹${fee.toStringAsFixed(0)}',
-              isBold: true),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeeRow(String label, String value, {bool isBold = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        CommonText(
-          label,
-          fontSize: 13.rf,
-          fontWeight: isBold ? FontWeight.w700 : FontWeight.w400,
-          color: AppColors.textPrimary,
-        ),
-        CommonText(
-          value,
-          fontSize: 14.rf,
-          fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-          color: AppColors.textPrimary,
-        ),
-      ],
     );
   }
 
@@ -235,15 +207,15 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
                 ),
                 SizedBox(height: 4.rh),
                 Obx(() => CommonText(
-                  Get.find<MemberController>().selectedMember?.name ?? '',
-                  fontSize: 14.rf,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                )),
+                      Get.find<MemberController>().selectedMember?.name ?? '',
+                      fontSize: 14.rf,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    )),
               ],
             ),
           ),
-          Icon(Icons.edit_outlined, size: 18.rs, color: AppColors.primary),
+          Icon(Icons.person_outline, size: 18.rs, color: AppColors.primary),
         ],
       ),
     );
@@ -269,18 +241,62 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
                   color: AppColors.textSecondary,
                 ),
                 SizedBox(height: 4.rh),
-                Obx(() => CommonText(
-                      '${controller.getFormattedSelectedDate()}, ${controller.selectedTimeSlot.value}',
-                      fontSize: 14.rf,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    )),
+                CommonText(
+                  controller.isOnline
+                      ? '${controller.formattedSelectedDate}, ${controller.selectedTimeDisplay}'
+                      : '${controller.offlineDayDisplay}, ${controller.offlineTimeDisplay}',
+                  fontSize: 14.rf,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ],
             ),
           ),
-          Icon(Icons.edit_outlined, size: 18.rs, color: AppColors.primary),
+          Icon(Icons.schedule_outlined, size: 18.rs, color: AppColors.primary),
         ],
       ),
+    );
+  }
+
+  Widget _buildPurposeField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CommonText(
+          AppString.kPurpose,
+          fontSize: 13.rf,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textPrimary,
+        ),
+        SizedBox(height: 8.rh),
+        TextField(
+          controller: controller.purposeController,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: AppString.kPurposeHint,
+            hintStyle: TextStyle(
+              fontSize: 13.rf,
+              fontFamily: 'Poppins',
+              color: AppColors.textSecondary,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: EdgeInsets.all(14.rs),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.rs),
+              borderSide: BorderSide(color: AppColors.borderLight),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.rs),
+              borderSide: BorderSide(color: AppColors.borderLight),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.rs),
+              borderSide: BorderSide(color: AppColors.primary),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -331,5 +347,27 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
         ),
       ],
     );
+  }
+
+  // ─── Helpers ─────────────────────────────────────────────────
+
+  String get _doctorName => controller.isOnline
+      ? controller.selectedOnlineDoctor.value?.name ?? ''
+      : controller.selectedNetworkDoctor.value?.name ?? '';
+
+  String get _doctorQualification => controller.isOnline
+      ? controller.selectedOnlineDoctor.value?.qualification ?? ''
+      : controller.selectedNetworkDoctor.value?.qualification ?? '';
+
+  String get _specialityDisplay {
+    if (controller.isOnline) {
+      return controller.selectedOnlineDoctor.value?.specialityName ?? '';
+    }
+    return controller.selectedOfflineSpeciality.value?.name ?? '';
+  }
+
+  String get _hospitalName {
+    if (controller.isOnline) return '';
+    return controller.selectedNetworkDoctor.value?.network?.name ?? '';
   }
 }

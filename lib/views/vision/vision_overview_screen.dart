@@ -10,6 +10,8 @@ import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/common_slot_selector.dart';
+import 'package:flip_health/core/utils/custom_textfeild.dart';
+import 'package:flip_health/core/utils/file_picker_helper.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
 
@@ -41,12 +43,21 @@ class VisionOverviewScreen extends GetView<VisionController> {
                   _buildPhoneSection(),
                   SizedBox(height: 20.rh),
                   _buildDateTimeSection(context),
-                  if (controller.uploadedFiles.isNotEmpty) ...[
-                    SizedBox(height: 20.rh),
-                    Divider(color: AppColors.borderLight, thickness: 0.5),
-                    SizedBox(height: 20.rh),
-                    _buildPrescriptionSection(),
-                  ],
+                  Obx(() {
+                    if (!controller.isEyeCheckup &&
+                        controller.prescriptionFiles.isNotEmpty) {
+                      return Column(
+                        children: [
+                          SizedBox(height: 20.rh),
+                          Divider(
+                              color: AppColors.borderLight, thickness: 0.5),
+                          SizedBox(height: 20.rh),
+                          _buildPrescriptionSection(),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
                   SizedBox(height: 20.rh),
                   Divider(color: AppColors.borderLight, thickness: 0.5),
                   SizedBox(height: 20.rh),
@@ -59,10 +70,11 @@ class VisionOverviewScreen extends GetView<VisionController> {
             ),
           ),
           SafeBottomPadding(
-            child: ActionButton(
-              text: AppString.kConfirm,
-              onPressed: controller.confirmBooking,
-            ),
+            child: Obx(() => ActionButton(
+                  text: AppString.kConfirm,
+                  onPressed: controller.confirmBooking,
+                  isLoading: controller.confirmBookingLoading.value,
+                )),
           ),
         ],
       ),
@@ -130,42 +142,57 @@ class VisionOverviewScreen extends GetView<VisionController> {
           ),
           SizedBox(height: 4.rh),
           Obx(() => CommonText(
-            'For ${Get.find<MemberController>().selectedMember?.name ?? ''}',
-            fontSize: 12.rf,
-            color: AppColors.textTertiary,
-          )),
+                'For ${Get.find<MemberController>().selectedMember?.name ?? ''}',
+                fontSize: 12.rf,
+                color: AppColors.textTertiary,
+              )),
         ],
       ),
     );
   }
 
   Widget _buildPhoneSection() {
+    final mc = Get.find<MemberController>();
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 24.rw),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          RichText(
-            text: TextSpan(children: [
-              TextSpan(
-                text: '${AppString.kPhoneNumber}: ',
-                style: TextStyle(
-                  fontSize: 14.rf,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
+          Obx(() {
+            final member = mc.selectedMember;
+            String phone = (member?.phone ?? '').trim();
+            if (phone.isEmpty) {
+              final primary =
+                  mc.familyMembers.isNotEmpty ? mc.familyMembers.first : null;
+              phone = (primary?.phone ?? '').trim();
+            }
+            if (phone.isNotEmpty && !phone.startsWith('+91')) {
+              phone = '+91 $phone';
+            }
+            return RichText(
+              text: TextSpan(children: [
+                TextSpan(
+                  text: '${AppString.kPhoneNumber}: ',
+                  style: TextStyle(
+                    fontSize: 14.rf,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              TextSpan(
-                text: '+91 9876543210',
-                style: TextStyle(
-                  fontSize: 14.rf,
-                  fontFamily: 'Poppins',
-                  color: AppColors.textTertiary,
+                TextSpan(
+                  text: phone.isNotEmpty ? phone : '-',
+                  style: TextStyle(
+                    fontSize: 14.rf,
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textTertiary,
+                  ),
                 ),
-              ),
-            ]),
-          ),
+              ]),
+            );
+          }),
           SizedBox(height: 4.rh),
           CommonText(
             AppString.kBookingUpdatesNote,
@@ -173,57 +200,20 @@ class VisionOverviewScreen extends GetView<VisionController> {
             color: AppColors.textTertiary,
           ),
           SizedBox(height: 16.rh),
-          CommonText(
-            AppString.kAlternatePhoneNumber,
-            fontSize: 14.rf,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
-          ),
-          SizedBox(height: 8.rh),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.border),
-              borderRadius: BorderRadius.circular(8.rs),
+          CustomTextField(
+            label: AppString.kAlternatePhoneNumber,
+            hint: AppString.kEnterAlternateNumber,
+            controller: controller.alternatePhoneController,
+            keyboardType: TextInputType.number,
+            maxLength: 10,
+            prefixIcon: Padding(
+              padding: EdgeInsets.only(left: 16.rw, right: 8.rw, top: 12.rh),
+              child: CommonText('+91',
+                  fontSize: 14.rf, color: AppColors.textSecondary),
             ),
-            height: 48.rh,
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.rw),
-                  decoration: BoxDecoration(
-                    color: AppColors.backgroundTertiary,
-                    border: Border(right: BorderSide(color: AppColors.border)),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(8.rs),
-                      bottomLeft: Radius.circular(8.rs),
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: CommonText('+91', fontSize: 13.rf, color: AppColors.textSecondary),
-                ),
-                Expanded(
-                  child: TextField(
-                    controller: controller.alternatePhoneController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      LengthLimitingTextInputFormatter(10),
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
-                    style: TextStyle(fontFamily: 'Poppins', fontSize: 14.rf),
-                    decoration: InputDecoration(
-                      hintText: AppString.kEnterAlternateNumber,
-                      hintStyle: TextStyle(
-                        color: AppColors.border,
-                        fontSize: 12.rf,
-                        fontFamily: 'Poppins',
-                      ),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12.rw),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+            ],
           ),
         ],
       ),
@@ -250,7 +240,8 @@ class VisionOverviewScreen extends GetView<VisionController> {
                     border: Border.all(color: AppColors.border),
                     borderRadius: BorderRadius.circular(8.rs),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 12.rw, vertical: 14.rh),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: 12.rw, vertical: 14.rh),
                   child: Row(
                     children: [
                       Expanded(
@@ -262,7 +253,8 @@ class VisionOverviewScreen extends GetView<VisionController> {
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      Icon(Icons.edit_outlined, color: AppColors.info, size: 24.rs),
+                      Icon(Icons.edit_outlined,
+                          color: AppColors.info, size: 24.rs),
                     ],
                   ),
                 ),
@@ -291,8 +283,11 @@ class VisionOverviewScreen extends GetView<VisionController> {
                 child: Container(
                   width: 28.rs,
                   height: 28.rs,
-                  decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.backgroundTertiary),
-                  child: Icon(Icons.close, size: 18.rs, color: AppColors.textSecondary),
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.backgroundTertiary),
+                  child: Icon(Icons.close,
+                      size: 18.rs, color: AppColors.textSecondary),
                 ),
               ),
             ),
@@ -306,10 +301,12 @@ class VisionOverviewScreen extends GetView<VisionController> {
                   onTimeSlotSelected: controller.selectTimeSlot,
                   morningSlots: controller.morningSlots.toList(),
                   afternoonSlots: controller.afternoonSlots.toList(),
+                  eveningSlots: controller.eveningSlots.toList(),
                 )),
             SizedBox(height: 16.rh),
             Obx(() => controller.selectedTimeSlot.value.isNotEmpty
-                ? ActionButton(text: AppString.kConfirm, onPressed: () => Get.back())
+                ? ActionButton(
+                    text: AppString.kConfirm, onPressed: () => Get.back())
                 : const SizedBox.shrink()),
           ],
         ),
@@ -333,7 +330,7 @@ class VisionOverviewScreen extends GetView<VisionController> {
           Obx(() => Wrap(
                 spacing: 12.rw,
                 runSpacing: 12.rh,
-                children: controller.uploadedFiles.map((file) {
+                children: controller.prescriptionFiles.map((file) {
                   return Container(
                     width: 60.rs,
                     height: 60.rs,
@@ -342,7 +339,10 @@ class VisionOverviewScreen extends GetView<VisionController> {
                       borderRadius: BorderRadius.circular(8.rs),
                       border: Border.all(color: AppColors.borderLight),
                     ),
-                    child: Icon(Icons.description, color: AppColors.textSecondary, size: 24.rs),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.rs),
+                      child: FilePickerHelper.buildFilePreview(file),
+                    ),
                   );
                 }).toList(),
               )),
@@ -356,19 +356,21 @@ class VisionOverviewScreen extends GetView<VisionController> {
       padding: EdgeInsets.symmetric(horizontal: 24.rw),
       child: Column(
         children: [
-          _priceRow(AppString.kTotalMRP, '₹ 0'),
+          _priceRow(AppString.kTotalMRP, '\u20B9 0'),
           SizedBox(height: 8.rh),
-          _priceRow(AppString.kFromWallet, '₹ 0', valueColor: AppColors.error),
+          _priceRow(AppString.kFromWallet, '\u20B9 0',
+              valueColor: AppColors.error),
           SizedBox(height: 12.rh),
           Divider(color: AppColors.borderLight, thickness: 0.5),
           SizedBox(height: 12.rh),
-          _priceRow(AppString.kNetPay, '₹ 0', isBold: true),
+          _priceRow(AppString.kNetPay, '\u20B9 0', isBold: true),
         ],
       ),
     );
   }
 
-  Widget _priceRow(String label, String value, {bool isBold = false, Color? valueColor}) {
+  Widget _priceRow(String label, String value,
+      {bool isBold = false, Color? valueColor}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -398,9 +400,11 @@ class VisionOverviewScreen extends GetView<VisionController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CommonText(AppString.kRemarksLabel, fontSize: 10.rf, color: AppColors.error),
+            CommonText(AppString.kRemarksLabel,
+                fontSize: 10.rf, color: AppColors.error),
             SizedBox(height: 4.rh),
-            CommonText(AppString.kOrderCannotBeCancelled, fontSize: 10.rf, color: AppColors.textPrimary),
+            CommonText(AppString.kOrderCannotBeCancelled,
+                fontSize: 10.rf, color: AppColors.textPrimary),
           ],
         ),
       ),

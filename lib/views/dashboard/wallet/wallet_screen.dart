@@ -148,7 +148,7 @@ class _WalletScreenState extends State<WalletScreen>
           ),
           SizedBox(height: 24.rh),
           ...List.generate(
-            4,
+            3,
             (i) => Padding(
               padding: EdgeInsets.only(bottom: 10.rh),
               child: _shimmerBox(height: 68.rh, borderRadius: 14.rs),

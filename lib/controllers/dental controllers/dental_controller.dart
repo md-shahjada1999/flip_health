@@ -54,10 +54,7 @@ class DentalController extends GetxController {
     final lat = addr?.latitude;
     final lng = addr?.longitude;
     if (addr == null || lat == null || lng == null) {
-      AppToast.error(
-        title: 'Address',
-        message: 'Select an address with map location to find nearby clinics',
-      );
+    
       vendors.clear();
       selectedVendorId.value = '';
       return;

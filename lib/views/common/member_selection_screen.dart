@@ -100,16 +100,22 @@ class CommonMemberSelectionScreen extends StatelessWidget {
           : const SizedBox.shrink());
     }
 
-    return Obx(() => SafeBottomPadding(
+    return Obx(() {
+      final hasSelection = mc.selectedUserId.value.isNotEmpty;
+      return SafeBottomPadding(
+        child: Opacity(
+          opacity: hasSelection ? 1.0 : 0.5,
           child: ActionButton(
             text: AppString.kContinue,
             onPressed: () {
-              if (mc.selectedUserId.value.isEmpty) return;
+              if (!hasSelection) return;
               final member = mc.selectedMember;
               onContinue(member != null ? [member] : []);
             },
             isLoading: mc.isLoading.value,
           ),
-        ));
+        ),
+      );
+    });
   }
 }

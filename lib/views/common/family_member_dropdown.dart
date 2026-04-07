@@ -1,3 +1,4 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
@@ -78,29 +79,41 @@ class FamilyMemberDropdown extends StatelessWidget {
         else
           InkWell(
             onTap: () => _openSheet(context, title),
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 12.rh),
-              decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: AppColors.borderLight)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: CommonText(
-                      _displayName(_selected),
-                      fontSize: 14.rf,
-                      color: _selected == null
-                          ? AppColors.textSecondary
-                          : AppColors.textPrimary,
+            child: ShakeX(
+              duration: Duration(milliseconds: 800),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 12.rh, horizontal: 12.rw),
+                decoration:  BoxDecoration(
+                  border: Border.all(color: AppColors.borderLight),
+                  borderRadius: BorderRadius.circular(12.rs),
+                  color: AppColors.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.shadow.withValues(alpha: 0.1),
+                      blurRadius: 10.rs,
+                      offset: Offset(0, 4.rs),
                     ),
-                  ),
-                  Icon(
-                    Icons.arrow_drop_down,
-                    color: AppColors.primary,
-                    size: 28.rs,
-                  ),
-                ],
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: CommonText(
+                        _displayName(_selected),
+                        fontSize: 14.rf,
+                        color: _selected == null
+                            ? AppColors.textSecondary
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: AppColors.primary,
+                      size: 28.rs,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

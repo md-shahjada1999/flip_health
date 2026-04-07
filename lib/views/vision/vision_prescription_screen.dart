@@ -7,9 +7,9 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
-import 'package:flip_health/views/vision/vision_overview_screen.dart';
+import 'package:flip_health/core/utils/file_picker_helper.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
-import 'dart:io';
+import 'package:flip_health/views/vision/vision_overview_screen.dart';
 
 class VisionPrescriptionScreen extends GetView<VisionController> {
   const VisionPrescriptionScreen({Key? key}) : super(key: key);
@@ -36,7 +36,8 @@ class VisionPrescriptionScreen extends GetView<VisionController> {
                     ),
                     child: Column(
                       children: [
-                        Icon(Icons.upload_file, size: 48.rs, color: AppColors.primary),
+                        Icon(Icons.upload_file,
+                            size: 48.rs, color: AppColors.primary),
                         SizedBox(height: 12.rh),
                         CommonText(
                           AppString.kUploadPrescription,
@@ -54,25 +55,43 @@ class VisionPrescriptionScreen extends GetView<VisionController> {
                     ),
                   ),
                   SizedBox(height: 24.rh),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildUploadOption(
-                          icon: Icons.photo_library_outlined,
-                          label: AppString.kUploadFromGallery,
-                          onTap: controller.pickFromGallery,
+                  Obx(() {
+                    if (controller.prescriptionUploading.value) {
+                      return Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20.rh),
+                          child: CircularProgressIndicator(
+                              color: AppColors.primary),
+                        ),
+                      );
+                    }
+                    return GestureDetector(
+                      onTap: controller.pickPrescription,
+                      child: Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 20.rh),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12.rs),
+                          border: Border.all(
+                              color: AppColors.primary, width: 1.5),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(Icons.cloud_upload_outlined,
+                                size: 32.rs, color: AppColors.primary),
+                            SizedBox(height: 8.rh),
+                            CommonText(
+                              'Tap to upload prescription',
+                              fontSize: 13.rf,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(width: 16.rw),
-                      Expanded(
-                        child: _buildUploadOption(
-                          icon: Icons.camera_alt_outlined,
-                          label: AppString.kTakePhoto,
-                          onTap: controller.pickFromCamera,
-                        ),
-                      ),
-                    ],
-                  ),
+                    );
+                  }),
                   SizedBox(height: 32.rh),
                   CommonText(
                     AppString.kUploadedPrescriptions,
@@ -82,14 +101,15 @@ class VisionPrescriptionScreen extends GetView<VisionController> {
                   ),
                   SizedBox(height: 16.rh),
                   Obx(() {
-                    if (controller.uploadedFiles.isEmpty) {
+                    if (controller.prescriptionFiles.isEmpty) {
                       return Container(
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(vertical: 40.rh),
                         child: Column(
                           children: [
                             Icon(Icons.image_not_supported_outlined,
-                                size: 48.rs, color: AppColors.borderLight),
+                                size: 48.rs,
+                                color: AppColors.borderLight),
                             SizedBox(height: 12.rh),
                             CommonText(
                               AppString.kNoPrescriptionsYet,
@@ -104,15 +124,53 @@ class VisionPrescriptionScreen extends GetView<VisionController> {
                     return GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate:
+                          SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 3,
                         crossAxisSpacing: 12.rw,
                         mainAxisSpacing: 12.rh,
                       ),
-                      itemCount: controller.uploadedFiles.length,
+                      itemCount: controller.prescriptionFiles.length,
                       itemBuilder: (context, index) {
-                        final file = controller.uploadedFiles[index];
-                        return _buildFileCard(file, index);
+                        final file = controller.prescriptionFiles[index];
+                        return Stack(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundTertiary,
+                                borderRadius:
+                                    BorderRadius.circular(12.rs),
+                                border: Border.all(
+                                    color: AppColors.borderLight),
+                              ),
+                              child: Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(4.rs),
+                                  child: FilePickerHelper
+                                      .buildFilePreview(file),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 4.rh,
+                              right: 4.rw,
+                              child: GestureDetector(
+                                onTap: () =>
+                                    controller.removePrescription(index),
+                                child: Container(
+                                  width: 22.rs,
+                                  height: 22.rs,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.error,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.close,
+                                      color: Colors.white, size: 14.rs),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
                       },
                     );
                   }),
@@ -121,111 +179,15 @@ class VisionPrescriptionScreen extends GetView<VisionController> {
               ),
             ),
           ),
-          SafeBottomPadding(
-            child: ActionButton(
-              text: AppString.kContinue,
-              onPressed: () => Get.to(() => const VisionOverviewScreen()),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUploadOption({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 20.rh),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12.rs),
-          border: Border.all(color: AppColors.primary, width: 1.5),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 32.rs, color: AppColors.primary),
-            SizedBox(height: 8.rh),
-            CommonText(
-              label,
-              fontSize: 12.rf,
-              color: AppColors.primary,
-              fontWeight: FontWeight.w500,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFileCard(Map<String, dynamic> file, int index) {
-    final isImage = file['isImage'] == true;
-    final path = file['path'] as String? ?? '';
-
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.backgroundTertiary,
-            borderRadius: BorderRadius.circular(12.rs),
-            border: Border.all(color: AppColors.borderLight),
-          ),
-          child: isImage && path.isNotEmpty
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(12.rs),
-                  child: Image.file(
-                    File(path),
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                    errorBuilder: (_, __, ___) => _buildFileFallback(file),
+          Obx(() => controller.prescriptionFiles.isNotEmpty
+              ? SafeBottomPadding(
+                  child: ActionButton(
+                    text: AppString.kContinue,
+                    onPressed: () =>
+                        Get.to(() => const VisionOverviewScreen()),
                   ),
                 )
-              : _buildFileFallback(file),
-        ),
-        Positioned(
-          top: 4.rh,
-          right: 4.rw,
-          child: GestureDetector(
-            onTap: () => controller.removePrescriptionFile(index),
-            child: Container(
-              width: 22.rs,
-              height: 22.rs,
-              decoration: BoxDecoration(
-                color: AppColors.error,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.close, color: Colors.white, size: 14.rs),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFileFallback(Map<String, dynamic> file) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.description, size: 32.rs, color: AppColors.textSecondary),
-          SizedBox(height: 6.rh),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.rw),
-            child: CommonText(
-              file['name'] ?? '',
-              fontSize: 9.rf,
-              color: AppColors.textSecondary,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-          ),
+              : const SizedBox.shrink()),
         ],
       ),
     );

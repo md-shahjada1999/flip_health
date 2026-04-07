@@ -1,74 +1,184 @@
 import 'package:flip_health/core/services/api%20services/api_controller.dart';
+import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/core/services/app_exception.dart';
-import 'package:flip_health/model/heath%20checkup%20models/family_member_data_model.dart';
+import 'package:flip_health/core/utils/print_log.dart';
 import 'package:flip_health/model/vvd%20models/vendor_model.dart';
+import 'package:flip_health/model/vvd%20models/vision_booking_response.dart';
+import 'package:flip_health/model/vvd%20models/vision_network_model.dart';
+import 'package:flip_health/model/vvd%20models/vision_slot_model.dart';
 
 class VisionRepository {
   final ApiService apiService;
   VisionRepository({required this.apiService});
 
-  Future<List<VendorModel>> getVendors({required bool isEyeCheckup}) async {
+  /// Fetch clinics (`vision.clinic`) or stores (`vision.store`) near [location].
+  Future<List<VendorModel>> getVendors(
+    String location, {
+    required bool isEyeCheckup,
+  }) async {
     try {
-      // TODO: Replace with actual API call
-      if (isEyeCheckup) {
-        return [
-          VendorModel(id: 'v1', name: 'Dr. Agarwal\'s Eye Hospital', address: 'Road No. 1, Banjara Hills', city: 'Hyderabad', distance: '2.5', phone: '9876543210'),
-          VendorModel(id: 'v2', name: 'Centre for Sight', address: 'Somajiguda, Near Raj Bhavan', city: 'Hyderabad', distance: '4.8', phone: '9876543211'),
-          VendorModel(id: 'v3', name: 'L.V. Prasad Eye Institute', address: 'L.V. Prasad Marg, Banjara Hills', city: 'Hyderabad', distance: '6.1', phone: '9876543212'),
-          VendorModel(id: 'v4', name: 'Maxivision Eye Hospital', address: 'Madhapur, Hitec City', city: 'Hyderabad', distance: '3.0', phone: '9876543213'),
-        ];
-      } else {
-        return [
-          VendorModel(id: 'v1', name: 'Lenskart', address: 'Inorbit Mall, Madhapur', city: 'Hyderabad', distance: '3.2', phone: '9876543210'),
-          VendorModel(id: 'v2', name: 'Titan Eye+', address: 'Forum Sujana Mall, Kukatpally', city: 'Hyderabad', distance: '5.4', phone: '9876543211'),
-          VendorModel(id: 'v3', name: 'CoolWinks', address: 'GVK One Mall, Banjara Hills', city: 'Hyderabad', distance: '4.0', phone: '9876543212'),
-          VendorModel(id: 'v4', name: 'Vision Express', address: 'Jubilee Hills, Road No. 36', city: 'Hyderabad', distance: '5.8', phone: '9876543213'),
-        ];
+      final service = isEyeCheckup ? 'vision.clinic' : 'vision.store';
+      final response = await apiService.get(
+        ApiUrl.NETWORK_LIST,
+        queryParameters: {'location': location, 'service': service},
+      );
+      PrintLog.printLog(
+          'VisionRepository.getVendors status: ${response.statusCode}');
+
+      if (response.statusCode != 200) {
+        throw AppException(
+          message: response.data is Map
+              ? (response.data['message']?.toString() ??
+                  'Failed to load vendors')
+              : 'Failed to load vendors',
+          statusCode: response.statusCode,
+        );
       }
+
+      final root = response.data;
+      if (root is! Map<String, dynamic>) return [];
+
+      final listRaw = root['data'];
+      if (listRaw is! List<dynamic>) return [];
+
+      return listRaw
+          .whereType<Map>()
+          .map((e) => VisionNetworkModel.fromJson(
+              Map<String, dynamic>.from(e)))
+          .map((n) => n.toVendorModel())
+          .toList();
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AppException(message: e.toString());
+      PrintLog.printLog('VisionRepository.getVendors error: $e');
+      throw AppException(message: 'Failed to load vendors: $e');
     }
   }
 
-  Future<Map<String, dynamic>> getAvailableSlots() async {
+  /// Fetch available slots from the API.
+  /// Returns parsed response with daysList and categorised slot lists,
+  /// plus pre-formatted data for [CommonSlotSelector].
+  Future<Map<String, dynamic>> getSlots() async {
     try {
-      // TODO: Replace with actual API call
-      final now = DateTime.now().add(const Duration(days: 1));
-      final monthYear =
-          '${_monthName(now.month)} ${now.year}';
-      final dates = List.generate(7, (i) {
-        final date = now.add(Duration(days: i));
-        return {
-          'day': '${date.day}',
-          'weekday': _weekdayName(date.weekday),
-        };
-      });
+      final response = await apiService.get(ApiUrl.SERVICE_SLOTS);
+      PrintLog.printLog(
+          'VisionRepository.getSlots status: ${response.statusCode}');
+
+      if (response.statusCode != 200) {
+        throw AppException(
+          message: 'Failed to load slots',
+          statusCode: response.statusCode,
+        );
+      }
+
+      final data = response.data;
+      if (data is! Map<String, dynamic>) {
+        throw AppException(message: 'Unexpected slots response format');
+      }
+
+      final slotsResponse = VisionSlotsResponse.fromJson(data);
+
+      final availableDates = <Map<String, String>>[];
+      for (final dateStr in slotsResponse.daysList) {
+        final dt = DateTime.tryParse(dateStr);
+        if (dt != null) {
+          availableDates.add({
+            'day': '${dt.day}',
+            'weekday': _weekdayName(dt.weekday),
+          });
+        }
+      }
+
+      final monthYear = slotsResponse.daysList.isNotEmpty
+          ? () {
+              final dt = DateTime.tryParse(slotsResponse.daysList.first);
+              return dt != null
+                  ? '${_monthName(dt.month)} ${dt.year}'
+                  : '';
+            }()
+          : '';
+
       return {
         'monthYearLabel': monthYear,
-        'availableDates': dates,
-        'morningSlots': [
-          {'time': '9:00 AM', 'isDisabled': false},
-          {'time': '9:30 AM', 'isDisabled': false},
-          {'time': '10:00 AM', 'isDisabled': false},
-          {'time': '10:30 AM', 'isDisabled': true},
-          {'time': '11:00 AM', 'isDisabled': false},
-          {'time': '11:30 AM', 'isDisabled': false},
-        ],
-        'afternoonSlots': [
-          {'time': '2:00 PM', 'isDisabled': false},
-          {'time': '2:30 PM', 'isDisabled': false},
-          {'time': '3:00 PM', 'isDisabled': false},
-          {'time': '3:30 PM', 'isDisabled': true},
-          {'time': '4:00 PM', 'isDisabled': false},
-        ],
+        'availableDates': availableDates,
+        'daysList': slotsResponse.daysList,
+        'morningSlots': slotsResponse.morningSlots
+            .map((s) => s.toSelectorMap())
+            .toList(),
+        'afternoonSlots': slotsResponse.afternoonSlots
+            .map((s) => s.toSelectorMap())
+            .toList(),
+        'eveningSlots': slotsResponse.eveningSlots
+            .map((s) => s.toSelectorMap())
+            .toList(),
       };
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AppException(message: e.toString());
+      PrintLog.printLog('VisionRepository.getSlots error: $e');
+      throw AppException(message: 'Failed to load slots: $e');
+    }
+  }
+
+  /// Book a vision service (eye checkup or lens).
+  Future<VisionBookingResponse> bookVisionService({
+    required String bookingType,
+    required int userId,
+    required String addressId,
+    required Map<String, dynamic> slot,
+    String networkId = '',
+    List<Map<String, String>> prescription = const [],
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'booking_type': bookingType,
+        'user_id': userId,
+        'network_id': networkId,
+        'address_id': addressId,
+        'slot': slot,
+      };
+      if (prescription.isNotEmpty) {
+        body['prescription'] = prescription;
+      }
+
+      final response =
+          await apiService.post(ApiUrl.VISION_SERVICE_REQUEST, data: body);
+      PrintLog.printLog(
+          'VisionRepository.bookVisionService status: ${response.statusCode}');
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw AppException(
+          message: response.data is Map
+              ? (response.data['message']?.toString() ?? 'Booking failed')
+              : 'Booking failed',
+          statusCode: response.statusCode,
+        );
+      }
+
+      final root = response.data;
+      if (root is Map<String, dynamic>) {
+        return VisionBookingResponse.fromJson(root);
+      }
+      return VisionBookingResponse(
+        service: VisionBookingService(
+          id: '',
+          details: const VisionBookingDetails(),
+        ),
+        message: 'Request submitted',
+      );
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('VisionRepository.bookVisionService error: $e');
+      throw AppException(message: 'Booking failed: $e');
     }
   }
 
   String _monthName(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
     return months[month - 1];
   }
 

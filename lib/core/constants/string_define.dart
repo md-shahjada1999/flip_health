@@ -738,6 +738,83 @@ class AppString {
   static const String kSelectedFiles = 'Selected Files';
   static const String kNoFilesSelected = 'No files selected';
   static const String kPlaceOrder = 'Place Order';
+  static const String kAddPrescription = 'Add Prescription';
+  static const String kUploading = 'Uploading...';
+  static const String kUploadComplete = 'Upload complete';
+  static const String kUploadFailed = 'Upload failed';
+  static const String kPrescriptionDetail = 'Prescription Detail';
+  static const String kMedicines = 'Medicines';
+  static const String kDosageSchedule = 'Dosage Schedule';
+  static const String kDays = 'Days';
+  static const String kWeekly = 'Weekly';
+  static const String kSelectAndOrder = 'Select & Place Order';
+  static const String kPlacingOrder = 'Placing order...';
+  static const String kNight = 'Night';
+  static const String kDoctor = 'Doctor';
+  static const String kSymptoms = 'Symptoms';
+  static const String kDiagnosis = 'Diagnosis';
+  static const String kRecommendation = 'Recommendation';
+  static const String kNotes = 'Notes';
+  static const String kChronic = 'Chronic';
+  static const String kOther = 'Other';
+  static const String kNoPrescriptionsAvailable = 'No prescriptions available';
+  static const String kLoadingPrescriptions = 'Loading prescriptions...';
+  static const String kPrescriptionBy = 'Prescription by';
+  static const String kMedicineCount = 'medicines';
+  static const String kTablet = 'Tablet';
+  static const String kTimesPerWeek = 'times/week';
+  static const String kOTCOrderConfirm =
+      'Place an order for OTC products? Our team will contact you to confirm.';
+  static const String kMedicineDeliveryImage = 'assets/png/medicine_delivery.png';
+  static const String kUploadPrescriptionImage = 'assets/png/upload_prescription_illustration.png';
+  static const String kFlipHealthPrescriptionImage = 'assets/png/flip_health_prescription_illustration.png';
+  static const String kOTCProductsImage = 'assets/png/otc_products_illustration.png';
+  static const String kPrescriptionDetailImage = 'assets/png/prescription_detail_illustration.png';
+
+  // Dialog illustrations
+  static const String kDialogConfirmImage = 'assets/png/dialog_confirm_illustration.png';
+  static const String kDialogWarningImage = 'assets/png/dialog_warning_illustration.png';
+  static const String kDialogErrorImage = 'assets/png/dialog_error_illustration.png';
+  static const String kDialogInfoImage = 'assets/png/dialog_info_illustration.png';
+  static const String kDialogSuccessImage = 'assets/png/dialog_success_illustration.png';
+
+  // Consultation Module — Overview & Flows
+  static const String kConsultationOverview = 'Consultation';
+  static const String kOnlineConsultation = 'Online Consultation';
+  static const String kAtHospital = 'At Hospital';
+  static const String kOnlineConsultationDesc =
+      'Consult top doctors online from the comfort of your home via video/audio call.';
+  static const String kAtHospitalConsultDesc =
+      'Visit a specialist at a nearby hospital or clinic for an in-person consultation.';
+  static const String kSelectIssue = 'Select an Issue';
+  static const String kSearchIssues = 'Search Issues';
+  static const String kNoIssuesFound = 'No issues found';
+  static const String kNoDoctorsFound = 'No doctors found';
+  static const String kNoSlotsAvailable = 'No slots available for this date';
+  static const String kSelectDayAndTime = 'Select Day & Time';
+  static const String kNoScheduleAvailable = 'No schedule available';
+  static const String kPurpose = 'Purpose (Optional)';
+  static const String kPurposeHint = 'Briefly describe the reason for your visit';
+  static const String kConsultationFAQ1 =
+      'How does online consultation work?';
+  static const String kConsultationFAQ1Answer =
+      'Select an issue, choose a doctor, pick a time slot, and confirm your booking. The doctor will connect via video/audio call.';
+  static const String kConsultationFAQ2 =
+      'Can I book an in-person appointment?';
+  static const String kConsultationFAQ2Answer =
+      'Yes, select "At Hospital" to find nearby doctors and hospitals. Choose a specialist, check available schedules, and book.';
+  static const String kConsultationFAQ3 =
+      'What if I need to cancel my appointment?';
+  static const String kConsultationFAQ3Answer =
+      'You can cancel or reschedule your appointment from the "My Orders" section. Cancellation policies may vary.';
+  static const String kConsultationPrice = 'Consultation Price';
+  static const String kNextAvailable = 'Next available';
+  static const String kEvening = 'Evening';
+  static const String kConfirmBooking = 'Confirm Booking';
+  static const String kBookingSummary = 'Booking Summary';
+  static const String kSpeciality = 'Speciality';
+  static const String kSchedule = 'Schedule';
+  static const String kNearbyDoctors = 'Nearby Doctors';
 
   // Claims Module
   static const String kMyClaims = 'My Claims';

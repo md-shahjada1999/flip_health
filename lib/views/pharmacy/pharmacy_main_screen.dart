@@ -4,6 +4,7 @@ import 'package:flip_health/controllers/pharmacy%20controllers/pharmacy_controll
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
+import 'package:flip_health/core/utils/common_dialog.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
@@ -28,7 +29,6 @@ class PharmacyMainScreen extends GetView<PharmacyController> {
             Expanded(child: LocationHeaderBar()),
           ],
         ),
-        
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -63,7 +63,7 @@ class PharmacyMainScreen extends GetView<PharmacyController> {
 
   Widget _buildHeroSection() {
     return Container(
-      height: 220.rh,
+      height: 160 .rh,
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 20.rw),
       child: Stack(
@@ -90,8 +90,8 @@ class PharmacyMainScreen extends GetView<PharmacyController> {
             ),
           ),
           Positioned(
+            top: 0,
             right: 0,
-            bottom: 16.rh,
             child: Container(
               width: 140.rs,
               height: 140.rs,
@@ -99,7 +99,7 @@ class PharmacyMainScreen extends GetView<PharmacyController> {
                 color: AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(16.rs),
               ),
-              child: Icon(Icons.local_pharmacy, size: 64.rs, color: AppColors.primary),
+              child: Image.asset(AppString.kMedicineDeliveryImage),
             ),
           ),
         ],
@@ -113,18 +113,14 @@ class PharmacyMainScreen extends GetView<PharmacyController> {
       children: [
         Icon(Icons.chevron_right, size: 20.rs, color: AppColors.primary),
         SizedBox(width: 4.rw),
-        CommonText(
-          text,
-          fontSize: 12.rf,
-          color: AppColors.textPrimary,
-        ),
+        CommonText(text, fontSize: 12.rf, color: AppColors.textPrimary),
       ],
     );
   }
 
   Widget _buildDeliveryNote() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.rw, vertical: 8.rh),
+      padding: EdgeInsets.symmetric(horizontal: 20.rw, vertical: 4.rh),
       child: CommonText(
         AppString.kMedicineDeliveryNote,
         fontSize: 10.rf,
@@ -154,31 +150,31 @@ class PharmacyMainScreen extends GetView<PharmacyController> {
           ),
           SizedBox(height: 20.rh),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               Expanded(
-                child: GestureDetector(
+                child: _buildIllustrationCard(
+                  title: AppString.kUploadImage,
+                  buttonText: AppString.kUpload,
+                  imagePath: AppString.kUploadPrescriptionImage,
                   onTap: () {
                     controller.prescriptionSource.value = 'OTHER';
+                    controller.resetUploadState();
                     Get.to(() => const PharmacyPrescriptionScreen());
                   },
-                  child: _buildUploadCard(
-                    AppString.kUploadImage,
-                    AppString.kUpload,
-                  ),
                 ),
               ),
-              SizedBox(width: 16.rw),
+              SizedBox(width: 14.rw),
               Expanded(
-                child: GestureDetector(
+                child: _buildIllustrationCard(
+                  title: AppString.kFlipHealthPrescription,
+                  buttonText: AppString.kSelect,
+                  imagePath: AppString.kFlipHealthPrescriptionImage,
                   onTap: () {
                     controller.prescriptionSource.value = 'FLIPHEALTH';
+                    controller.resetFlipHealthState();
+                    controller.fetchPrescriptions();
                     Get.to(() => const PharmacyPrescriptionScreen());
                   },
-                  child: _buildUploadCard(
-                    AppString.kFlipHealthPrescription,
-                    AppString.kSelect,
-                  ),
                 ),
               ),
             ],
@@ -188,80 +184,185 @@ class PharmacyMainScreen extends GetView<PharmacyController> {
     );
   }
 
-  Widget _buildUploadCard(String title, String buttonText) {
-    return Container(
-      height: 120.rh,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(8.rs),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.rw),
-            child: CommonText(
-              title,
-              fontSize: 12.rf,
-              color: AppColors.primary,
-              textAlign: TextAlign.center,
+  Widget _buildIllustrationCard({
+    required String title,
+    required String buttonText,
+    required String imagePath,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 140.rw,
+        height: 200.rh,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14.rs),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 20.rw, vertical: 8.rh),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(5.rs),
+          ],
+        ),
+        child: Column(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(14.rs)),
+              child: Image.asset(
+                imagePath,
+                height: 100.rh,
+                width: double.infinity,
+                fit: BoxFit.contain,
+              ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CommonText(
-                  buttonText,
-                  fontSize: 12.rf,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-                SizedBox(width: 4.rw),
-                Icon(Icons.file_upload_outlined, size: 18.rs, color: Colors.white),
-              ],
+                Spacer(),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.rw, vertical: 10.rh),
+              child: Column(
+                children: [
+                  CommonText(
+                    title,
+                    fontSize: 12.rf,
+                    color: AppColors.textPrimary,
+                    textAlign: TextAlign.center,
+                    fontWeight: FontWeight.w600,
+                    maxLines: 2,
+                  ),
+              
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(vertical: 8.rh),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(8.rs),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CommonText(
+                          buttonText,
+                          fontSize: 12.rf,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        SizedBox(width: 4.rw),
+                        Icon(Icons.arrow_forward_rounded,
+                            size: 14.rs, color: Colors.white),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildOTCSection(BuildContext context) {
-    return Container(
-      color: AppColors.primaryLight,
-      padding: EdgeInsets.all(18.rs),
-      child: Row(
-        children: [
-          Icon(Icons.chevron_right, size: 24.rs, color: AppColors.primary),
-          SizedBox(width: 8.rw),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: controller.navigateToOTC,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: EdgeInsets.symmetric(vertical: 14.rh),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.rs),
-                ),
-                elevation: 0,
-              ),
-              child: CommonText(
-                AppString.kRequestOTCProducts,
-                fontSize: 16.rf,
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+    return GestureDetector(
+      onTap: controller.isOrdering.value ? null : _handleOTCOrder,
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 18.rw),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14.rs),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius:
+                  BorderRadius.horizontal(left: Radius.circular(14.rs)),
+              child: Image.asset(
+                AppString.kOTCProductsImage,
+                height: 100.rh,
+                width: 110.rw,
+                fit: BoxFit.contain,
               ),
             ),
-          ),
-        ],
+            SizedBox(width: 12.rw),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 12.rh),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CommonText(
+                      AppString.kRequestOTCProducts,
+                      fontSize: 14.rf,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                    SizedBox(height: 4.rh),
+                    CommonText(
+                      'No prescription needed',
+                      fontSize: 11.rf,
+                      color: AppColors.textSecondary,
+                    ),
+                    SizedBox(height: 10.rh),
+                    Obx(() => Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16.rw, vertical: 8.rh),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(8.rs),
+                          ),
+                          child: controller.isOrdering.value
+                              ? SizedBox(
+                                  height: 16.rs,
+                                  width: 16.rs,
+                                  child: const CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    CommonText(
+                                      'Order Now',
+                                      fontSize: 12.rf,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    SizedBox(width: 4.rw),
+                                    Icon(Icons.arrow_forward_rounded,
+                                        size: 14.rs, color: Colors.white),
+                                  ],
+                                ),
+                        )),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(width: 12.rw),
+          ],
+        ),
       ),
     );
+  }
+
+  void _handleOTCOrder() async {
+    final confirmed = await CommonDialog.confirm(
+      title: AppString.kRequestOTCProducts,
+      message: AppString.kOTCOrderConfirm,
+      confirmText: 'Place Order',
+      icon: Icons.shopping_bag_outlined,
+    );
+    if (confirmed == true) {
+      controller.placeOTCOrder();
+    }
   }
 
   Widget _buildFAQSection(BuildContext context) {

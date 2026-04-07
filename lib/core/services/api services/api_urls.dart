@@ -32,10 +32,16 @@ class ApiUrl {
   // Members
   static const String GET_MEMBERS = "/patient/member";
 
-  // Consultation
-  static const String GET_SPECIALITIES = "/patient/speciality";
-  static const String GET_DOCTORS = "/patient/doctor";
-  static const String GET_HOSPITALS = "/patient/hospital";
+  // Consultation — Online / Virtual
+  static const String ISSUES = "/patient/issues";
+  static const String SPECIALITY_DOCTORS = "/patient/speciality";
+  static const String AVAILABLE_SLOTS = "/patient/availableSlots";
+  static const String BOOK_APPOINTMENT = "/patient/appointment/book";
+
+  // Consultation — Offline / Hospital
+  static const String SPECIALTIES = "/patient/specialties";
+  static const String NETWORK_SLOTS = "/patient/network/slots";
+  static const String NETWORK_BOOK = "/patient/appointment/network_book";
 
   // Address
   static const String ADDRESS = "/patient/address";
@@ -51,6 +57,18 @@ class ApiUrl {
 
   /// Vaccine service booking request
   static const String VACCINE_SERVICE_REQUEST = "/patient/service/vaccine/request";
+
+  /// Vision / VVD service slots — `GET`
+  static const String SERVICE_SLOTS = "/patient/service/slots";
+
+  /// Vision service booking request
+  static const String VISION_SERVICE_REQUEST = "/patient/service/vision/request";
+
+  /// Pharmacy — place medicine order (upload / flip health / OTC)
+  static const String MEDICINE_ORDER = "/patient/medicine";
+
+  /// Flip Health prescriptions — `GET` all, `GET /{id}` single
+  static const String PRESCRIPTIONS = "/patient/prescriptions";
 
   // Health Score
   static const String HEALTH_SCORE = "/patient/healthscore";

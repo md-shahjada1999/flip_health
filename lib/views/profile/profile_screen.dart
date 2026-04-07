@@ -7,6 +7,7 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
+import 'package:flip_health/core/utils/common_dialog.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/views/profile/widgets/profile_action_card.dart';
 import 'package:flip_health/views/profile/widgets/profile_info_tile.dart';
@@ -403,16 +404,16 @@ class _ProfileScreenState extends State<ProfileScreen>
     return FadeTransition(
       opacity: _bmiFade,
       child: GestureDetector(
-        onTap: () {
-          Get.defaultDialog(
+        onTap: () async {
+          final confirmed = await CommonDialog.show(
             title: AppString.kLogout,
-            middleText: 'Are you sure you want to log out?',
-            textConfirm: 'Yes',
-            textCancel: 'No',
-            confirmTextColor: Colors.white,
-            buttonColor: AppColors.primary,
-            onConfirm: controller.logout,
+            message: 'Are you sure you want to log out?',
+            type: DialogType.warning,
+            confirmText: 'Logout',
+            cancelText: 'Cancel',
+            icon: Icons.logout_rounded,
           );
+          if (confirmed == true) controller.logout();
         },
         child: Container(
           width: double.infinity,

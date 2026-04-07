@@ -25,7 +25,7 @@ import 'package:flip_health/views/address/address_form_screen.dart';
 import 'package:flip_health/views/address/map_picker_screen.dart';
 import 'package:flip_health/views/auth/login/login_screen.dart';
 import 'package:flip_health/views/auth/login/otp_screen.dart';
-import 'package:flip_health/views/consultation/consultation_member_selection_screen.dart';
+import 'package:flip_health/views/consultation/consultation_overview_screen.dart';
 import 'package:flip_health/views/dashboard/dashboard_screen.dart';
 import 'package:flip_health/views/dashboard/view_more_services.dart';
 import 'package:flip_health/views/daignostics/health_checkup/add_family_member_page.dart';
@@ -120,7 +120,7 @@ class AppPages {
     // Consultation
     GetPage(
       name: AppRoutes.consultation,
-      page: () => const ConsultationMemberSelectionScreen(),
+      page: () => const ConsultationOverviewScreen(),
       binding: ConsultationBinding(),
     ),
 

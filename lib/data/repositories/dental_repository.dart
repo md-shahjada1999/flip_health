@@ -213,7 +213,7 @@ class DentalRepository {
         'language': language,
         'provider_id': providerId,
         'clinic_id': clinicId,
-        'user_id': userId,
+        'user_id': int.parse(userId),
         'center': center,
       };
 
