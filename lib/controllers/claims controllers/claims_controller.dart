@@ -1,10 +1,18 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:flip_health/core/services/app_exception.dart';
 import 'package:flip_health/core/utils/file_picker_helper.dart';
 import 'package:flip_health/core/utils/print_log.dart';
+import 'package:flip_health/core/constants/app_colors.dart';
+import 'package:flip_health/core/constants/string_define.dart';
+import 'package:flip_health/core/helpers/responsive_helpers.dart';
+import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/data/repositories/claims_repository.dart';
 import 'package:flip_health/data/repositories/member_repository.dart';
@@ -22,8 +30,8 @@ class ClaimsController extends GetxController {
   ClaimsController({
     required ClaimsRepository repository,
     required MemberRepository memberRepository,
-  })  : _repository = repository,
-        _memberRepository = memberRepository;
+  }) : _repository = repository,
+       _memberRepository = memberRepository;
   final isLoading = false.obs;
   final allClaims = <ClaimModel>[].obs;
   final filteredClaims = <ClaimModel>[].obs;
@@ -103,6 +111,20 @@ class ClaimsController extends GetxController {
   final paymentFiles = <Map<String, dynamic>>[].obs;
   final reportFiles = <Map<String, dynamic>>[].obs;
   final otherFiles = <Map<String, dynamic>>[].obs;
+
+  /// `-1` = new bill; `>= 0` = editing `bills[index]` (patient_app `billIndex`).
+  final billIndex = (-1).obs;
+  final billServicePickerSelection = <Map<String, dynamic>>[].obs;
+  final requiredPayments = <dynamic>[].obs;
+  final requiredReports = <dynamic>[].obs;
+  final step2DocumentsValid = true.obs;
+
+  /// patient_app `selectedServices` during claim-doc service sheet (payment / report / other).
+  final selectedDocServiceTypes = <Map<String, dynamic>>[].obs;
+  final isClaimDocUploading = false.obs;
+
+  /// Add-bill sheet: uploading bill attachment to `/upload` (patient_app `uploadFile` for BILL).
+  final isBillImageUploading = false.obs;
 
   static const List<Map<String, dynamic>> statusFilters = [
     {'status': -1, 'label': 'All', 'color': Color(0xFF607D8B)},
@@ -368,7 +390,6 @@ class ClaimsController extends GetxController {
 
   Future<void> _loadBankAccounts() async {
     try {
-      print("loadBankAccounts");
       bankAccounts.value = await _repository.getBankAccounts();
     } catch (_) {}
   }
@@ -774,27 +795,561 @@ class ClaimsController extends GetxController {
       selectedBank.value != null &&
       termsAccepted.value;
 
-  // Bill management
-  void addBill() {
-    if (billNumberController.text.isEmpty || billAmountController.text.isEmpty) {
-      return;
-    }
-    bills.add(
-      ClaimBill(
-        billNumber: billNumberController.text,
-        billDate: billDateController.text,
-        billAmount: double.tryParse(billAmountController.text) ?? 0,
-        clinicName: clinicNameController.text,
-        clinicAddress: clinicAddressController.text,
-        doctorName: doctorNameController.text,
-        doctorRegistration: doctorRegController.text,
-        imageFiles: List.from(billImageFiles),
-      ),
-    );
+  // Bill management — service types + required docs (patient_app `add_claims_new`)
+  void prepareNewBillSheet() {
+    billIndex.value = -1;
     _clearBillForm();
   }
 
-  void removeBill(int index) => bills.removeAt(index);
+  void loadBillForEdit(int index) {
+    if (index < 0 || index >= bills.length) return;
+    billIndex.value = index;
+    final b = bills[index];
+    billNumberController.text = b.billNumber;
+    billDateController.text = b.billDate;
+    billAmountController.text = b.billAmount.toString();
+    clinicNameController.text = b.clinicName;
+    clinicAddressController.text = b.clinicAddress;
+    doctorNameController.text = b.doctorName;
+    doctorRegController.text = b.doctorRegistration;
+    billImageFiles.assignAll(
+      b.imageFiles.map((e) => Map<String, dynamic>.from(e)),
+    );
+  }
+
+  bool _billFormFieldsValid() {
+    if (billNumberController.text.trim().isEmpty ||
+        billDateController.text.trim().isEmpty ||
+        billAmountController.text.trim().isEmpty ||
+        clinicNameController.text.trim().isEmpty ||
+        clinicAddressController.text.trim().isEmpty ||
+        billImageFiles.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Please fill mandatory bill fields and attach at least one bill image',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+      return false;
+    }
+    final amt = double.tryParse(billAmountController.text.trim());
+    if (amt == null || amt < 1) {
+      Get.snackbar(
+        'Error',
+        'Bill amount must be at least 1',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+      return false;
+    }
+    return true;
+  }
+
+  Future<void> onSaveMedicalBillPressed() async {
+    if (!_billFormFieldsValid()) return;
+    await ensureBillTypes();
+    if (billTypes.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Could not load service types. Try again.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+      return;
+    }
+    if (billIndex.value < 0) {
+      showBillReviewTermsBottomSheet();
+    } else {
+      showBillServiceTypesBottomSheet();
+    }
+  }
+
+  void showBillReviewTermsBottomSheet() {
+    Get.bottomSheet(
+      isScrollControlled: true,
+      isDismissible: false,
+      Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.rs)),
+        ),
+        padding: EdgeInsets.all(20.rs),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () => Get.back(),
+                  child: Container(
+                    padding: EdgeInsets.all(6.rs),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundTertiary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.close,
+                      size: 20.rs,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 8.rh),
+              CommonText(
+                AppString.kReviewYourSubmission,
+                fontSize: 18.rf,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+              SizedBox(height: 12.rh),
+              Container(
+                constraints: BoxConstraints(maxHeight: 160.rh),
+                padding: EdgeInsets.all(12.rs),
+                decoration: BoxDecoration(
+                  color: AppColors.backgroundTertiary,
+                  borderRadius: BorderRadius.circular(12.rs),
+                ),
+                child: SingleChildScrollView(
+                  child: CommonText(
+                    AppString.kBillReviewDisclaimer,
+                    fontSize: 14.rf,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              SizedBox(height: 20.rh),
+              ElevatedButton(
+                onPressed: () {
+                  Get.back();
+                  showBillServiceTypesBottomSheet();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: EdgeInsets.symmetric(vertical: 16.rh),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14.rs),
+                  ),
+                  elevation: 0,
+                ),
+                child: CommonText(
+                  AppString.kIAgree,
+                  fontSize: 15.rf,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _resetBillServicePickerSelection() {
+    billServicePickerSelection.clear();
+    final i = billIndex.value;
+    if (i >= 0 && i < bills.length) {
+      for (final m in bills[i].serviceTypes) {
+        billServicePickerSelection.add(
+          Map<String, dynamic>.from(json.decode(json.encode(m))),
+        );
+      }
+    }
+  }
+
+  void toggleBillServiceTypeSelection(Map<String, dynamic> value) {
+    final key = value['key']?.toString() ?? '';
+    if (key.isEmpty) return;
+    final idx = billServicePickerSelection.indexWhere(
+      (e) => e['key']?.toString() == key,
+    );
+    if (idx >= 0) {
+      billServicePickerSelection.removeAt(idx);
+    } else {
+      billServicePickerSelection.add({
+        'type': key,
+        ...Map<String, dynamic>.from(value),
+      });
+    }
+  }
+
+  void showBillServiceTypesBottomSheet() {
+    _resetBillServicePickerSelection();
+    Get.bottomSheet(
+      isScrollControlled: true,
+      Container(
+        height: Get.height * 0.55,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.rs)),
+        ),
+        padding: EdgeInsets.fromLTRB(20.rs, 12.rh, 20.rs, 20.rh),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: CommonText(
+                    AppString.kSelectServiceTypes,
+                    fontSize: 18.rf,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Get.back(),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    size: 24.rs,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            Divider(height: 20.rh, thickness: 1, color: AppColors.borderLight),
+            Expanded(
+              child: Obx(() {
+                if (billTypes.isEmpty) {
+                  return Center(
+                    child: CommonText(
+                      AppString.kNoServiceTypesAvailable,
+                      fontSize: 14.rf,
+                      color: AppColors.textSecondary,
+                    ),
+                  );
+                }
+                return SingleChildScrollView(
+                  child: Wrap(
+                    spacing: 10.rw,
+                    runSpacing: 10.rh,
+                    children: billTypes.map((value) {
+                      final key = value['key']?.toString() ?? '';
+                      final selected = billServicePickerSelection.any(
+                        (e) => e['key']?.toString() == key,
+                      );
+                      return GestureDetector(
+                        onTap: () => toggleBillServiceTypeSelection(value),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.rw,
+                            vertical: 8.rh,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14.rs),
+                            border: Border.all(
+                              color: selected
+                                  ? AppColors.primary
+                                  : AppColors.borderLight,
+                            ),
+                            color: selected
+                                ? AppColors.primary
+                                : AppColors.surface,
+                          ),
+                          child: CommonText(
+                            value['value']?.toString() ?? key,
+                            fontSize: 12.rf,
+                            color: selected
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                );
+              }),
+            ),
+            Obx(() {
+              if (billServicePickerSelection.isEmpty) {
+                return SizedBox(height: 8.rh);
+              }
+              return Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => billServicePickerSelection.clear(),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 14.rh),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14.rs),
+                        ),
+                        side: BorderSide(color: AppColors.borderLight),
+                      ),
+                      child: CommonText(
+                        AppString.kClearAll,
+                        fontSize: 14.rf,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.rw),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await commitBillAfterServiceSelection();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: EdgeInsets.symmetric(vertical: 14.rh),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14.rs),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: CommonText(
+                        AppString.kApply,
+                        fontSize: 14.rf,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> commitBillAfterServiceSelection() async {
+    if (billServicePickerSelection.isEmpty) {
+      Get.snackbar(
+        'Error',
+        AppString.kSelectAtLeastOneServiceType,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+      return;
+    }
+    final normalized = billServicePickerSelection
+        .map((e) => Map<String, dynamic>.from(json.decode(json.encode(e))))
+        .toList();
+
+    final newBill = ClaimBill(
+      billNumber: billNumberController.text.trim(),
+      billDate: billDateController.text.trim(),
+      billAmount: double.tryParse(billAmountController.text.trim()) ?? 0,
+      clinicName: clinicNameController.text.trim(),
+      clinicAddress: clinicAddressController.text.trim(),
+      doctorName: doctorNameController.text.trim(),
+      doctorRegistration: doctorRegController.text.trim(),
+      imageFiles: billImageFiles
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList(),
+      serviceTypes: normalized,
+    );
+
+    if (billIndex.value < 0) {
+      bills.add(newBill);
+    } else {
+      bills[billIndex.value] = newBill;
+    }
+
+    billIndex.value = -1;
+    _clearBillForm();
+    billServicePickerSelection.clear();
+
+    await syncRequiredDocumentsFromApi();
+    refreshStep2DocumentValidation();
+
+    Get.back();
+    Get.back();
+  }
+
+  List<Map<String, dynamic>> getUniqueSelectedServiceTypesFromBills() {
+    final out = <Map<String, dynamic>>[];
+    for (final bill in bills) {
+      for (final st in bill.serviceTypes) {
+        final key = st['key']?.toString();
+        if (key == null || key.isEmpty) continue;
+        if (out.any((e) => e['key'] == key)) continue;
+        out.add(Map<String, dynamic>.from(st));
+      }
+    }
+    return out;
+  }
+
+  List<dynamic> _normalizeRequiredDocList(List<dynamic> raw) {
+    return raw.map((e) {
+      if (e is Map) {
+        final m = Map<String, dynamic>.from(e);
+        m['missingReports'] = <dynamic>[];
+        return m;
+      }
+      return e;
+    }).toList();
+  }
+
+  Future<void> syncRequiredDocumentsFromApi() async {
+    final keys = getUniqueSelectedServiceTypesFromBills()
+        .map((e) => e['key']?.toString())
+        .where((k) => (k ?? '').isNotEmpty)
+        .join(',');
+    if (keys.isEmpty) {
+      requiredPayments.clear();
+      requiredReports.clear();
+      refreshStep2DocumentValidation();
+      return;
+    }
+    try {
+      final r = await _repository.getRequiredDocumentsMultiList(keys);
+      requiredPayments.assignAll(_normalizeRequiredDocList(r.payments));
+      requiredReports.assignAll(_normalizeRequiredDocList(r.reports));
+    } catch (_) {
+      requiredPayments.clear();
+      requiredReports.clear();
+    }
+    refreshStep2DocumentValidation();
+  }
+
+  Map<String, dynamic> _claimDraftForValidation() {
+    return {
+      'reimbursement_report_files': reportFiles
+          .map((f) => Map<String, dynamic>.from(f))
+          .toList(),
+      'reimbursement_bill_payment_files': paymentFiles
+          .map((f) => Map<String, dynamic>.from(f))
+          .toList(),
+    };
+  }
+
+  bool _rowParticularsRequired(Map<String, dynamic> row) {
+    final p = row['particulars'];
+    if (p is Map) {
+      return p['required'] == true;
+    }
+    return false;
+  }
+
+  bool _step2ValidationSync() {
+    final claimData = _claimDraftForValidation();
+    bool paymentOk = true;
+    bool reportOk = true;
+
+    for (var index = 0; index < requiredReports.length; index++) {
+      final report = requiredReports[index];
+      if (report is! Map) continue;
+      final row = Map<String, dynamic>.from(report);
+      requiredReports[index] = row;
+      row['missingReports'] = <dynamic>[];
+
+      if (!_rowParticularsRequired(row)) continue;
+
+      final category = row['category']?.toString() ?? '';
+      final merged = <Map<String, dynamic>>[];
+      for (final file in claimData['reimbursement_report_files'] as List) {
+        if (file is! Map) continue;
+        final fm = Map<String, dynamic>.from(file);
+        if ((fm['document_type']?.toString() ?? '') != category) continue;
+        final st = fm['service_types'];
+        if (st is List) {
+          for (final s in st) {
+            if (s is Map) {
+              final sm = Map<String, dynamic>.from(s);
+              final k = sm['key']?.toString();
+              if (k != null && !merged.any((e) => e['key'] == k)) {
+                merged.add(sm);
+              }
+            }
+          }
+        }
+      }
+
+      final claimTypes = row['claim_type'];
+      if (claimTypes is List) {
+        for (final ct in claimTypes) {
+          if (ct is! Map) continue;
+          final ctm = Map<String, dynamic>.from(ct);
+          final ck = ctm['key']?.toString();
+          if (ck == null) continue;
+          if (!merged.map((e) => e['key']).contains(ck)) {
+            (row['missingReports'] as List).add(json.decode(json.encode(ctm)));
+            reportOk = false;
+          }
+        }
+      }
+    }
+
+    for (var index = 0; index < requiredPayments.length; index++) {
+      final payment = requiredPayments[index];
+      if (payment is! Map) continue;
+      final row = Map<String, dynamic>.from(payment);
+      requiredPayments[index] = row;
+      row['missingReports'] = <dynamic>[];
+
+      if (!_rowParticularsRequired(row)) continue;
+
+      final category = row['category']?.toString() ?? '';
+      final merged = <Map<String, dynamic>>[];
+      for (final file
+          in claimData['reimbursement_bill_payment_files'] as List) {
+        if (file is! Map) continue;
+        final fm = Map<String, dynamic>.from(file);
+        if ((fm['document_type']?.toString() ?? '') != category) continue;
+        final st = fm['service_types'];
+        if (st is List) {
+          for (final s in st) {
+            if (s is Map) {
+              final sm = Map<String, dynamic>.from(s);
+              final k = sm['key']?.toString();
+              if (k != null && !merged.any((e) => e['key'] == k)) {
+                merged.add(sm);
+              }
+            }
+          }
+        }
+      }
+
+      final claimTypes = row['claim_type'];
+      if (claimTypes is List) {
+        for (final ct in claimTypes) {
+          if (ct is! Map) continue;
+          final ctm = Map<String, dynamic>.from(ct);
+          final ck = ctm['key']?.toString();
+          if (ck == null) continue;
+          if (!merged.map((e) => e['key']).contains(ck)) {
+            (row['missingReports'] as List).add(json.decode(json.encode(ctm)));
+            paymentOk = false;
+          }
+        }
+      }
+    }
+
+    requiredPayments.refresh();
+    requiredReports.refresh();
+
+    return paymentOk && reportOk;
+  }
+
+  void refreshStep2DocumentValidation() {
+    if (bills.isEmpty) {
+      step2DocumentsValid.value = true;
+      return;
+    }
+    if (requiredPayments.isEmpty && requiredReports.isEmpty) {
+      step2DocumentsValid.value = true;
+      return;
+    }
+    step2DocumentsValid.value = _step2ValidationSync();
+  }
+
+  void removeBill(int index) {
+    bills.removeAt(index);
+    Future(() async {
+      await syncRequiredDocumentsFromApi();
+    });
+  }
 
   void _clearBillForm() {
     billNumberController.clear();
@@ -808,28 +1363,564 @@ class ClaimsController extends GetxController {
   }
 
   void pickBillImage() {
-    FilePickerHelper.showPickerBottomSheet(
-      onFilePicked: (file) => billImageFiles.add(file.toMap()),
-    );
+    FocusManager.instance.primaryFocus?.unfocus();
+    final ctx = Get.context;
+    if (ctx != null) {
+      FocusScope.of(ctx).unfocus();
+    }
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      FilePickerHelper.showPickerBottomSheet(
+        onFilePicked: (picked) async {
+          await _uploadBillImageAfterPick(picked);
+        },
+      );
+    });
+  }
+
+  /// patient_app `uploadFile` → `result['data']` merged into `billFills` (same shape as API).
+  Future<void> _uploadBillImageAfterPick(PickedFileInfo picked) async {
+    final localPath = picked.path;
+    if (localPath.isEmpty) return;
+    isBillImageUploading.value = true;
+    try {
+      final up = await _repository.uploadReimbursementFile(
+        localPath,
+        refType: 'BILL',
+        documentType: '',
+      );
+      final displayName = picked.name.isNotEmpty
+          ? picked.name
+          : (up['title']?.toString() ?? 'file');
+      billImageFiles.add({
+        ...up,
+        'name': displayName,
+        'title': displayName,
+        'isImage': picked.isImage,
+      });
+    } on AppException catch (e) {
+      Get.snackbar(
+        'Error',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+    } finally {
+      isBillImageUploading.value = false;
+    }
   }
 
   void removeBillImage(int index) => billImageFiles.removeAt(index);
 
+  RxList<Map<String, dynamic>> _filesForClaimDocType(String refType) {
+    switch (refType) {
+      case 'PAYMENT':
+        return paymentFiles;
+      case 'REPORT':
+        return reportFiles;
+      case 'OTHER':
+        return otherFiles;
+      default:
+        return otherFiles;
+    }
+  }
+
+  void _putClaimDocEntry(
+    String refType,
+    Map<String, dynamic> entry, {
+    int replaceIndex = -1,
+  }) {
+    final list = _filesForClaimDocType(refType);
+    if (replaceIndex >= 0 && replaceIndex < list.length) {
+      list[replaceIndex] = entry;
+    } else {
+      list.add(entry);
+    }
+  }
+
+  void toggleDocServiceType(Map<String, dynamic> value) {
+    final key = value['key']?.toString() ?? '';
+    if (key.isEmpty) return;
+    final idx = selectedDocServiceTypes.indexWhere(
+      (e) => e['key']?.toString() == key,
+    );
+    if (idx >= 0) {
+      selectedDocServiceTypes.removeAt(idx);
+    } else {
+      selectedDocServiceTypes.add({
+        'type': key,
+        ...Map<String, dynamic>.from(value),
+      });
+    }
+  }
+
+  /// patient_app `uploadFile` → `getUniqueSelectedServiceList` → `serviceTypesBottomsheet` (non-BILL).
+  Future<void> _pickUploadThenServiceSheet(
+    String refType,
+    PickedFileInfo picked,
+    String documentType,
+  ) async {
+    final localPath = picked.path;
+    if (localPath.isEmpty) return;
+    final options = getUniqueSelectedServiceTypesFromBills();
+    if (options.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Add bills and select service types before uploading documents.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+      return;
+    }
+
+    isClaimDocUploading.value = true;
+    try {
+      final up = await _repository.uploadReimbursementFile(
+        localPath,
+        refType: refType,
+        documentType: documentType,
+      );
+      final base = <String, dynamic>{
+        ...up,
+        'name': picked.name,
+        'document_type': documentType,
+        'isImage': picked.isImage,
+      };
+      showClaimDocumentServiceTypesSheet(
+        claimDocType: refType,
+        uploadedBase: base,
+        editIndex: -1,
+      );
+    } on AppException catch (e) {
+      Get.snackbar(
+        'Error',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+    } finally {
+      isClaimDocUploading.value = false;
+    }
+  }
+
+  void showClaimDocumentServiceTypesSheet({
+    required String claimDocType,
+    required Map<String, dynamic> uploadedBase,
+    int editIndex = -1,
+  }) {
+    if (editIndex < 0) {
+      selectedDocServiceTypes.clear();
+    }
+    final options = getUniqueSelectedServiceTypesFromBills();
+    if (options.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'No bill service types to attach. Add a bill with service types first.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+      return;
+    }
+
+    final path = uploadedBase['path']?.toString() ?? '';
+    final isHttp = path.startsWith('http://') || path.startsWith('https://');
+    final isPdf =
+        path.toLowerCase().endsWith('.pdf') ||
+        (uploadedBase['name']?.toString() ?? '').toLowerCase().endsWith('.pdf');
+
+    Get.bottomSheet(
+      isScrollControlled: true,
+      Container(
+        height: Get.height * 0.58,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24.rs)),
+        ),
+        padding: EdgeInsets.fromLTRB(20.rs, 12.rh, 20.rs, 20.rh),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: CommonText(
+                    AppString.kSelectServiceTypes,
+                    fontSize: 18.rf,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    if (editIndex >= 0) {
+                      removeFile(claimDocType, editIndex);
+                    }
+                    selectedDocServiceTypes.clear();
+                    Get.back();
+                  },
+                  icon: Icon(
+                    Icons.close_rounded,
+                    size: 24.rs,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            Divider(height: 16.rh, thickness: 1, color: AppColors.borderLight),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10.rs),
+                  child: SizedBox(
+                    width: 64.rs,
+                    height: 64.rs,
+                    child: isPdf
+                        ? ColoredBox(
+                            color: AppColors.backgroundTertiary,
+                            child: Icon(
+                              Icons.picture_as_pdf_outlined,
+                              size: 36.rs,
+                              color: AppColors.error,
+                            ),
+                          )
+                        : (isHttp
+                              ? Image.network(
+                                  path,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Icon(
+                                    Icons.broken_image_outlined,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                )
+                              : (path.isNotEmpty && File(path).existsSync()
+                                    ? Image.file(
+                                        File(path),
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => Icon(
+                                          Icons.broken_image_outlined,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.insert_drive_file_outlined,
+                                        color: AppColors.textSecondary,
+                                      ))),
+                  ),
+                ),
+                SizedBox(width: 10.rw),
+                Expanded(
+                  child: CommonText(
+                    uploadedBase['name']?.toString() ?? 'Document',
+                    fontSize: 13.rf,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                    maxLines: 3,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.rh),
+            Expanded(
+              child: Obx(() {
+                return SingleChildScrollView(
+                  child: Wrap(
+                    spacing: 10.rw,
+                    runSpacing: 10.rh,
+                    children: options.map((value) {
+                      final key = value['key']?.toString() ?? '';
+                      final selected = selectedDocServiceTypes.any(
+                        (e) => e['key']?.toString() == key,
+                      );
+                      return GestureDetector(
+                        onTap: () => toggleDocServiceType(value),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.rw,
+                            vertical: 8.rh,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14.rs),
+                            border: Border.all(
+                              color: selected
+                                  ? AppColors.primary
+                                  : AppColors.borderLight,
+                            ),
+                            color: selected
+                                ? AppColors.primary
+                                : AppColors.surface,
+                          ),
+                          child: CommonText(
+                            value['value']?.toString() ?? key,
+                            fontSize: 12.rf,
+                            color: selected
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                );
+              }),
+            ),
+            Obx(() {
+              if (selectedDocServiceTypes.isEmpty) {
+                return SizedBox(height: 8.rh);
+              }
+              return Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => selectedDocServiceTypes.clear(),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 14.rh),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14.rs),
+                        ),
+                        side: BorderSide(color: AppColors.borderLight),
+                      ),
+                      child: CommonText(
+                        AppString.kClearAll,
+                        fontSize: 14.rf,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12.rw),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (selectedDocServiceTypes.isEmpty) {
+                          Get.snackbar(
+                            'Error',
+                            AppString.kSelectAtLeastOneServiceType,
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.red.shade100,
+                            colorText: Colors.red.shade800,
+                          );
+                          return;
+                        }
+                        final entry = Map<String, dynamic>.from(uploadedBase);
+                        entry['service_types'] = selectedDocServiceTypes
+                            .map(
+                              (e) => Map<String, dynamic>.from(
+                                json.decode(json.encode(e)),
+                              ),
+                            )
+                            .toList();
+                        _putClaimDocEntry(
+                          claimDocType,
+                          entry,
+                          replaceIndex: editIndex,
+                        );
+                        selectedDocServiceTypes.clear();
+                        refreshStep2DocumentValidation();
+                        Get.back();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: EdgeInsets.symmetric(vertical: 14.rh),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14.rs),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: CommonText(
+                        AppString.kApply,
+                        fontSize: 14.rf,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// patient_app `imagesWidget` edit callback → `serviceTypesBottomsheet` with existing row.
+  void editClaimDocumentServiceTypes(String refType, int index) {
+    final list = _filesForClaimDocType(refType);
+    if (index < 0 || index >= list.length) return;
+    final raw = Map<String, dynamic>.from(list[index]);
+    selectedDocServiceTypes.clear();
+    final st = raw['service_types'];
+    if (st is List) {
+      for (final e in st) {
+        if (e is Map) {
+          selectedDocServiceTypes.add(Map<String, dynamic>.from(e));
+        }
+      }
+    }
+    showClaimDocumentServiceTypesSheet(
+      claimDocType: refType,
+      uploadedBase: raw,
+      editIndex: index,
+    );
+  }
+
+  bool _claimFileIsPdf(Map<String, dynamic> file, String path) {
+    final ft = file['file_type']?.toString().toUpperCase();
+    if (ft == 'PDF') return true;
+    final n = '${file['name'] ?? ''}${file['title'] ?? ''}'.toLowerCase();
+    if (n.endsWith('.pdf')) return true;
+    return path.toLowerCase().endsWith('.pdf');
+  }
+
+  bool _claimFileIsImageExtension(String path) {
+    final lower = path.toLowerCase();
+    return lower.endsWith('.png') ||
+        lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.gif') ||
+        lower.endsWith('.webp') ||
+        lower.endsWith('.heic');
+  }
+
+  Future<void> openClaimAttachmentPreview(Map<String, dynamic> file) async {
+    final path = file['path']?.toString() ?? '';
+    if (path.isEmpty) return;
+    final label =
+        file['name']?.toString() ?? file['title']?.toString() ?? 'Preview';
+    final isPdf = _claimFileIsPdf(file, path);
+
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      if (isPdf) {
+        await Get.dialog(
+          Dialog(
+            insetPadding: EdgeInsets.zero,
+            child: SizedBox(
+              width: Get.width,
+              height: Get.height * 0.92,
+              child: Scaffold(
+                appBar: AppBar(
+                  title: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  leading: IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Get.back(),
+                  ),
+                ),
+                body: SfPdfViewer.network(path),
+              ),
+            ),
+          ),
+        );
+        return;
+      }
+      await Get.dialog(
+        Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.all(16.rs),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12.rs),
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4,
+              child: Image.network(
+                path,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => Center(
+                  child: Icon(Icons.broken_image_outlined, size: 48.rs),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final f = File(path);
+    if (!f.existsSync()) return;
+
+    if (isPdf) {
+      await Get.dialog(
+        Dialog(
+          insetPadding: EdgeInsets.zero,
+          child: SizedBox(
+            width: Get.width,
+            height: Get.height * 0.92,
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                leading: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Get.back(),
+                ),
+              ),
+              body: SfPdfViewer.file(f),
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (_claimFileIsImageExtension(path) || file['isImage'] == true) {
+      await Get.dialog(
+        Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: EdgeInsets.all(16.rs),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12.rs),
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4,
+              child: Image.file(f, fit: BoxFit.contain),
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
   void pickFile(String type) {
+    final docType = type == 'PAYMENT' ? 'PAYMENT' : '';
     FilePickerHelper.showPickerBottomSheet(
       onFilePicked: (file) {
-        final map = file.toMap();
-        switch (type) {
-          case 'PAYMENT':
-            paymentFiles.add(map);
-            break;
-          case 'REPORT':
-            reportFiles.add(map);
-            break;
-          case 'OTHER':
-            otherFiles.add(map);
-            break;
-        }
+        _pickUploadThenServiceSheet(type, file, docType);
+      },
+    );
+  }
+
+  /// Upload for a specific required category (prescription, payment proof, report type, etc.).
+  void pickFileForCategory(String refType, String category) {
+    FilePickerHelper.showPickerBottomSheet(
+      onFilePicked: (file) {
+        _pickUploadThenServiceSheet(refType, file, category);
       },
     );
   }
@@ -846,6 +1937,7 @@ class ClaimsController extends GetxController {
         otherFiles.removeAt(index);
         break;
     }
+    refreshStep2DocumentValidation();
   }
 
   double get totalBillAmount => bills.fold(0, (sum, b) => sum + b.billAmount);
@@ -906,6 +1998,19 @@ class ClaimsController extends GetxController {
       }
     }
 
+    refreshStep2DocumentValidation();
+    if ((requiredPayments.isNotEmpty || requiredReports.isNotEmpty) &&
+        !step2DocumentsValid.value) {
+      Get.snackbar(
+        'Error',
+        'Please upload all mandatory documents for your selected service types',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.shade100,
+        colorText: Colors.red.shade800,
+      );
+      return;
+    }
+
     final memberRaw = _selectedMemberMap();
     if (memberRaw == null) {
       Get.snackbar(
@@ -939,19 +2044,34 @@ class ClaimsController extends GetxController {
     }
 
     await ensureBillTypes();
-    final svc = _defaultServiceType;
 
     isSubmittingClaim.value = true;
     try {
+      List<Map<String, dynamic>> serviceTypesForBill(ClaimBill bill) {
+        if (bill.serviceTypes.isNotEmpty) {
+          return bill.serviceTypes
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+        }
+        return [Map<String, dynamic>.from(_defaultServiceType)];
+      }
+
       final reimbursementBills = <Map<String, dynamic>>[];
       for (final bill in bills) {
+        final billSvc = serviceTypesForBill(bill);
         final files = <Map<String, dynamic>>[];
         for (final f in bill.imageFiles) {
-          final path = f['path'] as String?;
-          if (path == null ||
-              path.isEmpty ||
-              path.startsWith('http://') ||
-              path.startsWith('https://')) {
+          final path = f['path']?.toString();
+          if (path == null || path.isEmpty) continue;
+          if (path.startsWith('http://') || path.startsWith('https://')) {
+            files.add({
+              if (f['id'] != null) 'id': f['id'],
+              'path': path,
+              'file_type': f['file_type']?.toString() ?? 'IMG',
+              'document_type': f['document_type']?.toString() ?? '',
+              'ref_type': 'BILL',
+              'service_types': billSvc,
+            });
             continue;
           }
           final up = await _repository.uploadReimbursementFile(
@@ -959,12 +2079,10 @@ class ClaimsController extends GetxController {
             refType: 'BILL',
             documentType: '',
           );
-          files.add({...up, 'service_types': [svc]});
+          files.add({...up, 'service_types': billSvc});
         }
         if (files.isEmpty) {
-          throw AppException(
-            message: 'Bill upload failed. Try again.',
-          );
+          throw AppException(message: 'Bill upload failed. Try again.');
         }
         reimbursementBills.add({
           'bill_number': bill.billNumber,
@@ -975,7 +2093,7 @@ class ClaimsController extends GetxController {
           'doctor_name': bill.doctorName,
           'doctor_registration_number': bill.doctorRegistration,
           'reimbursement_bill_files': files,
-          'service_types': [svc],
+          'service_types': billSvc,
         });
       }
 
@@ -985,31 +2103,56 @@ class ClaimsController extends GetxController {
       ) async {
         final out = <Map<String, dynamic>>[];
         for (final f in src) {
-          final path = f['path'] as String?;
-          if (path == null ||
-              path.isEmpty ||
-              path.startsWith('http://') ||
-              path.startsWith('https://')) {
+          final path = f['path']?.toString();
+          if (path == null || path.isEmpty) continue;
+
+          final docType = f['document_type']?.toString() ?? '';
+          final stRaw = f['service_types'];
+          final List<Map<String, dynamic>> svcList;
+          if (stRaw is List && stRaw.isNotEmpty) {
+            svcList = stRaw
+                .map((e) => Map<String, dynamic>.from(e as Map))
+                .toList();
+          } else {
+            svcList = [Map<String, dynamic>.from(_defaultServiceType)];
+          }
+          final title = f['name']?.toString() ?? 'Document';
+
+          if (path.startsWith('http://') || path.startsWith('https://')) {
+            out.add({
+              if (f['id'] != null) 'id': f['id'],
+              'path': path,
+              'file_type': f['file_type']?.toString() ?? 'file',
+              'service_types': svcList,
+              if (docType.isNotEmpty) 'document_type': docType,
+              'title': title,
+            });
             continue;
           }
+
           final up = await _repository.uploadReimbursementFile(
             path,
             refType: refType,
-            documentType: '',
+            documentType: docType,
           );
           out.add({
             ...up,
-            'service_types': [svc],
-            'title': f['name']?.toString() ?? 'Document',
+            'service_types': svcList,
+            if (docType.isNotEmpty) 'document_type': docType,
+            'title': title,
           });
         }
         return out;
       }
 
-      final paymentUploaded =
-          await uploadDocList(paymentFiles.toList(), 'PAYMENT');
-      final reportUploaded =
-          await uploadDocList(reportFiles.toList(), 'REPORT');
+      final paymentUploaded = await uploadDocList(
+        paymentFiles.toList(),
+        'PAYMENT',
+      );
+      final reportUploaded = await uploadDocList(
+        reportFiles.toList(),
+        'REPORT',
+      );
       final otherUploaded = await uploadDocList(otherFiles.toList(), 'OTHER');
 
       final body = <String, dynamic>{
@@ -1088,6 +2231,12 @@ class ClaimsController extends GetxController {
     otherFiles.clear();
     billImageFiles.clear();
     billTypes.clear();
+    billIndex.value = -1;
+    billServicePickerSelection.clear();
+    selectedDocServiceTypes.clear();
+    requiredPayments.clear();
+    requiredReports.clear();
+    step2DocumentsValid.value = true;
     _clearBillForm();
     _clearBankForm();
     Future.microtask(() => ensureBillTypes());

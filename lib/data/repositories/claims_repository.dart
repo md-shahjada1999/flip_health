@@ -220,6 +220,54 @@ class ClaimsRepository {
     }
   }
 
+  /// `GET /patient/reimbursement/multi_document/type?type=key1,key2` — required payment & report doc rows.
+  Future<({List<dynamic> payments, List<dynamic> reports})>
+      getRequiredDocumentsMultiList(String typesCsv) async {
+    try {
+      final response = await apiService.get(
+        ApiUrl.REIMBURSEMENT_MULTI_DOC_TYPES,
+        queryParameters: {'type': typesCsv},
+      );
+      if (response.statusCode == 200 && response.data is Map) {
+        final map = Map<String, dynamic>.from(response.data as Map);
+        final raw = map['data'];
+        List<dynamic> payments = [];
+        List<dynamic> reports = [];
+        if (raw is List) {
+          for (final el in raw) {
+            if (el is! Map) continue;
+            final m = Map<String, dynamic>.from(el);
+            final dt = m['document_type']?.toString();
+            if (dt == 'payments') {
+              final cat = m['category'];
+              if (cat is List) {
+                payments = List<dynamic>.from(cat);
+              }
+            } else if (dt == 'reports') {
+              final cat = m['category'];
+              if (cat is List) {
+                reports = List<dynamic>.from(cat);
+              }
+            }
+          }
+        }
+        return (payments: payments, reports: reports);
+      }
+      throw AppException(
+        message: response.data is Map
+            ? (response.data as Map)['message']?.toString() ??
+                  'Failed to load required documents'
+            : 'Failed to load required documents',
+        statusCode: response.statusCode,
+      );
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('ClaimsRepository.getRequiredDocumentsMultiList error: $e');
+      throw AppException(message: 'Failed to load required documents: $e');
+    }
+  }
+
   /// Claim file upload — patient_app: `type: reimbursement`, `ref_type`, `document_type`, `file`.
   Future<Map<String, dynamic>> uploadReimbursementFile(
     String filePath, {
@@ -271,14 +319,20 @@ class ClaimsRepository {
             relPath = msg['path']?.toString();
           }
         }
-        final ext = _fileBasename(filePath).split('.').last;
+        final baseName = _fileBasename(filePath);
+        final extLower = baseName.contains('.')
+            ? baseName.split('.').last.toLowerCase()
+            : '';
+        // patient_app `_processFileUploadInIsolate`: `file_type` is `"PDF"` or `"IMG"`.
+        final fileTypeLabel = extLower == 'pdf' ? 'PDF' : 'IMG';
         final fullPath = relPath != null ? ApiUrl.publicFileUrl(relPath) : null;
         return {
           if (id != null) 'id': id,
           'path': fullPath ?? relPath ?? '',
-          'file_type': ext.length <= 8 ? ext : 'file',
+          'file_type': fileTypeLabel,
           'document_type': doc,
           'ref_type': refType,
+          'title': baseName,
         };
       }
 

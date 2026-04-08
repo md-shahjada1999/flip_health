@@ -765,18 +765,28 @@ class AppString {
   static const String kTimesPerWeek = 'times/week';
   static const String kOTCOrderConfirm =
       'Place an order for OTC products? Our team will contact you to confirm.';
-  static const String kMedicineDeliveryImage = 'assets/png/medicine_delivery.png';
-  static const String kUploadPrescriptionImage = 'assets/png/upload_prescription_illustration.png';
-  static const String kFlipHealthPrescriptionImage = 'assets/png/flip_health_prescription_illustration.png';
-  static const String kOTCProductsImage = 'assets/png/otc_products_illustration.png';
-  static const String kPrescriptionDetailImage = 'assets/png/prescription_detail_illustration.png';
+  static const String kMedicineDeliveryImage =
+      'assets/png/medicine_delivery.png';
+  static const String kUploadPrescriptionImage =
+      'assets/png/upload_prescription_illustration.png';
+  static const String kFlipHealthPrescriptionImage =
+      'assets/png/flip_health_prescription_illustration.png';
+  static const String kOTCProductsImage =
+      'assets/png/otc_products_illustration.png';
+  static const String kPrescriptionDetailImage =
+      'assets/png/prescription_detail_illustration.png';
 
   // Dialog illustrations
-  static const String kDialogConfirmImage = 'assets/png/dialog_confirm_illustration.png';
-  static const String kDialogWarningImage = 'assets/png/dialog_warning_illustration.png';
-  static const String kDialogErrorImage = 'assets/png/dialog_error_illustration.png';
-  static const String kDialogInfoImage = 'assets/png/dialog_info_illustration.png';
-  static const String kDialogSuccessImage = 'assets/png/dialog_success_illustration.png';
+  static const String kDialogConfirmImage =
+      'assets/png/dialog_confirm_illustration.png';
+  static const String kDialogWarningImage =
+      'assets/png/dialog_warning_illustration.png';
+  static const String kDialogErrorImage =
+      'assets/png/dialog_error_illustration.png';
+  static const String kDialogInfoImage =
+      'assets/png/dialog_info_illustration.png';
+  static const String kDialogSuccessImage =
+      'assets/png/dialog_success_illustration.png';
 
   // Consultation Module — Overview & Flows
   static const String kConsultationOverview = 'Consultation';
@@ -794,9 +804,9 @@ class AppString {
   static const String kSelectDayAndTime = 'Select Day & Time';
   static const String kNoScheduleAvailable = 'No schedule available';
   static const String kPurpose = 'Purpose (Optional)';
-  static const String kPurposeHint = 'Briefly describe the reason for your visit';
-  static const String kConsultationFAQ1 =
-      'How does online consultation work?';
+  static const String kPurposeHint =
+      'Briefly describe the reason for your visit';
+  static const String kConsultationFAQ1 = 'How does online consultation work?';
   static const String kConsultationFAQ1Answer =
       'Select an issue, choose a doctor, pick a time slot, and confirm your booking. The doctor will connect via video/audio call.';
   static const String kConsultationFAQ2 =
@@ -843,6 +853,9 @@ class AppString {
   static const String kTapToSelectBank = 'Tap to select bank account';
   static const String kAcceptTermsAndConditions =
       'I accept the Terms & Conditions for OPD claim reimbursement';
+  static const String kIAgreeToThe = 'I agree to the';
+  static const String kTermsAndConditionsLink = 'Terms & Conditions';
+  static const String kViewFullTermsInBrowser = 'View full terms in browser';
   static const String kStepPatient = 'Patient';
   static const String kStepBills = 'Bills';
   static const String kStepReview = 'Review';
@@ -886,6 +899,26 @@ class AppString {
   static const String kUtrNumber = 'UTR number';
   static const String kSettledDate = 'Settled date';
   static const String kClaimReasonTitle = 'Status note';
+  static const String kReviewYourSubmission = 'Review Your Submission';
+  static const String kBillReviewDisclaimer =
+      'Claims may be rejected if details are incomplete or do not match the bill. Please review carefully before proceeding.';
+  static const String kIAgree = 'I Agree';
+  static const String kSelectServiceTypes = 'Select Service Type(s)';
+  static const String kNoServiceTypesAvailable = 'No service types available';
+  static const String kSelectAtLeastOneServiceType =
+      'Select at least one service type';
+  static const String kMandatoryFor = 'Mandatory for';
+  static const String kOptionalForServiceTypes = 'Optional for service types';
+  static const String kVaccineReportNote =
+      'Note: For children, please upload the vaccination card. For adults, please upload the prescription/report.';
+  static const String kPaymentReceiptsSeparateHint =
+      'Upload payment proofs that are separate from the bill.';
+  static const String kPaymentUploadsGeneral = 'Payment files';
+  static const String kMissingDocumentsLabel = 'Missing documents';
+  static const String kAddFile = 'Add file';
+  static const String kReportsAndPrescriptions = 'Reports & prescriptions';
+  static const String kUploadReportsPrescriptionsHint =
+      'Upload prescriptions, reports, or payment proofs as required for your service types.';
 
   // Bank Details
   static const String kBankAccounts = 'Bank Accounts';

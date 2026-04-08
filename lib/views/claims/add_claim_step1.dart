@@ -8,7 +8,10 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
 import 'package:flip_health/routes/app_routes.dart';
+import 'package:flip_health/core/services/api%20services/api_urls.dart';
+import 'package:flip_health/views/claims/claim_opd_terms_text.dart';
 import 'package:flip_health/views/common/family_member_dropdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AddClaimStep1 extends GetView<ClaimsController> {
   const AddClaimStep1({Key? key}) : super(key: key);
@@ -62,7 +65,7 @@ class AddClaimStep1 extends GetView<ClaimsController> {
           SizedBox(height: 12.rh),
           _buildBankSelector(),
           SizedBox(height: 28.rh),
-          _buildTermsCheckbox(),
+          _buildTermsRow(),
           SizedBox(height: 32.rh),
           _buildNextButton(),
           SizedBox(height: 20.rh),
@@ -267,47 +270,89 @@ class AddClaimStep1 extends GetView<ClaimsController> {
     );
   }
 
-  Widget _buildTermsCheckbox() {
-    return Obx(() => GestureDetector(
-          onTap: () => controller.termsAccepted.toggle(),
-          child: Container(
-            padding: EdgeInsets.all(14.rs),
-            decoration: BoxDecoration(
-              color: controller.termsAccepted.value ? AppColors.primary.withValues(alpha: 0.04) : AppColors.surface,
-              borderRadius: BorderRadius.circular(12.rs),
-              border: Border.all(color: controller.termsAccepted.value ? AppColors.primary.withValues(alpha: 0.3) : AppColors.borderLight),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 22.rs,
-                  height: 22.rs,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(6.rs),
-                    color: controller.termsAccepted.value ? AppColors.primary : Colors.transparent,
-                    border: Border.all(color: controller.termsAccepted.value ? AppColors.primary : AppColors.borderLight, width: 2),
-                  ),
-                  child: controller.termsAccepted.value ? Icon(Icons.check, size: 14.rs, color: Colors.white) : null,
-                ),
-                SizedBox(width: 12.rw),
-                Expanded(
-                  child: CommonText(
-                    AppString.kAcceptTermsAndConditions,
-                    fontSize: 13.rf,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
+  /// Same flow as patient_app `claims_step_1`: checkbox / link opens scrollable T&C sheet;
+  /// accepting is completed after scrolling to the end (or short content) and tapping Continue.
+  Widget _buildTermsRow() {
+    return Obx(() => Container(
+          padding: EdgeInsets.all(14.rs),
+          decoration: BoxDecoration(
+            color: controller.termsAccepted.value ? AppColors.primary.withValues(alpha: 0.04) : AppColors.surface,
+            borderRadius: BorderRadius.circular(12.rs),
+            border: Border.all(
+              color: controller.termsAccepted.value ? AppColors.primary.withValues(alpha: 0.3) : AppColors.borderLight,
             ),
           ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Checkbox(
+                value: controller.termsAccepted.value,
+                onChanged: (_) => _showOpdTermsBottomSheet(),
+                activeColor: AppColors.primary,
+              ),
+              SizedBox(width: 4.rw),
+              Expanded(
+                child: GestureDetector(
+                  onTap: _showOpdTermsBottomSheet,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 10.rh),
+                    child: RichText(
+                      text: TextSpan(
+                        style: TextStyle(
+                          fontSize: 13.rf,
+                          color: AppColors.textPrimary,
+                          height: 1.4,
+                        ),
+                        children: [
+                          TextSpan(text: '${AppString.kIAgreeToThe} '),
+                          TextSpan(
+                            text: AppString.kTermsAndConditionsLink,
+                            style: const TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                              decorationColor: Colors.blue,
+                            ),
+                          ),
+                          const TextSpan(
+                            text: ' for OPD claim reimbursement.',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ));
+  }
+
+  void _showOpdTermsBottomSheet() {
+    Get.bottomSheet(
+      _OpdTermsBottomSheet(controller: controller),
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+    );
+  }
+
+  /// patient_app `step1PopupTermsNConditionsBS` — shown before navigating to bills step.
+  void _showImportantNoteBottomSheet() {
+    Get.bottomSheet(
+      _ImportantNoteBottomSheet(controller: controller),
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+    );
   }
 
   Widget _buildNextButton() {
     return SizedBox(
       width: double.infinity,
       child: Obx(() => ElevatedButton(
-            onPressed: controller.isStep1Valid ? () => controller.goToStep(1) : null,
+            onPressed: controller.isStep1Valid ? () => _showImportantNoteBottomSheet() : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               disabledBackgroundColor: AppColors.borderLight,
@@ -322,6 +367,259 @@ class AddClaimStep1 extends GetView<ClaimsController> {
               color: controller.isStep1Valid ? Colors.white : AppColors.textSecondary,
             ),
           )),
+    );
+  }
+}
+
+class _OpdTermsBottomSheet extends StatefulWidget {
+  const _OpdTermsBottomSheet({required this.controller});
+
+  final ClaimsController controller;
+
+  @override
+  State<_OpdTermsBottomSheet> createState() => _OpdTermsBottomSheetState();
+}
+
+class _OpdTermsBottomSheetState extends State<_OpdTermsBottomSheet> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()..addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeMarkReadIfNotScrollable());
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final p = _scrollController.position;
+    if (p.maxScrollExtent <= 4) {
+      widget.controller.termsAccepted.value = true;
+    } else if (p.pixels >= p.maxScrollExtent - 28) {
+      widget.controller.termsAccepted.value = true;
+    }
+  }
+
+  void _maybeMarkReadIfNotScrollable() {
+    if (!_scrollController.hasClients) return;
+    final p = _scrollController.position;
+    if (p.maxScrollExtent <= 4) {
+      widget.controller.termsAccepted.value = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _openFullTermsUrl() async {
+    final uri = Uri.parse(ApiUrl.TERMS_AND_CONDITIONS_URL);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: Get.height * 0.88,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.rs)),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20.rw, 12.rh, 20.rw, 16.rh),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () => Get.back(),
+                  child: Container(
+                    padding: EdgeInsets.all(6.rs),
+                    decoration: const BoxDecoration(color: Color(0xFFE0E0E0), shape: BoxShape.circle),
+                    child: Icon(Icons.close_rounded, size: 20.rs, color: AppColors.textPrimary),
+                  ),
+                ),
+              ),
+              SizedBox(height: 8.rh),
+              CommonText(
+                ClaimOpdTermsText.title,
+                fontSize: 17.rf,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+              SizedBox(height: 12.rh),
+              Expanded(
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  controller: _scrollController,
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(12.rw, 10.rh, 16.rw, 10.rh),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundTertiary,
+                      borderRadius: BorderRadius.circular(12.rs),
+                    ),
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      child: CommonText(
+                        ClaimOpdTermsText.body,
+                        fontSize: 13.rf,
+                        color: AppColors.textPrimary,
+                        height: 1.45,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 12.rh),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: _openFullTermsUrl,
+                  child: CommonText(
+                    AppString.kViewFullTermsInBrowser,
+                    fontSize: 13.rf,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              SizedBox(height: 8.rh),
+              Obx(() {
+                final accepted = widget.controller.termsAccepted.value;
+                return ElevatedButton(
+                  onPressed: accepted
+                      ? () {
+                          Get.back();
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: accepted ? AppColors.textPrimary : AppColors.borderLight,
+                    disabledBackgroundColor: AppColors.borderLight,
+                    padding: EdgeInsets.symmetric(vertical: 14.rh),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.rs)),
+                    elevation: 0,
+                  ),
+                  child: CommonText(
+                    AppString.kContinue,
+                    fontSize: 15.rf,
+                    fontWeight: FontWeight.w600,
+                    color: accepted ? Colors.white : AppColors.textSecondary,
+                  ),
+                );
+              }),
+            ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ImportantNoteBottomSheet extends StatelessWidget {
+  const _ImportantNoteBottomSheet({required this.controller});
+
+  final ClaimsController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final base = TextStyle(fontSize: 13.rf, color: AppColors.textPrimary, height: 1.45);
+    final bold = TextStyle(
+      fontSize: 13.rf,
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w700,
+      height: 1.45,
+    );
+
+    return SizedBox(
+      height: Get.height * 0.52,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.rs)),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20.rw, 12.rh, 20.rw, 16.rh),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () => Get.back(),
+                  child: Container(
+                    padding: EdgeInsets.all(6.rs),
+                    decoration: const BoxDecoration(color: Color(0xFFE0E0E0), shape: BoxShape.circle),
+                    child: Icon(Icons.close_rounded, size: 20.rs, color: AppColors.textPrimary),
+                  ),
+                ),
+              ),
+              SizedBox(height: 8.rh),
+              CommonText(
+                ClaimStep1ImportantNoteText.title,
+                fontSize: 17.rf,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+              SizedBox(height: 12.rh),
+              Expanded(
+                child: Scrollbar(
+                  thumbVisibility: true,
+                  child: Container(
+                    padding: EdgeInsets.fromLTRB(12.rw, 10.rh, 16.rw, 10.rh),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundTertiary,
+                      borderRadius: BorderRadius.circular(12.rs),
+                    ),
+                    child: SingleChildScrollView(
+                      child: RichText(
+                        text: TextSpan(
+                          style: base,
+                          children: [
+                            TextSpan(text: ClaimStep1ImportantNoteText.part1),
+                            TextSpan(text: ClaimStep1ImportantNoteText.part1Bold, style: bold),
+                            TextSpan(text: ClaimStep1ImportantNoteText.part2),
+                            TextSpan(text: ClaimStep1ImportantNoteText.part2Bold, style: bold),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.rh),
+              ElevatedButton(
+                onPressed: () {
+                  Get.back();
+                  controller.goToStep(1);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.textPrimary,
+                  padding: EdgeInsets.symmetric(vertical: 14.rh),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.rs)),
+                  elevation: 0,
+                ),
+                child: CommonText(
+                  AppString.kContinue,
+                  fontSize: 15.rf,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

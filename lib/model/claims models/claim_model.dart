@@ -93,6 +93,9 @@ class ClaimBill {
   final List<String> attachments;
   final List<Map<String, dynamic>> imageFiles;
 
+  /// Selected reimbursement service types for this bill (same shape as patient_app `service_types`).
+  final List<Map<String, dynamic>> serviceTypes;
+
   ClaimBill({
     required this.billNumber,
     required this.billDate,
@@ -103,6 +106,7 @@ class ClaimBill {
     this.doctorRegistration = '',
     this.attachments = const [],
     this.imageFiles = const [],
+    this.serviceTypes = const [],
   });
 }
 

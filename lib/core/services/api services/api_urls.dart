@@ -50,19 +50,22 @@ class ApiUrl {
   static const String NETWORK_LIST = "/patient/network/list";
 
   /// Dental service booking request
-  static const String DENTAL_SERVICE_REQUEST = "/patient/service/dental/request";
+  static const String DENTAL_SERVICE_REQUEST =
+      "/patient/service/dental/request";
 
   /// Vaccine service types — `GET ?search=service_type:vaccine`
   static const String NETWORK_SERVICES = "/patient/services";
 
   /// Vaccine service booking request
-  static const String VACCINE_SERVICE_REQUEST = "/patient/service/vaccine/request";
+  static const String VACCINE_SERVICE_REQUEST =
+      "/patient/service/vaccine/request";
 
   /// Vision / VVD service slots — `GET`
   static const String SERVICE_SLOTS = "/patient/service/slots";
 
   /// Vision service booking request
-  static const String VISION_SERVICE_REQUEST = "/patient/service/vision/request";
+  static const String VISION_SERVICE_REQUEST =
+      "/patient/service/vision/request";
 
   /// Pharmacy — place medicine order (upload / flip health / OTC)
   static const String MEDICINE_ORDER = "/patient/medicine";
@@ -111,6 +114,10 @@ class ApiUrl {
 
   static const String REIMBURSEMENT_BILL_TYPES =
       "/patient/reimbursement/service_types";
+
+  /// Required payment/report doc categories for selected service types — `GET …/multi_document/type?type=a,b`.
+  static const String REIMBURSEMENT_MULTI_DOC_TYPES =
+      "/patient/reimbursement/multi_document/type";
 
   /// Resolve attachment path from API (relative or absolute) for [Image.network] / PDF viewer.
   static String? publicFileUrl(String? path) {

@@ -1,0 +1,73 @@
+
+Dental:
+
+
+Vision:
+Need to add remove Prescription API
+Need to add cancel API
+
+
+Vaccine:
+Need to add remove Prescription API
+Need to add cancel API
+
+
+Mentalwellness
+Need to add cancel API
+
+
+Nutrition:
+Need to add cancel API
+
+
+
+Pharmacy:
+Need to update postman with another flows -> FH-Prescription & via Attachment
+
+
+Consultation:
+
+
+Diagnostics:
+Need to add flow of Packages out of pocket- Backend changes
+
+
+Member flow
+> Do we need to restrict on member adding count ?
+> Do we need to activate subcription whenever adding a new member ? [Then we need to select the dependent_type] [We need to call relation API & map depedent_type while adding ]
+
+> Forgot Password
+> Reset Password
+> Set password
+
+
+CLAIMS:
+
+
+
+
+Need to add nutrition redirection from Health score screen
+Need to check paginations in all required places.
+Need to implement razorpay in all required places.
+
+If pharmacy is not in wallet then respective module shouldnt be shown in opd wallet view
+Need to add active or deactivated in members while selecting in all the flows
+
+
+Need to check content in over all app
+check content in all success screens
+
+
+> CRASHLYTICS / SENTRY
+> SHOREBIRD
+> UPLOAD STRINGS TO FIREBASE
+
+
+
+DEPLOY TESTING:
+
+> LIVE PLAN TESTING [CORPORATE BASED TESTING]
+> USER MANUALS - SCREENSHOTS
+> DOCUMENTATION
+> VIDEOS
+
