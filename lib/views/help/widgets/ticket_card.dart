@@ -4,10 +4,10 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
-import 'package:flip_health/controllers/help%20controllers/help_controller.dart';
+import 'package:flip_health/model/support%20models/ticket_model.dart';
 
 class TicketCard extends StatefulWidget {
-  final SupportTicket ticket;
+  final TicketModel ticket;
   final VoidCallback onTap;
   final VoidCallback? onFeedbackTap;
   final int index;
@@ -62,9 +62,18 @@ class _TicketCardState extends State<TicketCard>
   @override
   Widget build(BuildContext context) {
     final ticket = widget.ticket;
-    final isOpen = ticket.status == 'open';
     final dateStr = DateFormat('dd MMM yyyy, hh:mm a').format(ticket.createdAt);
-    final showFeedback = !isOpen && ticket.feedback == null;
+
+    final statusColor = switch (ticket.status) {
+      0 => AppColors.info,
+      1 => AppColors.success,
+      _ => AppColors.textSecondary,
+    };
+    final statusBg = switch (ticket.status) {
+      0 => AppColors.infoLight,
+      1 => AppColors.successLight,
+      _ => AppColors.backgroundSecondary,
+    };
 
     return FadeTransition(
       opacity: _fadeAnim,
@@ -97,7 +106,7 @@ class _TicketCardState extends State<TicketCard>
                       height: 8.rs,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: isOpen ? AppColors.success : AppColors.textSecondary,
+                        color: statusColor,
                       ),
                     ),
                     SizedBox(width: 8.rw),
@@ -115,14 +124,14 @@ class _TicketCardState extends State<TicketCard>
                         vertical: 3.rh,
                       ),
                       decoration: BoxDecoration(
-                        color: isOpen ? AppColors.successLight : AppColors.backgroundSecondary,
+                        color: statusBg,
                         borderRadius: BorderRadius.circular(20.rs),
                       ),
                       child: CommonText(
-                        isOpen ? AppString.kOpenTickets : AppString.kClosedTickets,
+                        ticket.statusLabel,
                         fontSize: 10.rf,
                         fontWeight: FontWeight.w600,
-                        color: isOpen ? AppColors.success : AppColors.textSecondary,
+                        color: statusColor,
                       ),
                     ),
                   ],
@@ -153,7 +162,7 @@ class _TicketCardState extends State<TicketCard>
                         fontWeight: FontWeight.w400,
                       ),
                     ),
-                    if (showFeedback)
+                    if (ticket.canGiveFeedback)
                       GestureDetector(
                         onTap: widget.onFeedbackTap,
                         child: Container(
@@ -165,15 +174,26 @@ class _TicketCardState extends State<TicketCard>
                             color: AppColors.primaryLight,
                             borderRadius: BorderRadius.circular(20.rs),
                           ),
-                          child: CommonText(
-                            AppString.kGiveFeedback,
-                            fontSize: 10.rf,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.primary,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.star_outline_rounded,
+                                size: 14.rs,
+                                color: AppColors.primary,
+                              ),
+                              SizedBox(width: 4.rw),
+                              CommonText(
+                                AppString.kGiveFeedback,
+                                fontSize: 10.rf,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    if (!isOpen && ticket.feedback != null)
+                    if (ticket.isClosed && ticket.feedback != null)
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -184,7 +204,7 @@ class _TicketCardState extends State<TicketCard>
                           ),
                           SizedBox(width: 2.rw),
                           CommonText(
-                            '${ticket.rating ?? 0}/5',
+                            '${ticket.feedback!.rating}/5',
                             fontSize: 11.rf,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textTertiary,

@@ -5,10 +5,12 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/custom_dropdown.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/controllers/help%20controllers/help_controller.dart';
+import 'package:flip_health/model/support%20models/ticket_model.dart';
 import 'package:flip_health/views/help/widgets/quick_action_card.dart';
 import 'package:flip_health/views/help/widgets/ticket_card.dart';
 import 'package:flip_health/views/help/help_ticket_detail_screen.dart';
@@ -36,26 +38,31 @@ class HelpScreen extends StatelessWidget {
           color: Colors.white,
         ),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 16.rw),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 8.rh),
-            _QuickActionsGrid(),
-            SizedBox(height: 24.rh),
-            CommonText(
-              AppString.kYourTickets,
-              fontSize: 16.rf,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-            SizedBox(height: 12.rh),
-            _SegmentedToggle(controller: controller),
-            SizedBox(height: 14.rh),
-            _TicketsList(controller: controller),
-            SizedBox(height: 80.rh),
-          ],
+      body: RefreshIndicator(
+        onRefresh: controller.loadTickets,
+        color: AppColors.primary,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.symmetric(horizontal: 16.rw),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 8.rh),
+              _QuickActionsGrid(),
+              SizedBox(height: 24.rh),
+              CommonText(
+                AppString.kYourTickets,
+                fontSize: 16.rf,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+              SizedBox(height: 12.rh),
+              _SegmentedToggle(controller: controller),
+              SizedBox(height: 14.rh),
+              _TicketsList(controller: controller),
+              SizedBox(height: 80.rh),
+            ],
+          ),
         ),
       ),
     );
@@ -111,7 +118,20 @@ class HelpScreen extends StatelessWidget {
                 maxLines: 4,
                 textCapitalization: TextCapitalization.sentences,
               ),
-              SizedBox(height: 8.rh),
+              SizedBox(height: 14.rh),
+              Obx(() => CustomDropdown(
+                    label: 'Language',
+                    hint: 'Select language',
+                    value: controller.selectedLanguage.value,
+                    items: HelpController.supportedLanguages,
+                    onChanged: (val) => controller.selectedLanguage.value = val,
+                    prefixIcon: Icon(
+                      Icons.language_rounded,
+                      size: 20.rs,
+                      color: AppColors.textSecondary,
+                    ),
+                  )),
+              SizedBox(height: 14.rh),
               Obx(() => ActionButton(
                     text: AppString.kSubmit,
                     isLoading: controller.isSubmitting.value,
@@ -144,9 +164,12 @@ class _QuickActionsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final actions = [
       _QuickAction(AppString.kIconFAQ, AppString.kFAQ, AppString.kFAQSubtitle),
-      _QuickAction(AppString.kIconSupport, AppString.kContactSupport, AppString.kContactSupportSubtitle),
-      _QuickAction(AppString.kIconTC, AppString.kTC, AppString.kTCSubtitle),
-      _QuickAction(AppString.kIconPrivacyPolicies, AppString.kPrivacyPolicies, AppString.kPrivacyPoliciesSubtitle),
+      _QuickAction(AppString.kIconSupport, AppString.kContactSupport,
+          AppString.kContactSupportSubtitle),
+      _QuickAction(
+          AppString.kIconTC, AppString.kTC, AppString.kTCSubtitle),
+      _QuickAction(AppString.kIconPrivacyPolicies, AppString.kPrivacyPolicies,
+          AppString.kPrivacyPoliciesSubtitle),
     ];
 
     return GridView.builder(
@@ -205,14 +228,16 @@ class _SegmentedToggle extends StatelessWidget {
           children: [
             Expanded(
               child: _ToggleChip(
-                label: '${AppString.kOpenTickets} (${controller.openTickets.length})',
+                label:
+                    '${AppString.kOpenTickets} (${controller.openTickets.length})',
                 isSelected: isOpen,
                 onTap: () => controller.toggleFilter(true),
               ),
             ),
             Expanded(
               child: _ToggleChip(
-                label: '${AppString.kClosedTickets} (${controller.closedTickets.length})',
+                label:
+                    '${AppString.kClosedTickets} (${controller.closedTickets.length})',
                 isSelected: !isOpen,
                 onTap: () => controller.toggleFilter(false),
               ),
@@ -261,7 +286,8 @@ class _ToggleChip extends StatelessWidget {
             label,
             fontSize: 13.rf,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+            color:
+                isSelected ? AppColors.textPrimary : AppColors.textSecondary,
           ),
         ),
       ),
@@ -278,6 +304,14 @@ class _TicketsList extends StatelessWidget {
     return Obx(() {
       final isOpen = controller.isOpenSelected.value;
       final tickets = controller.currentTickets;
+      final loading = controller.isLoading.value;
+
+      if (loading && tickets.isEmpty) {
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: 40.rh),
+          child: const Center(child: CircularProgressIndicator()),
+        );
+      }
 
       if (tickets.isEmpty) {
         return Container(
@@ -292,7 +326,9 @@ class _TicketsList extends StatelessWidget {
               ),
               SizedBox(height: 12.rh),
               CommonText(
-                isOpen ? AppString.kNoActiveTicket : AppString.kNoClosedTicket,
+                isOpen
+                    ? AppString.kNoActiveTicket
+                    : AppString.kNoClosedTicket,
                 fontSize: 14.rf,
                 color: AppColors.textSecondary,
                 textAlign: TextAlign.center,
@@ -316,7 +352,7 @@ class _TicketsList extends StatelessWidget {
               controller.selectTicket(ticket);
               Get.to(() => const HelpTicketDetailScreen());
             },
-            onFeedbackTap: ticket.status == 'closed' && ticket.feedback == null
+            onFeedbackTap: ticket.canGiveFeedback
                 ? () => _showFeedbackSheet(context, controller, ticket)
                 : null,
           );
@@ -328,9 +364,11 @@ class _TicketsList extends StatelessWidget {
   void _showFeedbackSheet(
     BuildContext context,
     HelpController controller,
-    SupportTicket ticket,
+    TicketModel ticket,
   ) {
     final selectedRating = 0.obs;
+    final descriptionController = TextEditingController();
+
     Get.bottomSheet(
       Container(
         padding: EdgeInsets.only(
@@ -343,67 +381,111 @@ class _TicketsList extends StatelessWidget {
           color: AppColors.background,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.rs)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Center(
-              child: Container(
-                width: 40.rw,
-                height: 4.rh,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2.rs),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40.rw,
+                  height: 4.rh,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2.rs),
+                  ),
                 ),
               ),
-            ),
-            SizedBox(height: 16.rh),
-            CommonText(
-              AppString.kRateExperience,
-              fontSize: 18.rf,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-            SizedBox(height: 20.rh),
-            Obx(() => Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(5, (i) {
-                    final starIndex = i + 1;
-                    return GestureDetector(
-                      onTap: () => selectedRating.value = starIndex,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 6.rw),
-                        child: Icon(
-                          starIndex <= selectedRating.value
-                              ? Icons.star_rounded
-                              : Icons.star_outline_rounded,
-                          size: 36.rs,
-                          color: starIndex <= selectedRating.value
-                              ? AppColors.warning
-                              : AppColors.iconDisabled,
+              SizedBox(height: 16.rh),
+              CommonText(
+                AppString.kRateExperience,
+                fontSize: 18.rf,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+              SizedBox(height: 20.rh),
+              Obx(() => Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (i) {
+                      final starIndex = i + 1;
+                      return GestureDetector(
+                        onTap: () => selectedRating.value = starIndex,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 6.rw),
+                          child: AnimatedScale(
+                            scale: starIndex <= selectedRating.value
+                                ? 1.2
+                                : 1.0,
+                            duration: const Duration(milliseconds: 200),
+                            child: Icon(
+                              starIndex <= selectedRating.value
+                                  ? Icons.star_rounded
+                                  : Icons.star_outline_rounded,
+                              size: 36.rs,
+                              color: starIndex <= selectedRating.value
+                                  ? AppColors.warning
+                                  : AppColors.iconDisabled,
+                            ),
+                          ),
                         ),
-                      ),
+                      );
+                    }),
+                  )),
+              SizedBox(height: 16.rh),
+              TextField(
+                controller: descriptionController,
+                textCapitalization: TextCapitalization.sentences,
+                maxLines: 3,
+                style: TextStyle(fontSize: 13.rf),
+                decoration: InputDecoration(
+                  hintText: 'Tell us more about your experience (optional)',
+                  hintStyle: TextStyle(
+                    fontSize: 12.rf,
+                    color: AppColors.textSecondary,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.rs),
+                    borderSide: BorderSide(color: AppColors.borderLight),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.rs),
+                    borderSide: BorderSide(color: AppColors.borderLight),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.rs),
+                    borderSide: BorderSide(color: AppColors.primary),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 14.rw,
+                    vertical: 10.rh,
+                  ),
+                ),
+              ),
+              SizedBox(height: 12.rh),
+              ActionButton(
+                text: AppString.kSubmit,
+                icon: Icons.check_rounded,
+                onPressed: () {
+                  if (selectedRating.value == 0) {
+                    Get.snackbar(
+                      'Required',
+                      'Please select a rating',
+                      snackPosition: SnackPosition.BOTTOM,
+                      margin: const EdgeInsets.all(16),
                     );
-                  }),
-                )),
-            SizedBox(height: 8.rh),
-            ActionButton(
-              text: AppString.kSubmit,
-              icon: Icons.check_rounded,
-              onPressed: () {
-                if (selectedRating.value == 0) {
-                  Get.snackbar(
-                    'Required',
-                    'Please select a rating',
-                    snackPosition: SnackPosition.BOTTOM,
-                    margin: const EdgeInsets.all(16),
+                    return;
+                  }
+                  Get.back();
+                  controller.submitFeedback(
+                    ticket.id,
+                    selectedRating.value,
+                    descriptionController.text.trim().isNotEmpty
+                        ? descriptionController.text.trim()
+                        : null,
                   );
-                  return;
-                }
-                Get.back();
-                controller.submitFeedback(ticket.id, selectedRating.value, null);
-              },
-            ),
-          ],
+                },
+              ),
+            ],
+          ),
         ),
       ),
       isScrollControlled: true,

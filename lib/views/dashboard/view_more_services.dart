@@ -308,29 +308,10 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconDental,
                     title: AppString.kDentalServices,
                     subtitle: AppString.kDentalServicesSubtitle,
-                    onTap: () => ServiceTypeSheet.show(
-                      title: AppString.kSelectServiceType,
-                      options: [
-                        ServiceOption(
-                          title: AppString.kAtHospitalDental,
-                          subtitle: AppString.kAtHospitalDentalDesc,
-                          svgPath: AppString.kIconDental,
-                          onTap: () => Get.toNamed(
+                    onTap: () => Get.toNamed(
                             AppRoutes.dental,
-                            arguments: 'hospital',
+                         
                           ),
-                        ),
-                        ServiceOption(
-                          title: AppString.kVirtualDental,
-                          subtitle: AppString.kVirtualDentalDesc,
-                          svgPath: AppString.kVirtualIcon,
-                          onTap: () => Get.toNamed(
-                            AppRoutes.dental,
-                            arguments: 'virtual',
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
                 _buildAnimatedCard(

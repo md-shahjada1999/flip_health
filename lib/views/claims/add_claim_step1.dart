@@ -479,19 +479,7 @@ class _OpdTermsBottomSheetState extends State<_OpdTermsBottomSheet> {
                 ),
               ),
               SizedBox(height: 12.rh),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: _openFullTermsUrl,
-                  child: CommonText(
-                    AppString.kViewFullTermsInBrowser,
-                    fontSize: 13.rf,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              SizedBox(height: 8.rh),
+             
               Obx(() {
                 final accepted = widget.controller.termsAccepted.value;
                 return ElevatedButton(

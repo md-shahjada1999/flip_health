@@ -119,6 +119,19 @@ class ApiUrl {
   static const String REIMBURSEMENT_MULTI_DOC_TYPES =
       "/patient/reimbursement/multi_document/type";
 
+        /// Support tickets — GET all, POST create
+  static const String SUPPORT_TICKETS = "/patient/support/ticket";
+
+  /// Support ticket detail — append ticket ID for GET messages (?page=N) / POST message
+  static const String SUPPORT_TICKET_DETAIL = "/patient/support/ticket/";
+
+  /// Feedback — POST rating + description
+  static const String FEEDBACK = "/patient/feedback";
+
+  /// Medical records / history — `GET /history/type/{type}` (consultations, prescriptions, labtest, etc.)
+  static const String MEDICAL_RECORDS = "/patient/history/type/";
+
+
   /// Resolve attachment path from API (relative or absolute) for [Image.network] / PDF viewer.
   static String? publicFileUrl(String? path) {
     if (path == null || path.isEmpty) return null;

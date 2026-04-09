@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/core/services/app_exception.dart';
+import 'package:flip_health/core/services/global_error_controller.dart';
 import 'package:flip_health/core/services/secure%20storage/secure_storage.dart';
 import 'package:flip_health/core/utils/custom_toast.dart';
 import 'package:flip_health/core/utils/print_log.dart';
@@ -113,6 +114,10 @@ class ApiService {
 
   void _checkHtmlError(Response response) {
     if (response.toString().contains('!DOCTYPE')) {
+      try {
+        g.Get.find<GlobalErrorController>()
+            .showError(GlobalErrorType.serverError);
+      } catch (_) {}
       throw AppException.server('Something went wrong, Please try again.');
     }
   }
@@ -203,6 +208,28 @@ class _ErrorInterceptor extends Interceptor {
         ? 'Request Timeout'
         : err.message ?? 'Something went wrong';
     ToastCustom.showSnackBar(subtitle: message);
+
+    try {
+      final ec = g.Get.find<GlobalErrorController>();
+      switch (err.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          ec.showError(GlobalErrorType.timeout, message);
+          break;
+        case DioExceptionType.connectionError:
+          ec.showError(GlobalErrorType.serverError, message);
+          break;
+        default:
+          final statusCode = err.response?.statusCode;
+          if (statusCode == 404) {
+            ec.showError(GlobalErrorType.notFound, message);
+          } else if (statusCode != null && statusCode >= 500) {
+            ec.showError(GlobalErrorType.serverError, message);
+          }
+      }
+    } catch (_) {}
+
     handler.next(err);
   }
 }

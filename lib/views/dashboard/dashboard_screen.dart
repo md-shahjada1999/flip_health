@@ -1,14 +1,17 @@
 import 'package:animated_bottom_navigation_bar/animated_bottom_navigation_bar.dart';
 import 'package:flip_health/controllers/help%20controllers/help_controller.dart';
+import 'package:flip_health/controllers/medical%20records%20controllers/medical_records_controller.dart';
 import 'package:flip_health/controllers/orders%20controllers/orders_controller.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/services/api%20services/api_controller.dart';
 import 'package:flip_health/data/repositories/help_repository.dart';
+import 'package:flip_health/data/repositories/medical_records_repository.dart';
 import 'package:flip_health/data/repositories/orders_repository.dart';
 import 'package:flip_health/views/dashboard/dashboard_home_page.dart';
 import 'package:flip_health/views/dashboard/view_more_services.dart';
 import 'package:flip_health/views/help/help_screen.dart';
+import 'package:flip_health/views/medical_records/medical_records_screen.dart';
 import 'package:flip_health/views/orders/orders_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -47,7 +50,7 @@ class _DashboardMainScreenState extends State<DashboardMainScreen> {
       const ServicesScreen(),
       DashboardHomeScreen(),
       const HelpScreen(),
-      Container(), // Medical Records placeholder
+      const MedicalRecordsScreen(),
     ];
   }
 
@@ -70,6 +73,14 @@ class _DashboardMainScreenState extends State<DashboardMainScreen> {
     if (!Get.isRegistered<HelpController>()) {
       Get.lazyPut<HelpController>(
           () => HelpController(repository: Get.find()));
+    }
+    if (!Get.isRegistered<MedicalRecordsRepository>()) {
+      Get.lazyPut<MedicalRecordsRepository>(
+          () => MedicalRecordsRepository(apiService: Get.find()));
+    }
+    if (!Get.isRegistered<MedicalRecordsController>()) {
+      Get.lazyPut<MedicalRecordsController>(
+          () => MedicalRecordsController(repository: Get.find()));
     }
   }
 

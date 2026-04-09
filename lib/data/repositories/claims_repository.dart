@@ -312,8 +312,10 @@ class ClaimsRepository {
         final data = map['data'];
         String? relPath;
         String? id;
+        String? logo;
         if (data is Map) {
           id = data['id']?.toString();
+          logo = data['logo']?.toString();
           final msg = data['message'];
           if (msg is Map) {
             relPath = msg['path']?.toString();
@@ -323,7 +325,6 @@ class ClaimsRepository {
         final extLower = baseName.contains('.')
             ? baseName.split('.').last.toLowerCase()
             : '';
-        // patient_app `_processFileUploadInIsolate`: `file_type` is `"PDF"` or `"IMG"`.
         final fileTypeLabel = extLower == 'pdf' ? 'PDF' : 'IMG';
         final fullPath = relPath != null ? ApiUrl.publicFileUrl(relPath) : null;
         return {
@@ -333,6 +334,7 @@ class ClaimsRepository {
           'document_type': doc,
           'ref_type': refType,
           'title': baseName,
+          if (logo != null) 'logo': logo,
         };
       }
 

@@ -380,12 +380,31 @@ class ClaimsController extends GetxController {
     }
   }
 
-  /// Family member dropdown (same pattern as nutrition / mental wellness).
+  FamilyMember? get _primaryMember {
+    for (final m in familyMembers) {
+      final rel = (m.relationship ?? '').toLowerCase().trim();
+      if (rel.isEmpty || rel == 'self' || rel == 'employee') return m;
+    }
+    return familyMembers.isNotEmpty ? familyMembers.first : null;
+  }
+
   void selectMember(FamilyMember m) {
     selectedMemberId.value = m.id;
     selectedMemberName.value = m.name;
-    phoneController.text = _digits10(m.phone);
-    emailController.text = (m.email ?? '').trim();
+
+    final phone = _digits10(m.phone);
+    if (phone.isNotEmpty) {
+      phoneController.text = phone;
+    } else {
+      phoneController.text = _digits10(_primaryMember?.phone);
+    }
+
+    final email = (m.email ?? '').trim();
+    if (email.isNotEmpty) {
+      emailController.text = email;
+    } else {
+      emailController.text = (_primaryMember?.email ?? '').trim();
+    }
   }
 
   Future<void> _loadBankAccounts() async {
@@ -871,80 +890,84 @@ class ClaimsController extends GetxController {
     Get.bottomSheet(
       isScrollControlled: true,
       isDismissible: false,
-      Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24.rs)),
-        ),
-        padding: EdgeInsets.all(20.rs),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: () => Get.back(),
-                  child: Container(
-                    padding: EdgeInsets.all(6.rs),
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundTertiary,
-                      shape: BoxShape.circle,
+      enableDrag: false,
+      SizedBox(
+        height: Get.height * 0.52,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20.rs)),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(20.rw, 12.rh, 20.rw, 16.rh),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: () => Get.back(),
+                      child: Container(
+                        padding: EdgeInsets.all(6.rs),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE0E0E0),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.close_rounded, size: 20.rs, color: AppColors.textPrimary),
+                      ),
                     ),
-                    child: Icon(
-                      Icons.close,
-                      size: 20.rs,
-                      color: AppColors.textSecondary,
+                  ),
+                  SizedBox(height: 8.rh),
+                  CommonText(
+                    AppString.kReviewYourSubmission,
+                    fontSize: 17.rf,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                  SizedBox(height: 12.rh),
+                  Expanded(
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      child: Container(
+                        padding: EdgeInsets.fromLTRB(12.rw, 10.rh, 16.rw, 10.rh),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundTertiary,
+                          borderRadius: BorderRadius.circular(12.rs),
+                        ),
+                        child: SingleChildScrollView(
+                          child: CommonText(
+                            AppString.kBillReviewDisclaimer,
+                            fontSize: 13.rf,
+                            color: AppColors.textPrimary,
+                            height: 1.45,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              SizedBox(height: 8.rh),
-              CommonText(
-                AppString.kReviewYourSubmission,
-                fontSize: 18.rf,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-              SizedBox(height: 12.rh),
-              Container(
-                constraints: BoxConstraints(maxHeight: 160.rh),
-                padding: EdgeInsets.all(12.rs),
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundTertiary,
-                  borderRadius: BorderRadius.circular(12.rs),
-                ),
-                child: SingleChildScrollView(
-                  child: CommonText(
-                    AppString.kBillReviewDisclaimer,
-                    fontSize: 14.rf,
-                    color: AppColors.textSecondary,
+                  SizedBox(height: 16.rh),
+                  ElevatedButton(
+                    onPressed: () {
+                      Get.back();
+                      showBillServiceTypesBottomSheet();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.textPrimary,
+                      padding: EdgeInsets.symmetric(vertical: 14.rh),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.rs)),
+                      elevation: 0,
+                    ),
+                    child: CommonText(
+                      AppString.kIAgree,
+                      fontSize: 15.rf,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
+                ],
               ),
-              SizedBox(height: 20.rh),
-              ElevatedButton(
-                onPressed: () {
-                  Get.back();
-                  showBillServiceTypesBottomSheet();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: EdgeInsets.symmetric(vertical: 16.rh),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14.rs),
-                  ),
-                  elevation: 0,
-                ),
-                child: CommonText(
-                  AppString.kIAgree,
-                  fontSize: 15.rf,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -1388,9 +1411,12 @@ class ClaimsController extends GetxController {
         refType: 'BILL',
         documentType: '',
       );
-      final displayName = picked.name.isNotEmpty
-          ? picked.name
-          : (up['title']?.toString() ?? 'file');
+      final logo = up['logo']?.toString() ?? '';
+      final displayName = logo.contains('/')
+          ? logo.split('/').last
+          : picked.name.isNotEmpty
+              ? picked.name
+              : (up['title']?.toString() ?? 'file');
       billImageFiles.add({
         ...up,
         'name': displayName,
@@ -1489,9 +1515,15 @@ class ClaimsController extends GetxController {
         refType: refType,
         documentType: documentType,
       );
+      final docLogo = up['logo']?.toString() ?? '';
+      final docDisplayName = docLogo.contains('/')
+          ? docLogo.split('/').last
+          : picked.name.isNotEmpty
+              ? picked.name
+              : (up['title']?.toString() ?? 'file');
       final base = <String, dynamic>{
         ...up,
-        'name': picked.name,
+        'name': docDisplayName,
         'document_type': documentType,
         'isImage': picked.isImage,
       };

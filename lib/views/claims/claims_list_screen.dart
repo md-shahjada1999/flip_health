@@ -20,7 +20,7 @@ class ClaimsListScreen extends GetView<ClaimsController> {
       appBar: CommonAppBar.build(title: AppString.kMyClaims),
       body: Column(
         children: [
-          _buildFilterBar(),
+       //   _buildFilterBar(),
           Expanded(child: _buildClaimsList()),
         ],
       ),

@@ -407,6 +407,7 @@ class SelectSpecialityScreen extends GetView<ConsultationController> {
         separatorBuilder: (_, __) => Divider(height: 1, color: AppColors.borderLight),
         itemBuilder: (_, index) {
           final spec = specs[index];
+          final initial = spec.name.isNotEmpty ? spec.name[0].toUpperCase() : 'S';
           return ListTile(
             onTap: () => controller.selectOfflineSpeciality(spec),
             contentPadding: EdgeInsets.symmetric(horizontal: 8.rw, vertical: 4.rh),
@@ -417,7 +418,16 @@ class SelectSpecialityScreen extends GetView<ConsultationController> {
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12.rs),
               ),
-              child: Icon(Icons.medical_services_outlined, color: AppColors.primary, size: 20.rs),
+              child: Center(
+                child: Text(
+                  initial,
+                  style: TextStyle(
+                    fontSize: 18.rf,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
             ),
             title: CommonText(
               spec.name,
@@ -425,34 +435,7 @@ class SelectSpecialityScreen extends GetView<ConsultationController> {
               fontWeight: FontWeight.w500,
               color: AppColors.textPrimary,
             ),
-            subtitle: spec.consultationPrice > 0
-                ? CommonText(
-                    '₹${spec.consultationPrice} • ${spec.consultationTime} min',
-                    fontSize: 11.rf,
-                    color: AppColors.textSecondary,
-                  )
-                : null,
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (spec.consultationPrice > 0)
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.rw, vertical: 3.rh),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6.rs),
-                    ),
-                    child: CommonText(
-                      '₹${spec.consultationPrice}',
-                      fontSize: 11.rf,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.success,
-                    ),
-                  ),
-                SizedBox(width: 4.rw),
-                Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20.rs),
-              ],
-            ),
+            trailing: Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 20.rs),
           );
         },
       );
