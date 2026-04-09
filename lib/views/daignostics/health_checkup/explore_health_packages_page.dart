@@ -1,4 +1,3 @@
-import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -290,7 +289,6 @@ class ExploreHealthPackagesPage extends StatelessWidget {
                         color: AppColors.warning,
                         width: 1,
                       ),
-                      // color: AppColors.success.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(15.rs),
                     ),
                     child: Row(
@@ -475,12 +473,6 @@ class ExploreHealthPackagesPage extends StatelessWidget {
                           height: 1.3,
                         ),
                         SizedBox(width: 16.rw),
-                        // Container(
-                        //   width: 1,
-                        //   height: 16.rh,
-                        //   color: Colors.white.withOpacity(0.3),
-                        // ),
-                        // Spacer(),
                         SvgPicture.asset(
                           AppString.kCenterIcon,
                           width: 10.rw,

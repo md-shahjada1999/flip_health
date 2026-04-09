@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 import 'package:flip_health/controllers/member%20controllers/member_controller.dart';
 import 'package:flip_health/core/helpers/app_toasts.dart';
+import 'package:flip_health/core/services/secure%20storage/secure_storage.dart';
 import 'package:flip_health/core/utils/payment_success_screen.dart';
 import 'package:flip_health/data/repositories/health_checkup_repository.dart';
+import 'package:flip_health/model/heath%20checkup%20models/diagnostics_package_model.dart';
 import 'package:flip_health/views/daignostics/health_checkup/explore_health_packages_page.dart';
 import 'package:flip_health/views/daignostics/health_checkup/health_checkup_overview_page.dart';
 import 'package:flip_health/views/daignostics/health_checkup/health_selection_slot_page.dart';
@@ -13,43 +15,86 @@ class HealthCheckupsController extends GetxController {
 
   HealthCheckupsController({required HealthCheckupRepository repository})
       : _repository = repository;
+
   final RxBool isLoading = false.obs;
   var selectedPackageIndex = (-1).obs;
   var isHomeCollection = true.obs;
-  // Observable variables for slot selection
-final RxInt selectedDateIndex = 0.obs;
-final RxString selectedTimeSlot = ''.obs;
-final RxString selectedMonthYear = 'Sept 2025 ( IST )'.obs;
 
+  // --- Packages from API ---
+  final packages = <DiagnosticsPackage>[].obs;
+  final Rxn<DiagnosticsPackageDetail> selectedPackageDetail =
+      Rxn<DiagnosticsPackageDetail>();
+  final RxInt expandedPackageId = (-1).obs;
+  final RxBool isDetailLoading = false.obs;
 
-// Available dates
-final RxList<Map<String, String>> availableDates = <Map<String, String>>[
-  {'day': '10', 'weekday': 'Mon'},
-  {'day': '11', 'weekday': 'Tue'},
-  {'day': '12', 'weekday': 'Wed'},
-  {'day': '13', 'weekday': 'Thu'},
-  {'day': '14', 'weekday': 'Fri'},
-].obs;
+  // --- Slot selection ---
+  final RxInt selectedDateIndex = 0.obs;
+  final RxString selectedTimeSlot = ''.obs;
+  final RxString selectedMonthYear = 'Sept 2025 ( IST )'.obs;
 
-// Morning time slots
-final List<Map<String, dynamic>> morningSlots = [
-  {'time': '7 AM-8 AM', 'isDisabled': false},
-  {'time': '8 AM-9 AM', 'isDisabled': false},
-  {'time': '9 AM-10 AM', 'isDisabled': true},
-  {'time': '10 AM-11 AM', 'isDisabled': false},
-  {'time': '11 AM-12 PM', 'isDisabled': false},
-];
+  final RxList<Map<String, String>> availableDates = <Map<String, String>>[
+    {'day': '10', 'weekday': 'Mon'},
+    {'day': '11', 'weekday': 'Tue'},
+    {'day': '12', 'weekday': 'Wed'},
+    {'day': '13', 'weekday': 'Thu'},
+    {'day': '14', 'weekday': 'Fri'},
+  ].obs;
 
-// Afternoon time slots
-final List<Map<String, dynamic>> afternoonSlots = [
-  {'time': '7 AM-8 AM', 'isDisabled': false},
-  {'time': '8 AM-9 AM', 'isDisabled': false},
-  {'time': '9 AM-10 AM', 'isDisabled': false},
-  {'time': '10 AM-11 AM', 'isDisabled': false},
-  {'time': '11 AM-12 PM', 'isDisabled': false},
-];
+  final List<Map<String, dynamic>> morningSlots = [
+    {'time': '7 AM-8 AM', 'isDisabled': false},
+    {'time': '8 AM-9 AM', 'isDisabled': false},
+    {'time': '9 AM-10 AM', 'isDisabled': true},
+    {'time': '10 AM-11 AM', 'isDisabled': false},
+    {'time': '11 AM-12 PM', 'isDisabled': false},
+  ];
 
-  // --- Member selection (delegated to MemberController) ---
+  final List<Map<String, dynamic>> afternoonSlots = [
+    {'time': '7 AM-8 AM', 'isDisabled': false},
+    {'time': '8 AM-9 AM', 'isDisabled': false},
+    {'time': '9 AM-10 AM', 'isDisabled': false},
+    {'time': '10 AM-11 AM', 'isDisabled': false},
+    {'time': '11 AM-12 PM', 'isDisabled': false},
+  ];
+
+  // --- Packages API ---
+
+  Future<void> fetchPackages() async {
+    final userId =
+        AppSecureStorage.getIntValueFromSharedPref(variableName: AppSecureStorage.kUserId) ?? 0;
+    if (userId == 0) return;
+
+    isLoading.value = true;
+    try {
+      packages.value = await _repository.getPackages(userId: userId);
+    } catch (e) {
+      AppToast.error(title: 'Error', message: '$e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> fetchPackageDetail(int id) async {
+    if (expandedPackageId.value == id) {
+      expandedPackageId.value = -1;
+      selectedPackageDetail.value = null;
+      return;
+    }
+
+    isDetailLoading.value = true;
+    expandedPackageId.value = id;
+    selectedPackageDetail.value = null;
+
+    try {
+      selectedPackageDetail.value = await _repository.getPackageDetail(id);
+    } catch (e) {
+      AppToast.error(title: 'Error', message: '$e');
+      expandedPackageId.value = -1;
+    } finally {
+      isDetailLoading.value = false;
+    }
+  }
+
+  // --- Member selection ---
 
   void continueWithSelection() {
     final mc = Get.find<MemberController>();
@@ -63,103 +108,74 @@ final List<Map<String, dynamic>> afternoonSlots = [
     Get.to(() => SelectPlanPage());
   }
 
-//continue with plan selected
   void continueWithPlanSelection() {
-    Get.to(()=>ExploreHealthPackagesPage());
-    // AppToast.success(
-    //   title: 'Checked',
-    //   message: 'Flip Health Checkup Plan Selected',
-    // );
+    Get.to(() => ExploreHealthPackagesPage());
   }
 
   void continueWithPackageSelection() {
-    Get.to(()=>HealthCheckUpSlotSelectionPage());
+    Get.to(() => HealthCheckUpSlotSelectionPage());
   }
 
+  // --- Slot selection ---
 
+  void selectDate(int index) {
+    selectedDateIndex.value = index;
+    update();
+  }
 
-  // Select date
-void selectDate(int index) {
-  selectedDateIndex.value = index;
-  update();
-}
+  void selectTimeSlot(String time) {
+    selectedTimeSlot.value = time;
+  }
 
-// Select time slot
-void selectTimeSlot(String time) {
-  selectedTimeSlot.value = time;
-}
+  void confirmSlotSelection() {
+    if (selectedTimeSlot.value.isEmpty) {
+      AppToast.error(
+        title: 'Error',
+        message: 'Please select a time slot',
+      );
+      return;
+    }
 
-// Confirm slot selection
-void confirmSlotSelection() {
-  if (selectedTimeSlot.value.isEmpty) {
-    AppToast.error(
-      title: 'Error',
-      message: 'Please select a time slot',
+    final selectedDate = availableDates[selectedDateIndex.value];
+
+    AppToast.success(
+      title: 'Slot Confirmed',
+      message:
+          'Appointment scheduled for ${selectedDate['day']} ${selectedDate['weekday']}, ${selectedTimeSlot.value}',
     );
-    return;
+
+    Get.to(() => HealthCheckupOverviewScreen());
   }
 
-  final selectedDate = availableDates[selectedDateIndex.value];
-  
-  AppToast.success(
-    title: 'Slot Confirmed',
-    message: 'Appointment scheduled for ${selectedDate['day']} ${selectedDate['weekday']}, ${selectedTimeSlot.value}',
-  );
+  void initializeSlotSelection() {
+    selectedDateIndex.value = 0;
+    selectedTimeSlot.value = '';
+    loadAvailableDates();
+  }
 
-  // Navigate to next screen or process the booking
-  Get.to(() => HealthCheckupOverviewScreen());
-}
+  void loadAvailableDates() {}
 
-// Initialize slot selection data
-void initializeSlotSelection() {
-  // Reset selections
-  selectedDateIndex.value = 0;
-  selectedTimeSlot.value = '';
-  
-  // You can load available dates from API here
-  // For now using static data
-  loadAvailableDates();
-}
+  bool isTimeSlotAvailable(String time) {
+    final allSlots = [...morningSlots, ...afternoonSlots];
+    final slot = allSlots.firstWhere(
+      (s) => s['time'] == time,
+      orElse: () => {'time': '', 'isDisabled': true},
+    );
+    return !(slot['isDisabled'] ?? true);
+  }
 
-// Load available dates (replace with API call if needed)
-void loadAvailableDates() {
-  // This can be replaced with actual API call to get available dates
-  // For now using the static data already defined
-  
-  // Example: You could modify this to load from backend
-  // final response = await _healthCheckupService.getAvailableDates();
-  // availableDates.value = response.dates;
-}
+  String getFormattedSelectedDate() {
+    if (availableDates.isEmpty) return '';
+    final selectedDate = availableDates[selectedDateIndex.value];
+    return '${selectedDate['day']} ${selectedDate['weekday']}';
+  }
 
-// Check if a specific time slot is available
-bool isTimeSlotAvailable(String time) {
-  final allSlots = [...morningSlots, ...afternoonSlots];
-  final slot = allSlots.firstWhere(
-    (s) => s['time'] == time,
-    orElse: () => {'time': '', 'isDisabled': true},
-  );
-  return !(slot['isDisabled'] ?? true);
-}
+  void resetSlotSelection() {
+    selectedDateIndex.value = 0;
+    selectedTimeSlot.value = '';
+  }
 
-// Get formatted selected date
-String getFormattedSelectedDate() {
-  if (availableDates.isEmpty) return '';
-  final selectedDate = availableDates[selectedDateIndex.value];
-  return '${selectedDate['day']} ${selectedDate['weekday']}';
-}
-
-// Reset slot selection
-void resetSlotSelection() {
-  selectedDateIndex.value = 0;
-  selectedTimeSlot.value = '';
-}
-
-
-//confirm booking
-void confirmBooking() {
-  
-
-  // Navigate to booking confirmation screen or process the booking
-  Get.to(() => PaymentSuccessScreen());
-}
+  void confirmBooking() {
+    Get.to(() => PaymentSuccessScreen());
+  }
 }

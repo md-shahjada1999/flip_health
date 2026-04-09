@@ -1,86 +1,255 @@
 import 'package:flip_health/core/services/api%20services/api_controller.dart';
+import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/core/services/app_exception.dart';
-import 'package:flip_health/model/heath%20checkup%20models/family_member_data_model.dart';
+import 'package:flip_health/core/utils/print_log.dart';
 import 'package:flip_health/model/heath%20checkup%20models/lab_test_model.dart';
 
 class LabTestRepository {
   final ApiService apiService;
   LabTestRepository({required this.apiService});
 
+  // -----------------------------------------------------------------------
+  // Lab tests / packages (paginated, searchable)
+  // -----------------------------------------------------------------------
 
-
-  Future<List<LabTestModel>> getAllTests() async {
+  Future<List<LabTest>> getLabTests({
+    required String addressId,
+    String name = '',
+    int page = 1,
+    int limit = 20,
+  }) async {
     try {
-      // TODO: Replace with actual API call
-      await Future.delayed(const Duration(milliseconds: 500));
-      return const [
-        LabTestModel(id: '1', name: 'Bilurubin (total, direct and indirect)', reportTime: 'Reports within 48 hours'),
-        LabTestModel(id: '2', name: 'Complete Blood Count (CBC)', reportTime: 'Reports within 24 hours'),
-        LabTestModel(id: '3', name: 'Thyroid Profile (T3, T4, TSH)', reportTime: 'Reports within 48 hours'),
-        LabTestModel(id: '4', name: 'Liver Function Test (LFT)', reportTime: 'Reports within 48 hours'),
-        LabTestModel(id: '5', name: 'Kidney Function Test (KFT)', reportTime: 'Reports within 48 hours'),
-        LabTestModel(id: '6', name: 'Lipid Profile', reportTime: 'Reports within 24 hours'),
-        LabTestModel(id: '7', name: 'HbA1c (Glycated Hemoglobin)', reportTime: 'Reports within 48 hours'),
-        LabTestModel(id: '8', name: 'Vitamin D (25-Hydroxy)', reportTime: 'Reports within 48 hours'),
-      ];
+      final params = <String, dynamic>{
+        'loc': addressId,
+        'page': page,
+        'limit': limit,
+      };
+      if (name.isNotEmpty) params['name'] = name;
+
+      final response = await apiService.get(
+        ApiUrl.DIAGNOSTICS_PACKAGES,
+        queryParameters: params,
+      );
+
+      if (response.statusCode != 200 || response.data is! Map) {
+        throw AppException(
+          message: 'Failed to fetch lab tests',
+          statusCode: response.statusCode,
+        );
+      }
+
+      final list = (response.data as Map<String, dynamic>)['data'] as List<dynamic>? ?? [];
+      return list.map((e) => LabTest.fromJson(e as Map<String, dynamic>)).toList();
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AppException(message: e.toString());
+      PrintLog.printLog('getLabTests error: $e');
+      throw AppException(message: 'Failed to load lab tests: $e');
     }
   }
 
-  Future<List<LabPackageModel>> getPopularPackages() async {
+  // -----------------------------------------------------------------------
+  // Vendors
+  // -----------------------------------------------------------------------
+
+  Future<List<LabVendor>> getVendors({required String addressId}) async {
     try {
-      // TODO: Replace with actual API call
-      return const [
-        LabPackageModel(
-          id: 'pkg1',
-          name: 'Basic Diagnostic Package - Home Collection',
-          price: 6000,
-          includedTests: ['1', '2', '3', '4'],
-        ),
-        LabPackageModel(
-          id: 'pkg2',
-          name: 'Advanced Health Package - Home Collection',
-          price: 12000,
-          includedTests: ['1', '2', '3', '4', '5', '6', '7', '8'],
-        ),
-      ];
+      final response = await apiService.post(
+        ApiUrl.DIAGNOSTICS_VENDORS,
+        data: {'address_id': addressId},
+      );
+
+      if (response.statusCode != 200 || response.data is! Map) {
+        throw AppException(
+          message: 'Failed to fetch vendors',
+          statusCode: response.statusCode,
+        );
+      }
+
+      final list = (response.data as Map<String, dynamic>)['data'] as List<dynamic>? ?? [];
+      return list.map((e) => LabVendor.fromJson(e as Map<String, dynamic>)).toList();
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AppException(message: e.toString());
+      PrintLog.printLog('getVendors error: $e');
+      throw AppException(message: 'Failed to load vendors: $e');
     }
   }
 
-  Future<List<LabModel>> getAvailableLabs({required List<LabTestModel> cartTests}) async {
+  // -----------------------------------------------------------------------
+  // Slots
+  // -----------------------------------------------------------------------
+
+  Future<LabSlotsResponse> getSlots({
+    required String addressId,
+    required String date,
+    required String vendorCode,
+    String package = 'test',
+  }) async {
     try {
-      // TODO: Replace with actual API call
-      return [
-        LabModel(
-          id: 'lab1',
-          name: 'Neuberg Diagnostics',
-          logoPath: 'assets/png/neuberg_logo.png',
-          rating: '4.5',
-          testPrices: cartTests
-              .map((t) => LabTestPrice(testId: t.id, testName: t.name, price: t.id == '1' ? 300 : 210))
-              .toList(),
-          homeCollectionCharge: 80,
-          supportedTypes: [CollectionType.home, CollectionType.center],
-        ),
-        LabModel(
-          id: 'lab2',
-          name: 'OrangeHealthLabs',
-          logoPath: 'assets/png/orange_health_logo.png',
-          rating: '4.5',
-          address: '3rd & 4th floor, Bright Square, Dharam Karan Rd, ShivBagh, Ameerpet, Hyderabad, Telangana 500016',
-          distance: '18 km',
-          testPrices: cartTests
-              .map((t) => LabTestPrice(testId: t.id, testName: t.name, price: t.id == '1' ? 210 : 210))
-              .toList(),
-          homeCollectionCharge: 80,
-          supportedTypes: [CollectionType.home, CollectionType.center],
-        ),
-      ];
+      final response = await apiService.post(
+        ApiUrl.DIAGNOSTICS_SLOTS,
+        data: {
+          'address_id': addressId,
+          'date': date,
+          'vendor_code': vendorCode,
+          'package': package,
+        },
+      );
+
+      if (response.statusCode != 200 || response.data is! Map) {
+        throw AppException(
+          message: 'Failed to fetch slots',
+          statusCode: response.statusCode,
+        );
+      }
+
+      final data = (response.data as Map<String, dynamic>)['data'] as Map<String, dynamic>? ?? {};
+      return LabSlotsResponse.fromJson(data);
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AppException(message: e.toString());
+      PrintLog.printLog('getSlots error: $e');
+      throw AppException(message: 'Failed to load slots: $e');
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Cart
+  // -----------------------------------------------------------------------
+
+  Future<LabCartResponse> getCart() async {
+    try {
+      final response = await apiService.get(ApiUrl.CART_LAB);
+
+      if (response.statusCode != 200 || response.data is! Map) {
+        throw AppException(
+          message: 'Failed to fetch cart',
+          statusCode: response.statusCode,
+        );
+      }
+
+      return LabCartResponse.fromJson(response.data as Map<String, dynamic>);
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('getCart error: $e');
+      throw AppException(message: 'Failed to load cart: $e');
+    }
+  }
+
+  Future<void> addToCart(int productId) async {
+    try {
+      final response = await apiService.post(
+        ApiUrl.CART_ADD,
+        data: {'product_id': productId, 'type': 'lab'},
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw AppException(
+          message: 'Failed to add item to cart',
+          statusCode: response.statusCode,
+        );
+      }
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('addToCart error: $e');
+      throw AppException(message: 'Failed to add to cart: $e');
+    }
+  }
+
+  Future<void> removeFromCart(int cartItemId) async {
+    try {
+      final response = await apiService.delete(
+        '${ApiUrl.CART_REMOVE_LAB}$cartItemId',
+      );
+
+      if (response.statusCode != 200) {
+        throw AppException(
+          message: 'Failed to remove item from cart',
+          statusCode: response.statusCode,
+        );
+      }
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('removeFromCart error: $e');
+      throw AppException(message: 'Failed to remove from cart: $e');
+    }
+  }
+
+  Future<void> clearCart() async {
+    try {
+      final response = await apiService.delete(ApiUrl.CART_CLEAR_LAB);
+
+      if (response.statusCode != 200) {
+        throw AppException(
+          message: 'Failed to clear cart',
+          statusCode: response.statusCode,
+        );
+      }
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('clearCart error: $e');
+      throw AppException(message: 'Failed to clear cart: $e');
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Booking overview + place order
+  // -----------------------------------------------------------------------
+
+  Future<BookingOverviewResponse> getBookingOverview({
+    required Map<String, dynamic> body,
+  }) async {
+    try {
+      final response = await apiService.post(
+        '${ApiUrl.DIAGNOSTICS_BOOKING}?overview=yes&useAppWallet=no',
+        data: body,
+      );
+
+      if (response.statusCode != 200 || response.data is! Map) {
+        throw AppException(
+          message: 'Failed to fetch booking overview',
+          statusCode: response.statusCode,
+        );
+      }
+
+      return BookingOverviewResponse.fromJson(
+          response.data as Map<String, dynamic>);
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('getBookingOverview error: $e');
+      throw AppException(message: 'Failed to load overview: $e');
+    }
+  }
+
+  Future<BookingOverviewResponse> placeOrder({
+    required Map<String, dynamic> body,
+  }) async {
+    try {
+      final response = await apiService.post(
+        '${ApiUrl.DIAGNOSTICS_BOOKING}?overview=no&useAppWallet=no',
+        data: body,
+      );
+
+      if (response.statusCode != 200 || response.data is! Map) {
+        throw AppException(
+          message: 'Failed to place order',
+          statusCode: response.statusCode,
+        );
+      }
+
+      return BookingOverviewResponse.fromJson(
+          response.data as Map<String, dynamic>);
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('placeOrder error: $e');
+      throw AppException(message: 'Failed to place order: $e');
     }
   }
 }

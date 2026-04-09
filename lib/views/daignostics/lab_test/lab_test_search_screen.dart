@@ -8,7 +8,6 @@ import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/model/heath%20checkup%20models/lab_test_model.dart';
-import 'package:flip_health/views/daignostics/widgets/cart_bottom_bar.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
 import 'package:flip_health/views/daignostics/widgets/my_orders_button.dart';
 
@@ -20,51 +19,59 @@ class LabTestSearchScreen extends GetView<LabTestController> {
     return SafeScreenWrapper(
       bottomSafe: false,
       appBar: CommonAppBar.build(
-        title: 'Lab Tests',
+        title: 'Search Tests',
         showBackButton: true,
         actions: [const MyOrdersButton()],
       ),
       body: Column(
         children: [
           const LocationHeaderBar(),
-          SizedBox(height: 12.rh),
           _buildSearchField(),
-          SizedBox(height: 12.rh),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.rs),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Obx(() => CommonText(
-                    controller.searchQuery.value.isEmpty
-                        ? 'Top Searches'
-                        : 'Search Results',
-                    fontSize: 13.rf,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  )),
-            ),
-          ),
-          SizedBox(height: 8.rh),
-          const Divider(height: 1, color: AppColors.borderLight),
           Expanded(
-            child: Obx(() => ListView.separated(
-                  padding: EdgeInsets.zero,
-                  itemCount: controller.searchResults.length,
-                  separatorBuilder: (_, __) =>
-                      FadeInUp(child: const Divider(height: 1, color: AppColors.borderLight)),
-                  itemBuilder: (context, index) {
-                    final test = controller.searchResults[index];
-                    return _buildTestTile(test);
-                  },
-                )),
-          ),
-          SafeBottomPadding(
-            child: Obx(() => CartBottomBar(
-                  itemCount: controller.cartTests.length,
-                  actionLabel: 'View cart',
-                  actionIcon: Icons.shopping_cart_outlined,
-                  onActionTap: controller.goToCart,
-                )),
+            child: Obx(() {
+              if (controller.isSearchLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                );
+              }
+
+              if (controller.searchQuery.value.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.search_rounded, size: 40.rs, color: AppColors.textQuaternary),
+                      SizedBox(height: 12.rh),
+                      CommonText('Search for tests, packages...', fontSize: 13.rf, color: AppColors.textSecondary),
+                    ],
+                  ),
+                );
+              }
+
+              if (controller.searchResults.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.search_off_rounded, size: 40.rs, color: AppColors.textQuaternary),
+                      SizedBox(height: 12.rh),
+                      CommonText('No results found', fontSize: 13.rf, color: AppColors.textSecondary),
+                    ],
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: EdgeInsets.only(bottom: 80.rh),
+                itemCount: controller.searchResults.length,
+                itemBuilder: (_, index) {
+                  return FadeInUp(
+                    duration: const Duration(milliseconds: 120),
+                    child: _buildTestTile(controller.searchResults[index]),
+                  );
+                },
+              );
+            }),
           ),
         ],
       ),
@@ -73,114 +80,90 @@ class LabTestSearchScreen extends GetView<LabTestController> {
 
   Widget _buildSearchField() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.rs),
+      padding: EdgeInsets.fromLTRB(16.rs, 8.rh, 16.rs, 6.rh),
       child: Container(
-        height: 48.rh,
+        height: 42.rh,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12.rs),
+          borderRadius: BorderRadius.circular(10.rs),
           border: Border.all(color: AppColors.borderLight),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadow,
-              blurRadius: 4,
-              offset: const Offset(0, 1),
-            ),
-          ],
         ),
         child: TextField(
           controller: controller.searchTextController,
           onChanged: controller.onSearchChanged,
           autofocus: true,
-          style: TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 14.rf,
-            color: AppColors.textPrimary,
-          ),
+          style: TextStyle(fontFamily: 'Poppins', fontSize: 13.rf, color: AppColors.textPrimary),
           decoration: InputDecoration(
-            hintText: 'Search and book lab tests',
-            hintStyle: TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 14.rf,
-              color: AppColors.textQuaternary,
-            ),
-            prefixIcon:
-                Icon(Icons.search, color: AppColors.textTertiary, size: 22.rs),
-            suffixIcon:
-                Icon(Icons.mic, color: AppColors.primary, size: 22.rs),
+            hintText: 'Search lab tests...',
+            hintStyle: TextStyle(fontFamily: 'Poppins', fontSize: 13.rf, color: AppColors.textQuaternary),
+            prefixIcon: Icon(Icons.search_rounded, color: AppColors.textQuaternary, size: 20.rs),
             border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(vertical: 14.rs),
+            contentPadding: EdgeInsets.symmetric(vertical: 12.rs),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTestTile(LabTestModel test) {
-    return FadeInUp(
-      child: Obx(() {
-        final isSelected = controller.isInCart(test.id);
-        return InkWell(
-          onTap: () => controller.toggleTestInCart(test),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.rs, vertical: 14.rs),
-            child: Row(
-              children: [
-                Container(
-                  width: 40.rw,
-                  height: 40.rh,
-                  decoration: BoxDecoration(
-                    color: AppColors.backgroundTertiary,
-                    borderRadius: BorderRadius.circular(8.rs),
-                  ),
-                  child: Icon(
-                    Icons.science_outlined,
-                    size: 20.rs,
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-                SizedBox(width: 14.rw),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CommonText(
-                        test.name,
-                        fontSize: 14.rf,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                        height: 1.3,
-                      ),
-                      SizedBox(height: 2.rh),
-                      CommonText(
-                        test.reportTime,
-                        fontSize: 12.rf,
-                        color: AppColors.textSecondary,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 12.rw),
-                Container(
-                  width: 24.rs,
-                  height: 24.rs,
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.black : Colors.transparent,
-                    border: Border.all(
-                      color: isSelected ? Colors.black : AppColors.border,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(4.rs),
-                  ),
-                  child: isSelected
-                      ? Icon(Icons.check, size: 16.rs, color: Colors.white)
-                      : null,
-                ),
-              ],
-            ),
+  Widget _buildTestTile(LabTest test) {
+    return Obx(() {
+      final inCart = controller.isInCart(test.id);
+      return InkWell(
+        onTap: () => controller.toggleCart(test.id),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 16.rs, vertical: 12.rs),
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: AppColors.borderLight, width: 0.5)),
           ),
-        );
-      }),
-    );
+          child: Row(
+            children: [
+              Container(
+                width: 36.rs,
+                height: 36.rs,
+                decoration: BoxDecoration(
+                  color: inCart ? AppColors.primary.withValues(alpha: 0.08) : AppColors.backgroundTertiary,
+                  borderRadius: BorderRadius.circular(8.rs),
+                ),
+                child: Icon(Icons.science_outlined, size: 18.rs,
+                    color: inCart ? AppColors.primary : AppColors.textTertiary),
+              ),
+              SizedBox(width: 12.rw),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CommonText(test.name, fontSize: 13.rf, fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary, maxLines: 2, overflow: TextOverflow.ellipsis, height: 1.3),
+                    SizedBox(height: 3.rh),
+                    Wrap(
+                      spacing: 6.rw,
+                      runSpacing: 2.rh,
+                      children: [
+                        CommonText(test.fastingLabel, fontSize: 10.5.rf, color: AppColors.textTertiary, height: 1.4),
+                        if (test.tatLabel.isNotEmpty)
+                          CommonText(test.tatLabel, fontSize: 10.5.rf, color: AppColors.textTertiary, height: 1.4),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 10.rw),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 22.rs,
+                height: 22.rs,
+                decoration: BoxDecoration(
+                  color: inCart ? Colors.black : Colors.transparent,
+                  border: Border.all(color: inCart ? Colors.black : AppColors.border, width: 1.5),
+                  borderRadius: BorderRadius.circular(4.rs),
+                ),
+                child: inCart ? Icon(Icons.check_rounded, size: 14.rs, color: Colors.white) : null,
+              ),
+            ],
+          ),
+        ),
+      );
+    });
   }
 }

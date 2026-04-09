@@ -131,6 +131,19 @@ class ApiUrl {
   /// Medical records / history — `GET /history/type/{type}` (consultations, prescriptions, labtest, etc.)
   static const String MEDICAL_RECORDS = "/patient/history/type/";
 
+  // Diagnostics
+  static const String DIAGNOSTICS_PACKAGES = "/patient/diagnostics/packages";
+  static const String DIAGNOSTICS_PACKAGE_DETAIL = "/patient/diagnostics/packages/";
+  static const String DIAGNOSTICS_VENDORS = "/patient/diagnostics/packages/pricing";
+  static const String DIAGNOSTICS_SLOTS = "/patient/diagnostics/slots";
+  static const String DIAGNOSTICS_BOOKING = "/patient/diagnostics/order/booking";
+
+  // Cart
+  static const String CART_LAB = "/patient/cart/lab";
+  static const String CART_ADD = "/patient/cart/add";
+  static const String CART_REMOVE_LAB = "/patient/cart/remove/lab/";
+  static const String CART_CLEAR_LAB = "/patient/cart/clear/lab";
+
 
   /// Resolve attachment path from API (relative or absolute) for [Image.network] / PDF viewer.
   static String? publicFileUrl(String? path) {
