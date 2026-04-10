@@ -9,6 +9,7 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/common_dialog.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 
@@ -625,9 +626,7 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
           // Confirm Button
           Expanded(
             child: ElevatedButton(
-              onPressed: () {
-                controller.confirmBooking();
-              },
+              onPressed: () => _confirmAndBook(),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
@@ -647,5 +646,17 @@ class HealthCheckupOverviewScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmAndBook() async {
+    final confirmed = await CommonDialog.confirm(
+      title: 'Confirm Booking',
+      message: 'Are you sure you want to confirm this health checkup booking?',
+      confirmText: 'Book Now',
+      cancelText: 'Go Back',
+    );
+    if (confirmed == true) {
+      Get.find<HealthCheckupsController>().confirmBooking();
+    }
   }
 }

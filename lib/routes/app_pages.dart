@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:flip_health/bindings/address%20bindings/add_address_binding.dart';
+import 'package:flip_health/bindings/address%20bindings/address_book_binding.dart';
 import 'package:flip_health/bindings/auth%20bindings/auth_binding.dart';
 import 'package:flip_health/bindings/consultation%20bindings/consultation_binding.dart';
 import 'package:flip_health/bindings/dashboard%20bindings/dashboard_binding.dart';
@@ -22,6 +23,7 @@ import 'package:flip_health/bindings/profile%20bindings/profile_binding.dart';
 import 'package:flip_health/routes/app_routes.dart';
 import 'package:flip_health/views/health_score/health_score_view.dart';
 import 'package:flip_health/views/address/address_form_screen.dart';
+import 'package:flip_health/views/address/address_book_screen.dart';
 import 'package:flip_health/views/address/map_picker_screen.dart';
 import 'package:flip_health/views/auth/login/login_screen.dart';
 import 'package:flip_health/views/auth/login/otp_screen.dart';
@@ -143,6 +145,8 @@ class AppPages {
       name: AppRoutes.pharmacy,
       page: () => const PharmacyMainScreen(),
       binding: PharmacyBinding(),
+      transition: Transition.rightToLeft,
+
     ),
 
     // Mental Wellness
@@ -209,6 +213,11 @@ class AppPages {
     ),
 
     // Address
+    GetPage(
+      name: AppRoutes.addressBook,
+      page: () => const AddressBookScreen(),
+      binding: AddressBookBinding(),
+    ),
     GetPage(
       name: AppRoutes.addAddress,
       page: () => const MapPickerScreen(),

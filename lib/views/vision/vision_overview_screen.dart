@@ -8,10 +8,12 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/common_dialog.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/common_slot_selector.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
 import 'package:flip_health/core/utils/file_picker_helper.dart';
+import 'package:flip_health/core/utils/file_preview_dialog.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
 
@@ -72,7 +74,7 @@ class VisionOverviewScreen extends GetView<VisionController> {
           SafeBottomPadding(
             child: Obx(() => ActionButton(
                   text: AppString.kConfirm,
-                  onPressed: controller.confirmBooking,
+                  onPressed: () => _confirmAndBook(),
                   isLoading: controller.confirmBookingLoading.value,
                 )),
           ),
@@ -331,17 +333,20 @@ class VisionOverviewScreen extends GetView<VisionController> {
                 spacing: 12.rw,
                 runSpacing: 12.rh,
                 children: controller.prescriptionFiles.map((file) {
-                  return Container(
-                    width: 60.rs,
-                    height: 60.rs,
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundTertiary,
-                      borderRadius: BorderRadius.circular(8.rs),
-                      border: Border.all(color: AppColors.borderLight),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8.rs),
-                      child: FilePickerHelper.buildFilePreview(file),
+                  return GestureDetector(
+                    onTap: () => FilePreviewDialog.show(file),
+                    child: Container(
+                      width: 60.rs,
+                      height: 60.rs,
+                      decoration: BoxDecoration(
+                        color: AppColors.backgroundTertiary,
+                        borderRadius: BorderRadius.circular(8.rs),
+                        border: Border.all(color: AppColors.borderLight),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8.rs),
+                        child: FilePickerHelper.buildFilePreview(file),
+                      ),
                     ),
                   );
                 }).toList(),
@@ -409,5 +414,15 @@ class VisionOverviewScreen extends GetView<VisionController> {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmAndBook() async {
+    final confirmed = await CommonDialog.confirm(
+      title: 'Confirm Booking',
+      message: 'Are you sure you want to confirm this vision appointment?',
+      confirmText: 'Book Now',
+      cancelText: 'Go Back',
+    );
+    if (confirmed == true) controller.confirmBooking();
   }
 }

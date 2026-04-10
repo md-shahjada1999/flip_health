@@ -320,27 +320,9 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconPrescribedPharmacy,
                     title: AppString.kPrescribedPharmacy,
                     subtitle: AppString.kPrescribedPharmacySubtitle,
-                    onTap: () => ServiceTypeSheet.show(
-                      title: AppString.kSelectServiceType,
-                      options: [
-                        ServiceOption(
-                          title: AppString.kPrescribedPharmacyOption,
-                          subtitle: AppString.kPrescribedPharmacyDesc,
-                          svgPath: AppString.kIconPrescribedPharmacy,
-                          onTap: () => Get.toNamed(
+                    onTap: () => Get.toNamed(
                             AppRoutes.pharmacy,
-                            arguments: 'prescribed',
                           ),
-                        ),
-                        ServiceOption(
-                          title: AppString.kOTCProducts,
-                          subtitle: AppString.kOTCProductsDesc,
-                          svgPath: AppString.kIconPrescribedPharmacy,
-                          onTap: () =>
-                              Get.toNamed(AppRoutes.pharmacy, arguments: 'otc'),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
                 _buildAnimatedCard(
@@ -587,7 +569,7 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconAddressBook,
                     title: AppString.kAddressBook,
                     subtitle: AppString.kAddressBookSubtitle,
-                    onTap: () {},
+                    onTap: () => Get.toNamed(AppRoutes.addressBook),
                   ),
                 ),
                 _buildAnimatedCard(

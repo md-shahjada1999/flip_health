@@ -45,6 +45,8 @@ class ApiUrl {
 
   // Address
   static const String ADDRESS = "/patient/address";
+  static const String ADDRESS_UPDATE = "/patient/v1/customer/address/";
+  static const String ADDRESS_PRIMARY = "/patient/address/primary/";
 
   /// VVD network (dental / vision / vaccine clinics) — `GET ?location=lat,lng&service=dental`
   static const String NETWORK_LIST = "/patient/network/list";

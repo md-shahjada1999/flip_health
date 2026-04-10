@@ -7,6 +7,7 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/common_dialog.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 
@@ -47,7 +48,7 @@ class GymOverviewScreen extends GetView<GymController> {
                 child: controller.termsAccepted.value
                     ? ActionButton(
                         text: AppString.kClickToPay,
-                        onPressed: controller.confirmBooking,
+                        onPressed: () => _confirmAndBook(),
                       )
                     : ActionButton(
                         text: AppString.kClickToPay,
@@ -449,6 +450,16 @@ class GymOverviewScreen extends GetView<GymController> {
             ),
           )),
     );
+  }
+
+  Future<void> _confirmAndBook() async {
+    final confirmed = await CommonDialog.confirm(
+      title: 'Confirm Booking',
+      message: 'Are you sure you want to confirm this gym membership?',
+      confirmText: 'Book Now',
+      cancelText: 'Go Back',
+    );
+    if (confirmed == true) controller.confirmBooking();
   }
 }
 

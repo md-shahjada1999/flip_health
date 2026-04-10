@@ -8,6 +8,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/common_dialog.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
@@ -144,7 +145,7 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
                   child: ActionButton(
                     text: 'Place Order',
                     isLoading: controller.isPlacingOrder.value,
-                    onPressed: controller.placeOrder,
+                    onPressed: () => _confirmAndBook(),
                   ),
                 )),
           ],
@@ -574,5 +575,15 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmAndBook() async {
+    final confirmed = await CommonDialog.confirm(
+      title: 'Confirm Order',
+      message: 'Are you sure you want to place this lab test order?',
+      confirmText: 'Place Order',
+      cancelText: 'Go Back',
+    );
+    if (confirmed == true) controller.placeOrder();
   }
 }

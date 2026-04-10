@@ -76,4 +76,51 @@ class AddressRepository {
       throw AppException(message: 'Failed to delete address: $e');
     }
   }
+
+  Future<AddressModel> updateAddress({
+    required String id,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      final response = await apiService.patch(
+        '${ApiUrl.ADDRESS_UPDATE}$id',
+        data: data,
+      );
+
+      if ((response.statusCode == 200 || response.statusCode == 201) &&
+          response.data is Map<String, dynamic>) {
+        return AddressModel.fromSingleResponse(response.data);
+      }
+
+      throw AppException(
+        message: response.data?['message'] ?? 'Failed to update address',
+        statusCode: response.statusCode,
+      );
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('AddressRepository.updateAddress error: $e');
+      throw AppException(message: 'Failed to update address: $e');
+    }
+  }
+
+  Future<void> setPrimaryAddress(String id) async {
+    try {
+      final response = await apiService.patch(
+        '${ApiUrl.ADDRESS_PRIMARY}$id',
+      );
+
+      if (response.statusCode != 200) {
+        throw AppException(
+          message: response.data?['message'] ?? 'Failed to set primary address',
+          statusCode: response.statusCode,
+        );
+      }
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('AddressRepository.setPrimaryAddress error: $e');
+      throw AppException(message: 'Failed to set primary address: $e');
+    }
+  }
 }

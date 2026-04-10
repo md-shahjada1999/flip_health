@@ -8,6 +8,8 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
+import 'package:flip_health/core/utils/file_picker_helper.dart';
+import 'package:flip_health/core/utils/file_preview_dialog.dart';
 class AddBankScreen extends GetView<ClaimsController> {
   const AddBankScreen({Key? key}) : super(key: key);
 
@@ -75,6 +77,7 @@ class AddBankScreen extends GetView<ClaimsController> {
                   ),
                   SizedBox(height: 20.rh),
                   CustomTextField(
+                    obscureText: true,
                     label: '${AppString.kConfirmAccountNumber} *',
                     hint: 'Re-enter account number',
                     controller: controller.confirmAccountController,
@@ -444,7 +447,15 @@ class AddBankScreen extends GetView<ClaimsController> {
               final isImage = file['isImage'] == true;
               final path = file['path'] as String? ?? '';
               final isPdf = path.toLowerCase().endsWith('.pdf');
-              return Stack(
+              final name = file['name'] as String? ?? '';
+              return GestureDetector(
+                onTap: () => FilePreviewDialog.show(PickedFileInfo(
+                  id: 'cheque_${entry.key}',
+                  name: name.isNotEmpty ? name : 'Cheque ${entry.key + 1}',
+                  path: isNetwork ? '' : path,
+                  isImage: isImage && !isPdf,
+                )),
+                child: Stack(
                 children: [
                   Container(
                     width: 100.rs,
@@ -508,7 +519,8 @@ class AddBankScreen extends GetView<ClaimsController> {
                       ),
                     ),
                   ),
-                ],
+                  ],
+                ),
               );
             }).toList(),
           );
@@ -548,46 +560,54 @@ class AddBankScreen extends GetView<ClaimsController> {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(20.rs),
-      child: Obx(
-        () => ElevatedButton(
-          onPressed: controller.isAddingBank.value
-              ? null
-              : () {
-                  if (controller.editingBankId.value != null) {
-                    controller.updateBankAccount();
-                  } else {
-                    controller.addBankAccount();
+      child: Obx(() {
+        final isLoading = controller.isAddingBank.value;
+        final isValid = controller.isBankFormValid.value;
+        final enabled = isValid && !isLoading;
+
+        return AnimatedOpacity(
+          duration: const Duration(milliseconds: 200),
+          opacity: enabled ? 1.0 : 0.45,
+          child: ElevatedButton(
+            onPressed: enabled
+                ? () {
+                    if (controller.editingBankId.value != null) {
+                      controller.updateBankAccount();
+                    } else {
+                      controller.addBankAccount();
+                    }
                   }
-                },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            padding: EdgeInsets.symmetric(vertical: 16.rh),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14.rs),
+                : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: EdgeInsets.symmetric(vertical: 16.rh),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14.rs),
+              ),
+              disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.6),
             ),
-            disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
-          ),
-          child: controller.isAddingBank.value
-              ? SizedBox(
-                  height: 22.rs,
-                  width: 22.rs,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
+            child: isLoading
+                ? SizedBox(
+                    height: 22.rs,
+                    width: 22.rs,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  )
+                : CommonText(
+                    controller.editingBankId.value != null
+                        ? AppString.kUpdateBankAccount
+                        : AppString.kSaveBankAccount,
+                    fontSize: 15.rf,
+                    fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
-                )
-              : CommonText(
-                  controller.editingBankId.value != null
-                      ? AppString.kUpdateBankAccount
-                      : AppString.kSaveBankAccount,
-                  fontSize: 15.rf,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-        ),
-      ),
+          ),
+        );
+      }),
     );
   }
 }

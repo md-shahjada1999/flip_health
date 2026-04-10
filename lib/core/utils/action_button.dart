@@ -5,7 +5,7 @@ import 'package:flip_health/core/utils/common_text.dart';
 
 class ActionButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool isLoading;
   final Color? backgroundColor;
   final EdgeInsetsGeometry? padding;
@@ -24,20 +24,26 @@ class ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
+    final enabled = onPressed != null && !isLoading;
     return Container(
       width: double.infinity,
       padding: padding ?? EdgeInsets.all(20.rs),
-      child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? AppColors.textPrimary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          padding: EdgeInsets.symmetric(vertical: 18.rh),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.rs),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: enabled ? 1.0 : 0.45,
+        child: ElevatedButton(
+          onPressed: enabled ? onPressed : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: backgroundColor ?? AppColors.textPrimary,
+            disabledBackgroundColor:
+                (backgroundColor ?? AppColors.textPrimary).withValues(alpha: 0.6),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            padding: EdgeInsets.symmetric(vertical: 18.rh),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.rs),
+            ),
           ),
-        ),
         child: isLoading
             ? SizedBox(
                 height: 20.rh,
@@ -62,6 +68,7 @@ class ActionButton extends StatelessWidget {
                   Icon(icon, color: Colors.white, size: 20.rs),
               ],
             ),
+        ),
       ),
     );
   }

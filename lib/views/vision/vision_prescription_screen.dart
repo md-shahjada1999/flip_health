@@ -8,6 +8,7 @@ import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/file_picker_helper.dart';
+import 'package:flip_health/core/utils/file_preview_dialog.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/views/vision/vision_overview_screen.dart';
 
@@ -133,25 +134,27 @@ class VisionPrescriptionScreen extends GetView<VisionController> {
                       itemCount: controller.prescriptionFiles.length,
                       itemBuilder: (context, index) {
                         final file = controller.prescriptionFiles[index];
-                        return Stack(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.backgroundTertiary,
-                                borderRadius:
-                                    BorderRadius.circular(12.rs),
-                                border: Border.all(
-                                    color: AppColors.borderLight),
-                              ),
-                              child: Center(
-                                child: Padding(
-                                  padding: EdgeInsets.all(4.rs),
-                                  child: FilePickerHelper
-                                      .buildFilePreview(file),
+                        return GestureDetector(
+                          onTap: () => FilePreviewDialog.show(file),
+                          child: Stack(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.backgroundTertiary,
+                                  borderRadius:
+                                      BorderRadius.circular(12.rs),
+                                  border: Border.all(
+                                      color: AppColors.borderLight),
+                                ),
+                                child: Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.all(4.rs),
+                                    child: FilePickerHelper
+                                        .buildFilePreview(file),
+                                  ),
                                 ),
                               ),
-                            ),
-                            Positioned(
+                              Positioned(
                               top: 4.rh,
                               right: 4.rw,
                               child: GestureDetector(
@@ -169,7 +172,8 @@ class VisionPrescriptionScreen extends GetView<VisionController> {
                                 ),
                               ),
                             ),
-                          ],
+                            ],
+                          ),
                         );
                       },
                     );

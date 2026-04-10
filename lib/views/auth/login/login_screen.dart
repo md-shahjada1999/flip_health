@@ -31,8 +31,6 @@ class LoginScreen extends GetView<LoginController> {
                 _buildTermsCheckbox(),
                 const SizedBox(height: 24),
                 _buildConfirmButton(),
-                const SizedBox(height: 16),
-                if (!controller.isLinkFlow) _buildLoginModeToggle(),
                 const SizedBox(height: 24),
               ],
             )),
@@ -51,9 +49,7 @@ class LoginScreen extends GetView<LoginController> {
       );
     }
     return CommonText(
-      controller.isEmailLogin.value
-          ? AppString.kEmailLoginTitle
-          : AppString.kLoginTitle,
+      AppString.kLoginTitle,
       fontSize: 28,
       color: AppColors.textPrimary,
       fontWeight: FontWeight.bold,
@@ -70,9 +66,7 @@ class LoginScreen extends GetView<LoginController> {
       );
     }
     return CommonText(
-      controller.isEmailLogin.value
-          ? AppString.kEmailLoginSubtitle
-          : AppString.kLoginSubtitle,
+      AppString.kLoginSubtitle,
       fontSize: 16,
       color: AppColors.textTertiary,
     );
@@ -84,9 +78,6 @@ class LoginScreen extends GetView<LoginController> {
     }
     if (controller.loginMode.value == LoginMode.linkPhone) {
       return _buildPhoneField();
-    }
-    if (controller.isEmailLogin.value) {
-      return _buildEmailFields();
     }
     return _buildPhoneField();
   }
@@ -130,45 +121,6 @@ class LoginScreen extends GetView<LoginController> {
               ? const Icon(Icons.check, color: AppColors.success)
               : null,
         ));
-  }
-
-  Widget _buildEmailFields() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Obx(() => CustomTextField(
-              label: AppString.kEmailLabel,
-              hint: AppString.kEmailHint,
-              controller: controller.emailController,
-              keyboardType: TextInputType.emailAddress,
-              prefixIcon: const Icon(Icons.email_outlined,
-                  color: AppColors.textSecondary, size: 20),
-              suffixIcon: controller.emailText.isNotEmpty &&
-                      AppValidator.isValidEmail(controller.emailText.value)
-                  ? const Icon(Icons.check, color: AppColors.success)
-                  : null,
-            )),
-        const SizedBox(height: 16),
-        Obx(() => CustomTextField(
-              label: AppString.kPasswordLabel,
-              hint: AppString.kPasswordHint,
-              controller: controller.passwordController,
-              obscureText: controller.obscurePassword.value,
-              prefixIcon: const Icon(Icons.lock_outline,
-                  color: AppColors.textSecondary, size: 20),
-              suffixIcon: GestureDetector(
-                onTap: controller.togglePasswordVisibility,
-                child: Icon(
-                  controller.obscurePassword.value
-                      ? Icons.visibility_off_outlined
-                      : Icons.visibility_outlined,
-                  color: AppColors.textSecondary,
-                  size: 20,
-                ),
-              ),
-            )),
-      ],
-    );
   }
 
   Widget _buildTermsCheckbox() {
@@ -267,45 +219,12 @@ class LoginScreen extends GetView<LoginController> {
 
   VoidCallback? _getButtonAction() {
     if (controller.isLinkFlow) return controller.sendLinkOTP;
-    if (controller.isEmailLogin.value) return controller.loginWithEmail;
     return controller.sendOTP;
   }
 
   String _getButtonText() {
     if (controller.isLinkFlow) return 'Send OTP';
-    if (controller.isEmailLogin.value) return AppString.kLogin;
     return AppString.kConfirm;
   }
 
-  Widget _buildLoginModeToggle() {
-    return Obx(() => Center(
-          child: GestureDetector(
-            onTap: controller.toggleLoginMode,
-            child: RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: controller.isEmailLogin.value
-                        ? AppString.kLoginWithPhone
-                        : AppString.kOrLoginWith,
-                    style: TextStyleCustom.normalStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  TextSpan(
-                    text: controller.isEmailLogin.value
-                        ? AppString.kMobile
-                        : AppString.kEmail,
-                    style: TextStyleCustom.normalStyle(
-                      fontSize: 14,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ));
-  }
 }

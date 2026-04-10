@@ -5,6 +5,7 @@ import 'package:flip_health/core/services/secure%20storage/secure_storage.dart';
 import 'package:flip_health/core/utils/print_log.dart';
 import 'package:flip_health/data/repositories/splash_repository.dart';
 import 'package:flip_health/routes/app_routes.dart';
+import 'package:flip_health/views/splash/notice_board_screen.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -58,9 +59,18 @@ class SplashScreenController extends GetxController {
       }
 
       final noticeBoardResult = await repository.getNoticeBoard();
-      if (noticeBoardResult.hasBanners) {
-        PrintLog.printLog('Banners found: ${noticeBoardResult.banners!.length}');
-        // TODO: Navigate to notice board screen when built
+      if (noticeBoardResult.hasBanner) {
+        final banner = noticeBoardResult.banner!;
+        PrintLog.printLog('Banner found: id=${banner.id}, blockLogin=${banner.blockLogin}');
+        _completeProgress();
+        await Future.delayed(const Duration(milliseconds: 300));
+        Get.off(
+          () => NoticeBoardScreen(
+            banner: banner,
+            onContinue: banner.blockLogin ? null : _navigateAfterSplash,
+          ),
+        );
+        return;
       }
 
       await _loadScreen();
@@ -90,6 +100,25 @@ class SplashScreenController extends GetxController {
     final healthStatus = AppSecureStorage.getHealthStatus();
     PrintLog.printLog('healthStatus: $healthStatus');
 
+    if (healthStatus != 1) {
+      Get.offAllNamed(AppRoutes.healthScore);
+    } else {
+      Get.offAllNamed(AppRoutes.dashboard);
+    }
+  }
+
+  static void _navigateAfterSplash() {
+    final isLoggedIn = AppSecureStorage.isLoggedIn();
+    if (!isLoggedIn) {
+      final onboardingDone = AppSecureStorage.isOnboardingDone();
+      if (!onboardingDone) {
+        Get.offAllNamed(AppRoutes.onboarding);
+      } else {
+        Get.offAllNamed(AppRoutes.login);
+      }
+      return;
+    }
+    final healthStatus = AppSecureStorage.getHealthStatus();
     if (healthStatus != 1) {
       Get.offAllNamed(AppRoutes.healthScore);
     } else {

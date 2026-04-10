@@ -82,6 +82,7 @@ class ClaimsController extends GetxController {
   /// API `bank_name` must be the bank **key** from `/patient/type`, not the display label.
   final selectedBankKey = ''.obs;
   final chequeFiles = <Map<String, dynamic>>[].obs;
+  final isBankFormValid = false.obs;
 
   final bankDirectory = <Map<String, dynamic>>[].obs;
   final banksLoading = false.obs;
@@ -144,6 +145,28 @@ class ClaimsController extends GetxController {
     _loadClaims();
     _loadMembers();
     _loadBankAccounts();
+    _initBankFormListeners();
+  }
+
+  void _initBankFormListeners() {
+    void validate() {
+      isBankFormValid.value =
+          selectedBankName.value.isNotEmpty &&
+          holderNameController.text.trim().isNotEmpty &&
+          accountNumberController.text.trim().isNotEmpty &&
+          confirmAccountController.text.trim().isNotEmpty &&
+          ifscController.text.trim().isNotEmpty &&
+          branchController.text.trim().isNotEmpty &&
+          chequeFiles.isNotEmpty;
+    }
+
+    holderNameController.addListener(validate);
+    accountNumberController.addListener(validate);
+    confirmAccountController.addListener(validate);
+    ifscController.addListener(validate);
+    branchController.addListener(validate);
+    ever(selectedBankName, (_) => validate());
+    ever(chequeFiles, (_) => validate());
   }
 
   Future<void> _loadClaims() async {

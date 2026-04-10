@@ -65,48 +65,20 @@ class HealthScorePage1 extends GetView<HealthScoreController> {
             ),
           ),
         ),
-        ActionButton(
-          text: 'Save & Proceed',
-          icon: Icons.arrow_forward,
-          onPressed: () {
-            if (controller.nameText.value.trim().length < 3) {
-              Get.snackbar('Required', 'Please enter your full name (min 3 characters)',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.red.shade100,
-                  colorText: Colors.red.shade800);
-              return;
-            }
-            if (controller.dob.value == null) {
-              Get.snackbar('Required', 'Please select your date of birth',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.red.shade100,
-                  colorText: Colors.red.shade800);
-              return;
-            }
-            if (controller.language.value.isEmpty) {
-              Get.snackbar('Required', 'Please select your preferred language',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.red.shade100,
-                  colorText: Colors.red.shade800);
-              return;
-            }
-            if (controller.isDiabetic.value == null) {
-              Get.snackbar('Required', 'Please select if you are diabetic',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.red.shade100,
-                  colorText: Colors.red.shade800);
-              return;
-            }
-            if (controller.hasBloodPressure.value == null) {
-              Get.snackbar('Required', 'Please select blood pressure status',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.red.shade100,
-                  colorText: Colors.red.shade800);
-              return;
-            }
-            controller.nextPage();
-          },
-        ),
+        Obx(() {
+          final allFilled =
+              controller.nameText.value.trim().length >= 3 &&
+              controller.dob.value != null &&
+              controller.language.value.isNotEmpty &&
+              controller.isDiabetic.value != null &&
+              controller.hasBloodPressure.value != null;
+
+          return ActionButton(
+            text: 'Save & Proceed',
+            icon: Icons.arrow_forward,
+            onPressed: allFilled ? controller.nextPage : null,
+          );
+        }),
       ],
     );
   }

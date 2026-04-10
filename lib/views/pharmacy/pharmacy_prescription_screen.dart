@@ -10,6 +10,7 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
+import 'package:flip_health/core/utils/file_preview_dialog.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/model/pharmacy%20models/flip_health_prescription_model.dart';
 import 'package:flip_health/views/pharmacy/pharmacy_prescription_detail_screen.dart';
@@ -260,7 +261,11 @@ class _PharmacyPrescriptionScreenState
       final state = entry.state.value;
       final file = entry.fileInfo;
 
-      return Stack(
+      return GestureDetector(
+        onTap: state == UploadState.uploading
+            ? null
+            : () => FilePreviewDialog.show(file),
+        child: Stack(
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
@@ -364,7 +369,8 @@ class _PharmacyPrescriptionScreenState
               ),
             ),
           ),
-        ],
+          ],
+        ),
       );
     });
   }

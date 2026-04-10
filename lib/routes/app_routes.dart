@@ -18,6 +18,7 @@ class AppRoutes {
   static const String addFamilyMember = '/add-family-member';
 
   // Address Routes
+  static const String addressBook = '/address-book';
   static const String addAddress = '/add-address';
   static const String addressForm = '/address-form';
 
