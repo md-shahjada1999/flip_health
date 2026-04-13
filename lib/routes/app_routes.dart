@@ -56,6 +56,19 @@ class AppRoutes {
   // Orders
   static const String orders = '/orders';
 
+  /// Consultation invoice detail (from orders list) — `arguments: { invoiceId }`
+  static const String consultationOrderDetail = '/consultation-order-detail';
+
+  /// WebRTC video call after join — `arguments: { data: Map }`
+  static const String consultationVideoCall = '/consultation-video-call';
+
+  /// Razorpay checkout — `arguments: [from, razorpay_payload, successSummary?]`
+  static const String razorPay = '/razor-pay';
+
+  /// After consultation payment — `arguments: Map` from [buildConsultationPaymentSuccessSummary]
+  static const String consultationPaymentSuccess =
+      '/consultation-payment-success';
+
   // Profile
   static const String profile = '/profile';
 

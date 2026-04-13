@@ -17,7 +17,10 @@ import 'package:flip_health/bindings/vision%20bindings/vision_binding.dart';
 import 'package:flip_health/bindings/mental%20wellness%20bindings/mental_wellness_binding.dart';
 import 'package:flip_health/bindings/vaccine%20bindings/vaccine_binding.dart';
 import 'package:flip_health/bindings/gym%20bindings/gym_binding.dart';
+import 'package:flip_health/bindings/consultation_order_detail_binding.dart';
 import 'package:flip_health/bindings/orders%20bindings/orders_binding.dart';
+import 'package:flip_health/bindings/razor_pay_binding.dart';
+import 'package:flip_health/bindings/video_call_binding.dart';
 import 'package:flip_health/bindings/dashboard%20bindings/wallet_binding.dart';
 import 'package:flip_health/bindings/profile%20bindings/profile_binding.dart';
 import 'package:flip_health/routes/app_routes.dart';
@@ -46,7 +49,11 @@ import 'package:flip_health/views/splash/splash_screen.dart';
 import 'package:flip_health/views/vision/vision_member_selection_screen.dart';
 import 'package:flip_health/views/vaccine/vaccine_member_selection_screen.dart';
 import 'package:flip_health/views/gym/gym_membership_screen.dart';
+import 'package:flip_health/views/consultation/consultation_order_detail_screen.dart';
+import 'package:flip_health/views/consultation/consultation_payment_success_screen.dart';
+import 'package:flip_health/views/consultation/video_call_screen.dart';
 import 'package:flip_health/views/orders/orders_screen.dart';
+import 'package:flip_health/views/razor_pay/razor_pay_screen.dart';
 import 'package:flip_health/views/dashboard/wallet/wallet_screen.dart';
 import 'package:flip_health/views/profile/profile_screen.dart';
 
@@ -196,6 +203,29 @@ class AppPages {
       name: AppRoutes.orders,
       page: () => const OrdersScreen(),
       binding: OrdersBinding(),
+    ),
+
+    GetPage(
+      name: AppRoutes.consultationOrderDetail,
+      page: () => const ConsultationOrderDetailScreen(),
+      binding: ConsultationOrderDetailBinding(),
+    ),
+
+    GetPage(
+      name: AppRoutes.consultationVideoCall,
+      page: () => const ConsultationVideoCallScreen(),
+      binding: VideoCallBinding(),
+    ),
+
+    GetPage(
+      name: AppRoutes.razorPay,
+      page: () => const RazorPayScreen(),
+      binding: RazorPayBinding(),
+    ),
+
+    GetPage(
+      name: AppRoutes.consultationPaymentSuccess,
+      page: () => const ConsultationPaymentSuccessScreen(),
     ),
 
     // Profile

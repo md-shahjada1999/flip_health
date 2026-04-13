@@ -9,7 +9,7 @@ class ApiUrl {
 
   /// Dev server base URL
   // static const kDomain = "http://122.175.52.41:2017";
-  static const kDomain = "http://192.168.1.88:2017";
+  static const kDomain = "http://192.168.1.106:2017";
   static const kBaseUrlDomain = "";
 
   static const kImageUrl =
@@ -121,7 +121,7 @@ class ApiUrl {
   static const String REIMBURSEMENT_MULTI_DOC_TYPES =
       "/patient/reimbursement/multi_document/type";
 
-        /// Support tickets — GET all, POST create
+  /// Support tickets — GET all, POST create
   static const String SUPPORT_TICKETS = "/patient/support/ticket";
 
   /// Support ticket detail — append ticket ID for GET messages (?page=N) / POST message
@@ -133,19 +133,45 @@ class ApiUrl {
   /// Medical records / history — `GET /history/type/{type}` (consultations, prescriptions, labtest, etc.)
   static const String MEDICAL_RECORDS = "/patient/history/type/";
 
+  /// All orders / invoices — `GET ?type=&limit=20&page=1` (Bearer). Same as patient_app `Apis.invoice`.
+  static const String INVOICE = "/patient/invoice";
+
+  /// Single invoice / consultation detail — `GET /patient/invoice/{id}`
+  static String invoiceById(String id) => "/patient/invoice/$id";
+
+  /// Video call signaling — `PATCH /patient/joincall/{roomId}` (patient_app `join_call`)
+  static String joinCall(String roomId) => "/patient/joincall/$roomId";
+
+  /// End call — `PATCH /patient/endcall/{roomId}`
+  static String endCall(String roomId) => "/patient/endcall/$roomId";
+
+  /// Cancel consultation — `PATCH /patient/appointment/cancel/{appointmentId}`
+  static String appointmentCancel(String appointmentId) =>
+      "/patient/appointment/cancel/$appointmentId";
+
+  /// Offline consultation payment confirm — `PATCH …/payment/{invoiceId}?useWallet=&status=confirm`
+  static const String OFFLINE_APPOINTMENT_PAYMENT =
+      "/patient/offline/appointment/payment";
+
+  /// Razorpay verify after booking — `PATCH /patient/appointment/paymentverify`
+  static const String APPOINTMENT_PAYMENT_VERIFY =
+      "/patient/appointment/paymentverify";
+
   // Diagnostics
   static const String DIAGNOSTICS_PACKAGES = "/patient/diagnostics/packages";
-  static const String DIAGNOSTICS_PACKAGE_DETAIL = "/patient/diagnostics/packages/";
-  static const String DIAGNOSTICS_VENDORS = "/patient/diagnostics/packages/pricing";
+  static const String DIAGNOSTICS_PACKAGE_DETAIL =
+      "/patient/diagnostics/packages/";
+  static const String DIAGNOSTICS_VENDORS =
+      "/patient/diagnostics/packages/pricing";
   static const String DIAGNOSTICS_SLOTS = "/patient/diagnostics/slots";
-  static const String DIAGNOSTICS_BOOKING = "/patient/diagnostics/order/booking";
+  static const String DIAGNOSTICS_BOOKING =
+      "/patient/diagnostics/order/booking";
 
   // Cart
   static const String CART_LAB = "/patient/cart/lab";
   static const String CART_ADD = "/patient/cart/add";
   static const String CART_REMOVE_LAB = "/patient/cart/remove/lab/";
   static const String CART_CLEAR_LAB = "/patient/cart/clear/lab";
-
 
   /// Resolve attachment path from API (relative or absolute) for [Image.network] / PDF viewer.
   static String? publicFileUrl(String? path) {

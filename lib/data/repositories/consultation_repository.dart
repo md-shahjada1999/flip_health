@@ -43,15 +43,21 @@ class ConsultationRepository {
     required String date,
     required int spid,
     required String language,
+    /// Same as patient_app `getAvailableSlots` when booking a follow-up (`?appointment_id=`).
+    String? followUpAppointmentId,
   }) async {
     try {
+      final qp = <String, dynamic>{
+        'date': date,
+        'spid': spid,
+        'language': language,
+      };
+      if (followUpAppointmentId != null && followUpAppointmentId.isNotEmpty) {
+        qp['appointment_id'] = followUpAppointmentId;
+      }
       final response = await apiService.get(
         ApiUrl.AVAILABLE_SLOTS,
-        queryParameters: {
-          'date': date,
-          'spid': spid,
-          'language': language,
-        },
+        queryParameters: qp,
       );
       final data = response.data as Map<String, dynamic>? ?? {};
       return SlotModel.fromListResponse(data);

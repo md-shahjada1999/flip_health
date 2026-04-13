@@ -5,7 +5,7 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
-import 'package:flip_health/controllers/orders%20controllers/orders_controller.dart';
+import 'package:flip_health/model/order_models.dart';
 
 class OrderCard extends StatefulWidget {
   final Order order;

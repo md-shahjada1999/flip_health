@@ -88,11 +88,36 @@ class ConsultationController extends GetxController {
   final RxBool isBooking = false.obs;
   final RxBool preselectedFlow = false.obs;
 
+  /// [patient_app] `BookConsultationController` follow-up from invoice detail.
+  final RxBool isFollowUpFlow = false.obs;
+  final RxString followUpAppointmentId = ''.obs;
+  final RxString followUpIssueId = ''.obs;
+  final RxString followUpSpecialityId = ''.obs;
+  final RxMap<String, dynamic> followUpDoctor = <String, dynamic>{}.obs;
+  final RxString followUpLanguage = 'English'.obs;
+
   @override
   void onInit() {
     super.onInit();
     final args = Get.arguments;
-    if (args == 'virtual') {
+    if (args is List &&
+        args.isNotEmpty &&
+        args[0] == 'follow_up' &&
+        args.length >= 2 &&
+        args[1] is Map) {
+      final m = Map<String, dynamic>.from(args[1] as Map);
+      consultationType.value = ConsultationType.virtual_;
+      preselectedFlow.value = true;
+      isFollowUpFlow.value = true;
+      followUpAppointmentId.value = m['appointment_id']?.toString() ?? '';
+      followUpIssueId.value = m['id']?.toString() ?? '';
+      followUpSpecialityId.value = m['speciality_id']?.toString() ?? '';
+      followUpDoctor.clear();
+      if (m['doctor'] is Map) {
+        followUpDoctor.assignAll(Map<String, dynamic>.from(m['doctor'] as Map));
+      }
+      followUpLanguage.value = m['language']?.toString() ?? 'English';
+    } else if (args == 'virtual') {
       consultationType.value = ConsultationType.virtual_;
       preselectedFlow.value = true;
     } else if (args == 'hospital') {
@@ -114,10 +139,70 @@ class ConsultationController extends GetxController {
       AppToast.error(title: 'Select Member', message: 'Please select a family member first');
       return;
     }
+    if (isFollowUpFlow.value) {
+      _continueFollowUpFlow();
+      return;
+    }
     if (isOnline) {
       startOnlineFlow();
     } else {
       startOfflineFlow();
+    }
+  }
+
+  /// Resolves issue/doctor from invoice payload and opens slot selection (patient `follow_up` path).
+  Future<void> _continueFollowUpFlow() async {
+    _resetOnlineState();
+    consultationType.value = ConsultationType.virtual_;
+    try {
+      await fetchIssues();
+      final wantedIssueId = int.tryParse(followUpIssueId.value) ?? 0;
+      final wantedSpid = int.tryParse(followUpSpecialityId.value) ?? 0;
+      IssueModel? match;
+      for (final i in allIssues) {
+        if (wantedIssueId > 0 && i.id == wantedIssueId) {
+          match = i;
+          break;
+        }
+      }
+      if (match == null && wantedSpid > 0) {
+        for (final i in allIssues) {
+          if (i.parent == wantedSpid) {
+            match = i;
+            break;
+          }
+        }
+      }
+      if (match == null) {
+        AppToast.error(
+          title: 'Error',
+          message: 'Could not find this speciality. Open virtual consultation to book manually.',
+        );
+        startOnlineFlow();
+        return;
+      }
+      selectedIssue.value = match;
+      selectedLanguage.value = followUpLanguage.value;
+      await fetchDoctorsBySpeciality(match.parent);
+      final docMap = Map<String, dynamic>.from(followUpDoctor);
+      final rawId = docMap['id'] ?? docMap['doctor_id'];
+      if (rawId != null) {
+        final did = int.tryParse(rawId.toString()) ?? 0;
+        for (final d in onlineDoctors) {
+          if (d.id == did) {
+            selectedOnlineDoctor.value = d;
+            break;
+          }
+        }
+      }
+      if (selectedOnlineDoctor.value == null && onlineDoctors.isNotEmpty) {
+        selectedOnlineDoctor.value = onlineDoctors.first;
+      }
+      Get.to(() => const ConsultationSlotSelectionScreen());
+      await fetchAvailableSlots();
+    } catch (e) {
+      AppToast.error(title: 'Error', message: e.toString());
+      startOnlineFlow();
     }
   }
 
@@ -226,10 +311,14 @@ class ConsultationController extends GetxController {
     final spid = selectedIssue.value?.parent ?? 0;
 
     try {
+      final followId = isFollowUpFlow.value && followUpAppointmentId.value.isNotEmpty
+          ? followUpAppointmentId.value
+          : null;
       final result = await _repository.getAvailableSlots(
         date: dateStr,
         spid: spid,
         language: selectedLanguage.value,
+        followUpAppointmentId: followId,
       );
       availableSlots.assignAll(result);
     } catch (e) {

@@ -8,6 +8,7 @@ import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/controllers/orders%20controllers/orders_controller.dart';
 import 'package:flip_health/views/orders/widgets/order_card.dart';
+import 'package:flip_health/routes/app_routes.dart';
 import 'package:flip_health/views/orders/order_detail_screen.dart';
 
 class OrdersScreen extends StatelessWidget {
@@ -28,30 +29,65 @@ class OrdersScreen extends StatelessWidget {
               if (controller.isLoading.value) {
                 return const Center(child: CircularProgressIndicator());
               }
-              if (controller.filteredOrders.isEmpty) {
+              // Snapshot RxList inside Obx so GetX tracks list mutations (append/pagination).
+              final rows = controller.orders.toList();
+              final showFooter =
+                  controller.hasMore.value || controller.isLoadingMore.value;
+              if (rows.isEmpty) {
                 return _EmptyState(
                   filter: controller.selectedFilter.value,
+                  onRetry: controller.refreshOrders,
                 );
               }
-              return ListView.builder(
-                key: ValueKey(controller.selectedFilter.value),
-                padding: EdgeInsets.symmetric(
-                  horizontal: 16.rw,
-                  vertical: 8.rh,
+              return RefreshIndicator(
+                onRefresh: controller.refreshOrders,
+                child: ListView.builder(
+                  key: ValueKey(controller.selectedFilter.value),
+                  controller: controller.scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.rw,
+                    vertical: 8.rh,
+                  ),
+                  itemCount:
+                      rows.length + (showFooter ? 1 : 0),
+                  itemBuilder: (_, i) {
+                    if (i >= rows.length) {
+                      return Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.rh),
+                        child: Center(
+                          child: controller.isLoadingMore.value
+                              ? const SizedBox(
+                                  width: 28,
+                                  height: 28,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      );
+                    }
+                    final order = rows[i];
+                    return OrderCard(
+                      order: order,
+                      iconPath: controller.iconForType(order.type),
+                      index: i,
+                        onTap: () {
+                          controller.selectOrder(order);
+                          if (order.type == 'Consultation') {
+                            final invId = order.rawJson?['id']?.toString() ?? order.id;
+                            Get.toNamed(
+                              AppRoutes.consultationOrderDetail,
+                              arguments: {'invoiceId': invId},
+                            );
+                          } else {
+                            Get.to(() => const OrderDetailScreen());
+                          }
+                        },
+                    );
+                  },
                 ),
-                itemCount: controller.filteredOrders.length,
-                itemBuilder: (_, i) {
-                  final order = controller.filteredOrders[i];
-                  return OrderCard(
-                    order: order,
-                    iconPath: controller.iconForType(order.type),
-                    index: i,
-                    onTap: () {
-                      controller.selectOrder(order);
-                      Get.to(() => const OrderDetailScreen());
-                    },
-                  );
-                },
               );
             }),
           ),
@@ -126,15 +162,21 @@ class _FilterChipsRow extends StatelessWidget {
 
 class _EmptyState extends StatelessWidget {
   final String filter;
+  final Future<void> Function() onRetry;
 
-  const _EmptyState({required this.filter});
+  const _EmptyState({
+    required this.filter,
+    required this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+    return RefreshIndicator(
+      onRefresh: onRetry,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
+          SizedBox(height: 120.rh),
           Icon(
             Icons.receipt_long_rounded,
             size: 64.rs,
