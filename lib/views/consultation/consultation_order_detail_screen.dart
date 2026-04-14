@@ -31,6 +31,8 @@ class ConsultationOrderDetailScreen extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 15.rw),
           child: SizedBox(
             width: double.infinity,
+            // FAB slot allows unbounded height; [Material] would expand without this.
+            height: 52.rh,
             child: Material(
               color: Colors.black,
               borderRadius: BorderRadius.circular(10.rs),
@@ -43,15 +45,12 @@ class ConsultationOrderDetailScreen extends StatelessWidget {
                     c.followUpBookingArgs(),
                   ],
                 ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 14.rh),
-                  child: Center(
-                    child: CommonText(
-                      'Book follow up',
-                      fontSize: 15.rf,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                child: Center(
+                  child: CommonText(
+                    'Book follow up',
+                    fontSize: 15.rf,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
               ),

@@ -3,6 +3,10 @@ import 'dart:convert';
 import 'package:flip_health/core/services/api%20services/api_controller.dart';
 import 'package:flip_health/core/utils/custom_toast.dart';
 import 'package:flip_health/data/repositories/consultation_order_repository.dart';
+import 'package:flip_health/data/repositories/gym_repository.dart';
+import 'package:flip_health/data/repositories/pharmacy_repository.dart';
+import 'package:flip_health/data/repositories/service_request_repository.dart';
+import 'package:flip_health/model/gym%20models/gym_membership_invoice_model.dart';
 import 'package:flip_health/routes/app_routes.dart';
 import 'package:get/get.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
@@ -71,6 +75,115 @@ class RazorPayController extends GetxController {
       } catch (e) {
         ToastCustom.showSnackBar(subtitle: e.toString());
       }
+    } else if (from == 'fromPharmacy') {
+      final map = <String, dynamic>{
+        'src': 'razorpay',
+        'order_id': response.orderId,
+        'payment_id': response.paymentId,
+        'signature': response.signature,
+      };
+      try {
+        if (!Get.isRegistered<PharmacyRepository>()) {
+          if (!Get.isRegistered<ApiService>()) {
+            Get.lazyPut<ApiService>(() => ApiService());
+          }
+          Get.lazyPut<PharmacyRepository>(
+            () => PharmacyRepository(apiService: Get.find()),
+          );
+        }
+        final repo = Get.find<PharmacyRepository>();
+        final res = await repo.verifyMedicineOrderPayment(map);
+        final ok =
+            res['status'] == true ||
+            res['status'] == 1 ||
+            res['success'] == true;
+        if (ok) {
+          ToastCustom.showSnackBar(subtitle: 'Payment successful');
+          Get.offAllNamed(AppRoutes.dashboard);
+        } else {
+          ToastCustom.showSnackBar(
+            subtitle: res['message']?.toString() ?? 'Verification failed',
+          );
+        }
+      } catch (e) {
+        ToastCustom.showSnackBar(subtitle: e.toString());
+      }
+    } else if (from == 'fromServiceRequest') {
+      final map = <String, dynamic>{
+        'src': 'razorpay',
+        'order_id': response.orderId,
+        'payment_id': response.paymentId,
+        'signature': response.signature,
+      };
+      try {
+        if (!Get.isRegistered<ServiceRequestRepository>()) {
+          if (!Get.isRegistered<ApiService>()) {
+            Get.lazyPut<ApiService>(() => ApiService());
+          }
+          Get.lazyPut<ServiceRequestRepository>(
+            () => ServiceRequestRepository(apiService: Get.find()),
+          );
+        }
+        final repo = Get.find<ServiceRequestRepository>();
+        final res = await repo.verifyServiceRequestPayment(map);
+        final ok =
+            res['status'] == true ||
+            res['status'] == 1 ||
+            res['success'] == true;
+        if (ok) {
+          ToastCustom.showSnackBar(subtitle: 'Payment successful');
+          Get.offAllNamed(AppRoutes.dashboard);
+        } else {
+          ToastCustom.showSnackBar(
+            subtitle: res['message']?.toString() ?? 'Verification failed',
+          );
+        }
+      } catch (e) {
+        ToastCustom.showSnackBar(subtitle: e.toString());
+      }
+    } else if (from == 'fromGymMembership') {
+      final invoiceId = _gymInvoiceIdFromArgs();
+      final map = <String, dynamic>{
+        'payment_id': response.paymentId,
+        'invoice_id': invoiceId,
+      };
+      try {
+        if (!Get.isRegistered<GymRepository>()) {
+          if (!Get.isRegistered<ApiService>()) {
+            Get.lazyPut<ApiService>(() => ApiService());
+          }
+          Get.lazyPut<GymRepository>(
+            () => GymRepository(apiService: Get.find()),
+          );
+        }
+        final repo = Get.find<GymRepository>();
+        final res = await repo.confirmGymMembershipPayment(map);
+        final ok =
+            res['status'] == true ||
+            res['status'] == 1 ||
+            res['success'] == true;
+        if (ok) {
+          Map<String, dynamic> summary = <String, dynamic>{
+            'invoice_id': invoiceId,
+          };
+          if (invoiceId.isNotEmpty) {
+            try {
+              final inv = await repo.getInvoiceDetail(invoiceId);
+              summary = _buildGymSuccessSummary(inv);
+            } catch (_) {}
+          }
+          Get.offAllNamed(
+            AppRoutes.gymMembershipPaymentSuccess,
+            arguments: summary,
+          );
+        } else {
+          ToastCustom.showSnackBar(
+            subtitle: res['message']?.toString() ?? 'Verification failed',
+          );
+        }
+      } catch (e) {
+        ToastCustom.showSnackBar(subtitle: e.toString());
+      }
     }
   }
 
@@ -114,4 +227,34 @@ Map<String, dynamic> _normalizeRazorpayOptions(dynamic raw) {
     m['amount'] = amount.round();
   }
   return m;
+}
+
+String _gymInvoiceIdFromArgs() {
+  final a = Get.arguments;
+  if (a is List && a.length >= 3 && a[2] != null) {
+    return a[2].toString();
+  }
+  return '';
+}
+
+Map<String, dynamic> _buildGymSuccessSummary(GymMembershipInvoice inv) {
+  final info = inv.info is Map
+      ? Map<String, dynamic>.from(inv.info as Map)
+      : <String, dynamic>{};
+  final details = info['details'] is Map
+      ? Map<String, dynamic>.from(info['details'] as Map)
+      : <String, dynamic>{};
+  final memberInfo = details['info'] is Map
+      ? Map<String, dynamic>.from(details['info'] as Map)
+      : <String, dynamic>{};
+  return <String, dynamic>{
+    'invoice_id': info['id']?.toString() ?? inv.id?.toString() ?? '',
+    'name': memberInfo['name']?.toString() ?? '',
+    'email': memberInfo['email']?.toString() ?? '',
+    'phone': memberInfo['phone']?.toString() ?? '',
+    'location':
+        details['location']?.toString() ?? info['location']?.toString() ?? '',
+    'start_date': details['start_date']?.toString() ?? '',
+    'end_date': details['end_date']?.toString() ?? '',
+  };
 }

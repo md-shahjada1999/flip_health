@@ -9,7 +9,7 @@ class ApiUrl {
 
   /// Dev server base URL
   // static const kDomain = "http://122.175.52.41:2017";
-  static const kDomain = "http://192.168.1.106:2017";
+  static const kDomain = "http://192.168.1.88:2017";
   static const kBaseUrlDomain = "";
 
   static const kImageUrl =
@@ -69,8 +69,32 @@ class ApiUrl {
   static const String VISION_SERVICE_REQUEST =
       "/patient/service/vision/request";
 
+  /// Service request payment / confirm / cancel (dental, vision, vaccine)
+  static const String SERVICE_REQUEST_PAYMENT =
+      "/patient/service/request/payment";
+  static const String SERVICE_REQUEST_PAYMENT_VERIFY =
+      "/patient/service/request/paymentverify";
+  static const String SERVICE_REQUEST_CANCEL =
+      "/patient/service/request/cancel";
+  static const String SERVICE_REQUEST_CONFIRM =
+      "/patient/service/request/confirm";
+
   /// Pharmacy — place medicine order (upload / flip health / OTC)
   static const String MEDICINE_ORDER = "/patient/medicine";
+
+  /// Pharmacy order payment / cancel / confirm — same paths as patient_app `Apis` under `/patient`.
+  static const String MEDICINE_ORDER_PAYMENT =
+      "/patient/medicine/order/payment";
+  static const String MEDICINE_ORDER_CANCEL = "/patient/medicine/order/cancel";
+  static const String MEDICINE_ORDER_CONFIRM =
+      "/patient/medicine/order/confirm";
+  static const String MEDICINE_ORDER_PAYMENT_VERIFY =
+      "/patient/medicine/order/paymentverify";
+
+  /// Gym membership order APIs.
+  static const String GYM_MEMBERSHIP_CHECK = "/patient/gym/check";
+  static const String GYM_MEMBERSHIP_OPTIN = "/patient/gym/optIn";
+  static const String GYM_OPTIN_PAYMENT_VERIFY = "/patient/gym/payment_verify";
 
   /// Flip Health prescriptions — `GET` all, `GET /{id}` single
   static const String PRESCRIPTIONS = "/patient/prescriptions";
@@ -93,6 +117,10 @@ class ApiUrl {
   /// Mental wellness & nutrition (Trijog) — same paths as patient_app `Apis`
   static const String WELLNESS_SESSION = "/patient/wellness/session";
   static const String MENTAL_WELLNESS_TYPES = "/patient/mental_wellness/type";
+  static const String JUMPING_MIND_ORDER_CANCEL =
+      "/patient/jumping-mind/expert/order/cancel";
+  static const String JUMPING_MIND_ORDER_RESCHEDULE =
+      "/patient/jumping-mind/expert/order/reschedule";
 
   // Static pages
   static const TERMS_AND_CONDITIONS_URL = "${kDomain}/terms-and-conditions";

@@ -49,8 +49,7 @@ class OrdersScreen extends StatelessWidget {
                     horizontal: 16.rw,
                     vertical: 8.rh,
                   ),
-                  itemCount:
-                      rows.length + (showFooter ? 1 : 0),
+                  itemCount: rows.length + (showFooter ? 1 : 0),
                   itemBuilder: (_, i) {
                     if (i >= rows.length) {
                       return Padding(
@@ -73,18 +72,52 @@ class OrdersScreen extends StatelessWidget {
                       order: order,
                       iconPath: controller.iconForType(order.type),
                       index: i,
-                        onTap: () {
-                          controller.selectOrder(order);
-                          if (order.type == 'Consultation') {
-                            final invId = order.rawJson?['id']?.toString() ?? order.id;
-                            Get.toNamed(
-                              AppRoutes.consultationOrderDetail,
-                              arguments: {'invoiceId': invId},
-                            );
-                          } else {
-                            Get.to(() => const OrderDetailScreen());
-                          }
-                        },
+                      onTap: () {
+                        controller.selectOrder(order);
+                        final tx = order.rawJson?['transaction_type']
+                            ?.toString()
+                            .toUpperCase();
+                        final invId =
+                            order.rawJson?['id']?.toString() ?? order.id;
+                        if (tx == 'MENTALWELLNESS' ||
+                            tx == 'NUTRITION' ||
+                            tx == 'YOGA') {
+                          Get.toNamed(
+                            AppRoutes.wellnessOrderDetail,
+                            arguments: {'invoiceId': invId},
+                          );
+                          return;
+                        }
+                        if (order.type == 'Consultation') {
+                          Get.toNamed(
+                            AppRoutes.consultationOrderDetail,
+                            arguments: {'invoiceId': invId},
+                          );
+                        } else if (order.type == 'Pharmacy' ||
+                            order.type == 'Chronic') {
+                          Get.toNamed(
+                            AppRoutes.pharmacyOrderDetail,
+                            arguments: {'invoiceId': invId},
+                          );
+                        } else if (order.type == 'Gym') {
+                          Get.toNamed(
+                            AppRoutes.gymMembershipOrderDetail,
+                            arguments: {'invoiceId': invId},
+                          );
+                        } else if (order.type == 'Dental' ||
+                            order.type == 'Vision' ||
+                            order.type == 'Vaccine') {
+                          Get.toNamed(
+                            AppRoutes.serviceRequestOrderDetail,
+                            arguments: {
+                              'invoiceId': invId,
+                              'service': order.type.toLowerCase(),
+                            },
+                          );
+                        } else {
+                          Get.to(() => const OrderDetailScreen());
+                        }
+                      },
                     );
                   },
                 ),
@@ -106,10 +139,9 @@ class _FilterChipsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 44.rh,
-      child: Obx(
-        () {
-          final currentFilter = controller.selectedFilter.value;
-          return ListView.separated(
+      child: Obx(() {
+        final currentFilter = controller.selectedFilter.value;
+        return ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 4.rh),
           itemCount: OrdersController.filterCategories.length,
@@ -154,8 +186,7 @@ class _FilterChipsRow extends StatelessWidget {
             );
           },
         );
-        },
-      ),
+      }),
     );
   }
 }
@@ -164,10 +195,7 @@ class _EmptyState extends StatelessWidget {
   final String filter;
   final Future<void> Function() onRetry;
 
-  const _EmptyState({
-    required this.filter,
-    required this.onRetry,
-  });
+  const _EmptyState({required this.filter, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {

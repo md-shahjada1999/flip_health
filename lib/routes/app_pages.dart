@@ -18,6 +18,10 @@ import 'package:flip_health/bindings/mental%20wellness%20bindings/mental_wellnes
 import 'package:flip_health/bindings/vaccine%20bindings/vaccine_binding.dart';
 import 'package:flip_health/bindings/gym%20bindings/gym_binding.dart';
 import 'package:flip_health/bindings/consultation_order_detail_binding.dart';
+import 'package:flip_health/bindings/pharmacy_order_detail_binding.dart';
+import 'package:flip_health/bindings/gym_membership_order_detail_binding.dart';
+import 'package:flip_health/bindings/wellness_order_detail_binding.dart';
+import 'package:flip_health/bindings/service_request_order_detail_binding.dart';
 import 'package:flip_health/bindings/orders%20bindings/orders_binding.dart';
 import 'package:flip_health/bindings/razor_pay_binding.dart';
 import 'package:flip_health/bindings/video_call_binding.dart';
@@ -39,16 +43,21 @@ import 'package:flip_health/views/daignostics/lab_test/lab_test_member_selection
 import 'package:flip_health/views/daignostics/lab_test/lab_test_search_screen.dart';
 import 'package:flip_health/views/dental/dental_member_selection_screen.dart';
 import 'package:flip_health/views/mental_wellness/mental_wellness_screen.dart';
+import 'package:flip_health/views/mental_wellness/wellness_order_detail_screen.dart';
 import 'package:flip_health/views/mental_wellness/wellness_request_success_screen.dart';
 import 'package:flip_health/views/claims/claims_list_screen.dart';
 import 'package:flip_health/views/claims/add_bank_screen.dart';
 import 'package:flip_health/views/claims/bank_list_screen.dart';
 import 'package:flip_health/views/pharmacy/pharmacy_main_screen.dart';
+import 'package:flip_health/views/pharmacy/pharmacy_order_detail_screen.dart';
+import 'package:flip_health/views/gym/gym_membership_order_detail_screen.dart';
+import 'package:flip_health/views/service_request/service_request_order_detail_screen.dart';
 import 'package:flip_health/views/splash/onboarding_screen.dart';
 import 'package:flip_health/views/splash/splash_screen.dart';
 import 'package:flip_health/views/vision/vision_member_selection_screen.dart';
 import 'package:flip_health/views/vaccine/vaccine_member_selection_screen.dart';
 import 'package:flip_health/views/gym/gym_membership_screen.dart';
+import 'package:flip_health/views/gym/gym_membership_payment_success_screen.dart';
 import 'package:flip_health/views/consultation/consultation_order_detail_screen.dart';
 import 'package:flip_health/views/consultation/consultation_payment_success_screen.dart';
 import 'package:flip_health/views/consultation/video_call_screen.dart';
@@ -100,10 +109,7 @@ class AppPages {
       page: () => DashboardMainScreen(),
       binding: DashboardBinding(),
     ),
-    GetPage(
-      name: AppRoutes.allServices,
-      page: () => ServicesScreen(),
-    ),
+    GetPage(name: AppRoutes.allServices, page: () => ServicesScreen()),
 
     // Diagnostics
     GetPage(
@@ -153,7 +159,6 @@ class AppPages {
       page: () => const PharmacyMainScreen(),
       binding: PharmacyBinding(),
       transition: Transition.rightToLeft,
-
     ),
 
     // Mental Wellness
@@ -212,6 +217,35 @@ class AppPages {
     ),
 
     GetPage(
+      name: AppRoutes.pharmacyOrderDetail,
+      page: () => const PharmacyOrderDetailScreen(),
+      binding: PharmacyOrderDetailBinding(),
+    ),
+
+    GetPage(
+      name: AppRoutes.gymMembershipOrderDetail,
+      page: () => const GymMembershipOrderDetailScreen(),
+      binding: GymMembershipOrderDetailBinding(),
+    ),
+
+    GetPage(
+      name: AppRoutes.gymMembershipPaymentSuccess,
+      page: () => const GymMembershipPaymentSuccessScreen(),
+    ),
+
+    GetPage(
+      name: AppRoutes.wellnessOrderDetail,
+      page: () => const WellnessOrderDetailScreen(),
+      binding: WellnessOrderDetailBinding(),
+    ),
+
+    GetPage(
+      name: AppRoutes.serviceRequestOrderDetail,
+      page: () => const ServiceRequestOrderDetailScreen(),
+      binding: ServiceRequestOrderDetailBinding(),
+    ),
+
+    GetPage(
       name: AppRoutes.consultationVideoCall,
       page: () => const ConsultationVideoCallScreen(),
       binding: VideoCallBinding(),
@@ -253,9 +287,6 @@ class AppPages {
       page: () => const MapPickerScreen(),
       binding: AddAddressBinding(),
     ),
-    GetPage(
-      name: AppRoutes.addressForm,
-      page: () => const AddressFormScreen(),
-    ),
+    GetPage(name: AppRoutes.addressForm, page: () => const AddressFormScreen()),
   ];
 }

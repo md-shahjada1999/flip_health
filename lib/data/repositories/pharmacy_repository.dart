@@ -1,10 +1,32 @@
+import 'package:dio/dio.dart';
 import 'package:flip_health/core/services/api%20services/api_controller.dart';
 import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/core/services/app_exception.dart';
 import 'package:flip_health/core/utils/print_log.dart';
 import 'package:flip_health/model/pharmacy%20models/flip_health_prescription_model.dart';
 import 'package:flip_health/model/pharmacy%20models/pharmacy_model.dart';
+import 'package:flip_health/model/pharmacy%20models/pharmacy_order_invoice_model.dart';
 import 'package:flip_health/model/pharmacy%20models/pharmacy_order_response.dart';
+
+Map<String, dynamic> _asMap(dynamic data) {
+  if (data is Map<String, dynamic>) return data;
+  if (data is Map) return Map<String, dynamic>.from(data);
+  return {};
+}
+
+bool _ok(dynamic status) {
+  if (status == true) return true;
+  if (status == 1) return true;
+  final s = status?.toString().toLowerCase();
+  return s == 'true' || s == '1';
+}
+
+/// Same success rules as [ConsultationOrderRepository._invoiceDetailOk].
+bool _invoiceOk(Map<String, dynamic> root) {
+  if (_ok(root['status'])) return true;
+  if (root['status'] == null && root['data'] is Map) return true;
+  return false;
+}
 
 class PharmacyRepository {
   final ApiService apiService;
@@ -116,6 +138,90 @@ class PharmacyRepository {
       PrintLog.printLog('PharmacyRepository.placeOrder error: $e');
       throw AppException(message: 'Failed to place order: $e');
     }
+  }
+
+  /// Same as [ConsultationOrderRepository.getInvoiceDetail] — full invoice for pharmacy orders.
+  Future<PharmacyOrderInvoice> getInvoiceDetail(String id) async {
+    try {
+      final Response r = await apiService.get(ApiUrl.invoiceById(id));
+      final raw = r.data;
+      if (raw is! Map) {
+        throw AppException(message: 'Invalid invoice response');
+      }
+      final root = _asMap(raw);
+      if (!_invoiceOk(root)) {
+        throw AppException(
+          message: root['message']?.toString() ?? 'Failed to load order',
+        );
+      }
+      final data = root['data'];
+      if (data is Map) {
+        return PharmacyOrderInvoice.fromJson(Map<String, dynamic>.from(data));
+      }
+      throw AppException(message: 'Invalid invoice data');
+    } on AppException {
+      rethrow;
+    } catch (e, st) {
+      PrintLog.printLog('PharmacyRepository.getInvoiceDetail: $e\n$st');
+      throw AppException(message: 'Could not load pharmacy order details.');
+    }
+  }
+
+  /// `PATCH /patient/medicine/order/payment/{invoiceId}?...` — quote or confirm payment.
+  Future<Map<String, dynamic>> patchMedicineOrderPayment({
+    required String invoiceId,
+    required bool confirm,
+    required bool useWallet,
+  }) async {
+    final q = confirm
+        ? '?status=confirm&useWallet=$useWallet'
+        : '?useWallet=$useWallet';
+    final Response r = await apiService.patch(
+      '${ApiUrl.MEDICINE_ORDER_PAYMENT}/$invoiceId$q',
+      data: <String, dynamic>{},
+    );
+    return _unwrapMap(r.data);
+  }
+
+  /// `PATCH /patient/medicine/order/cancel/{id}`
+  Future<void> cancelMedicineOrder(
+    String invoiceId,
+    Map<String, dynamic> body,
+  ) async {
+    await apiService.patch(
+      '${ApiUrl.MEDICINE_ORDER_CANCEL}/$invoiceId',
+      data: body,
+    );
+  }
+
+  /// `PATCH /patient/medicine/order/confirm/{id}`
+  Future<void> confirmMedicineOrder(
+    String invoiceId,
+    Map<String, dynamic> body,
+  ) async {
+    await apiService.patch(
+      '${ApiUrl.MEDICINE_ORDER_CONFIRM}/$invoiceId',
+      data: body,
+    );
+  }
+
+  /// Razorpay success — `PATCH /patient/medicine/order/paymentverify`
+  Future<Map<String, dynamic>> verifyMedicineOrderPayment(
+    Map<String, dynamic> body,
+  ) async {
+    final Response r = await apiService.patch(
+      ApiUrl.MEDICINE_ORDER_PAYMENT_VERIFY,
+      data: body,
+    );
+    return _unwrapMap(r.data);
+  }
+
+  Map<String, dynamic> _unwrapMap(dynamic raw) {
+    if (raw is! Map) return {};
+    final m = Map<String, dynamic>.from(raw);
+    final inner = m['data'];
+    if (inner is Map) return Map<String, dynamic>.from(inner);
+    return m;
   }
 
   List<FAQItem> getFAQs() {

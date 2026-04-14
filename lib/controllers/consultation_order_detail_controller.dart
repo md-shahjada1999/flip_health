@@ -99,7 +99,6 @@ class ConsultationOrderDetailController extends GetxController {
   /// `additional_info.payment_required`, `net_amount` > 0.
   bool get showPayConfirmBooking {
     if (infoStatus != 4) return false;
-    if (source == 'FLIPHEALTH') return false;
     final add = _info?['additional_info'];
     final payReq = add is Map && add['payment_required'] == true;
     final net = invoiceDetail['net_amount'];
@@ -158,8 +157,8 @@ class ConsultationOrderDetailController extends GetxController {
       'doctor': doctorMap,
       'language':
           invoiceDetail['language']?.toString() ??
-              info['language']?.toString() ??
-              'English',
+          info['language']?.toString() ??
+          'English',
     };
   }
 

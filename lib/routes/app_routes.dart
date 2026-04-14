@@ -1,7 +1,7 @@
 class AppRoutes {
   // Authentication Routes
   static const String splash = '/splash';
-   static const String onboarding = '/onboarding';
+  static const String onboarding = '/onboarding';
   static const String login = '/login';
   static const String otp = '/otp';
 
@@ -13,7 +13,7 @@ class AppRoutes {
 
   // Main App Routes
   static const String dashboard = '/dashboard';
-    static const String allServices = '/all-services';
+  static const String allServices = '/all-services';
   static const String healthCheckups = '/health-checkups';
   static const String addFamilyMember = '/add-family-member';
 
@@ -59,6 +59,23 @@ class AppRoutes {
   /// Consultation invoice detail (from orders list) — `arguments: { invoiceId }`
   static const String consultationOrderDetail = '/consultation-order-detail';
 
+  /// Pharmacy / chronic medicine invoice detail — `arguments: { invoiceId }`
+  static const String pharmacyOrderDetail = '/pharmacy-order-detail';
+
+  /// Gym membership invoice detail — `arguments: { invoiceId }`
+  static const String gymMembershipOrderDetail = '/gym-membership-order-detail';
+
+  /// Gym membership payment success — `arguments: Map` summary data.
+  static const String gymMembershipPaymentSuccess =
+      '/gym-membership-payment-success';
+
+  /// Mental wellness / nutrition / yoga invoice detail — `arguments: { invoiceId }`
+  static const String wellnessOrderDetail = '/wellness-order-detail';
+
+  /// Dental / vision / vaccine service request detail — `arguments: { invoiceId, service }`
+  static const String serviceRequestOrderDetail =
+      '/service-request-order-detail';
+
   /// WebRTC video call after join — `arguments: { data: Map }`
   static const String consultationVideoCall = '/consultation-video-call';
 
@@ -89,6 +106,5 @@ class AppRoutes {
 
     notFound,
     error,
-
   ];
 }

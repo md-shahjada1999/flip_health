@@ -1,6 +1,8 @@
 import 'package:flip_health/controllers/razor_pay_controller.dart';
 import 'package:flip_health/core/services/api%20services/api_controller.dart';
 import 'package:flip_health/data/repositories/consultation_order_repository.dart';
+import 'package:flip_health/data/repositories/gym_repository.dart';
+import 'package:flip_health/data/repositories/pharmacy_repository.dart';
 import 'package:get/get.dart';
 
 class RazorPayBinding extends Bindings {
@@ -13,6 +15,14 @@ class RazorPayBinding extends Bindings {
       Get.lazyPut<ConsultationOrderRepository>(
         () => ConsultationOrderRepository(apiService: Get.find()),
       );
+    }
+    if (!Get.isRegistered<PharmacyRepository>()) {
+      Get.lazyPut<PharmacyRepository>(
+        () => PharmacyRepository(apiService: Get.find()),
+      );
+    }
+    if (!Get.isRegistered<GymRepository>()) {
+      Get.lazyPut<GymRepository>(() => GymRepository(apiService: Get.find()));
     }
     // Must be eager [put]: [lazyPut] only runs on [Get.find], and [RazorPayScreen]
     // does not find the controller — checkout would never open.
