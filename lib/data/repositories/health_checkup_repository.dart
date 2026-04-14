@@ -8,11 +8,14 @@ class HealthCheckupRepository {
   final ApiService apiService;
   HealthCheckupRepository({required this.apiService});
 
+  // -------------------------------------------------------------------------
+  // GET packages for a specific user
+  // -------------------------------------------------------------------------
+
   Future<List<DiagnosticsPackage>> getPackages({
     required int userId,
-    String type = 'tests',
+    String type = 'special',
     bool sponsored = false,
-    String name = '',
   }) async {
     try {
       final response = await apiService.get(
@@ -20,7 +23,6 @@ class HealthCheckupRepository {
         queryParameters: {
           'type': type,
           'sponsored': sponsored,
-          'name': name,
           'user': userId,
         },
       );
@@ -44,6 +46,10 @@ class HealthCheckupRepository {
       throw AppException(message: 'Failed to load packages: $e');
     }
   }
+
+  // -------------------------------------------------------------------------
+  // GET package detail
+  // -------------------------------------------------------------------------
 
   Future<DiagnosticsPackageDetail> getPackageDetail(int packageId) async {
     try {
@@ -69,18 +75,79 @@ class HealthCheckupRepository {
     }
   }
 
-  Future<List<Map<String, String>>> getAvailableDates() async {
+  // -------------------------------------------------------------------------
+  // POST vendor/pricing
+  // -------------------------------------------------------------------------
+
+  Future<AhcVendorPricingResponse> getVendorPricing({
+    required String addressId,
+    required bool sponsored,
+    required List<Map<String, dynamic>> users,
+  }) async {
     try {
-      // TODO: Replace with actual API call
-      return [
-        {'day': '10', 'weekday': 'Mon'},
-        {'day': '11', 'weekday': 'Tue'},
-        {'day': '12', 'weekday': 'Wed'},
-        {'day': '13', 'weekday': 'Thu'},
-        {'day': '14', 'weekday': 'Fri'},
-      ];
+      final response = await apiService.post(
+        '${ApiUrl.DIAGNOSTICS_SPONSORED_PRICING}?page=1',
+        data: {
+          'address_id': addressId,
+          'sponsored': sponsored,
+          'users': users,
+        },
+      );
+
+      if (response.statusCode != 200 || response.data is! Map) {
+        throw AppException(
+          message: 'Failed to fetch vendor pricing',
+          statusCode: response.statusCode,
+        );
+      }
+
+      return AhcVendorPricingResponse.fromJson(
+          response.data as Map<String, dynamic>);
+    } on AppException {
+      rethrow;
     } catch (e) {
-      throw AppException(message: e.toString());
+      PrintLog.printLog('getVendorPricing error: $e');
+      throw AppException(message: 'Failed to load vendor pricing: $e');
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // POST slots
+  // -------------------------------------------------------------------------
+
+  Future<AhcSlotsResponse> getSlots({
+    required String addressId,
+    required String date,
+    required String vendorCode,
+    required String category,
+    String package = 'special',
+  }) async {
+    try {
+      final response = await apiService.post(
+        ApiUrl.DIAGNOSTICS_SLOTS,
+        data: {
+          'address_id': addressId,
+          'date': date,
+          'vendor_code': vendorCode,
+          'package': package,
+          'category': category,
+        },
+      );
+
+      if (response.statusCode != 200 || response.data is! Map) {
+        throw AppException(
+          message: 'Failed to fetch slots',
+          statusCode: response.statusCode,
+        );
+      }
+
+      return AhcSlotsResponse.fromJson(
+          response.data as Map<String, dynamic>);
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('getSlots error: $e');
+      throw AppException(message: 'Failed to load slots: $e');
     }
   }
 }

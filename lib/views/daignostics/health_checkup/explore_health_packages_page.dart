@@ -1,494 +1,317 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:lottie/lottie.dart';
 import 'package:flip_health/controllers/health%20checkup%20controllers/health_checkup_controller.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
-import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
+import 'package:flip_health/model/heath%20checkup%20models/diagnostics_package_model.dart';
+import 'package:flip_health/views/daignostics/widgets/location_header_bar.dart';
 
-class ExploreHealthPackagesPage extends StatelessWidget {
-  const ExploreHealthPackagesPage({Key? key}) : super(key: key);
+class ExploreHealthPackagesPage extends StatefulWidget {
+  const ExploreHealthPackagesPage({super.key});
+
+  @override
+  State<ExploreHealthPackagesPage> createState() =>
+      _ExploreHealthPackagesPageState();
+}
+
+class _ExploreHealthPackagesPageState extends State<ExploreHealthPackagesPage> {
+  final controller = Get.find<HealthCheckupsController>();
+
+  @override
+  void initState() {
+    super.initState();
+    controller.fetchVendorPricing();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<HealthCheckupsController>();
-
     return SafeScreenWrapper(
       bottomSafe: false,
-      appBar: CommonAppBar.build(
-        title: AppString.kHealthCheckupsTitle,
-        showBackButton: true,
-        actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 16.rw),
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.rw, vertical: 6.rh),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.borderDark, width: 0.7),
-                borderRadius: BorderRadius.circular(20.rs),
-              ),
-              child: Row(
-                children: [
-                  SvgPicture.asset(AppString.kShoppingBagIcon, width: 12.rs),
-                  SizedBox(width: 4.rw),
-                  CommonText(
-                    'My Orders',
-                    fontSize: 12.rf,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                    height: 1.3,
-                  ),
-                ],
-              ),
-            ),
-          ),
+      appBar: CommonAppBar.build(title: 'Select Vendor'),
+      body: Column(
+        children: [
+          const LocationHeaderBar(),
+          Expanded(child: _buildBody()),
+          Obx(() {
+            final vp = controller.vendorPricing.value;
+            final pathOk = vp == null ||
+                !vp.hasSelectablePathology ||
+                controller.selectedPathologyVendor.value != null;
+            final radOk = vp == null ||
+                !vp.hasSelectableRadiology ||
+                controller.selectedRadiologyVendor.value != null;
+
+            return ActionButton(
+              text: 'Continue to Slots',
+              onPressed: pathOk && radOk
+                  ? controller.continueToSlotSelection
+                  : null,
+            );
+          }),
         ],
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return Center(
-            child: CircularProgressIndicator(
-              color: AppColors.primary,
-            ),
-          );
-        }
-
-        return Column(
-          children: [
-            // Location Header
-            _buildLocationHeader(),
-
-            // Collection Type Tabs
-            _buildCollectionTypeTabs(controller),
-
-            // Scrollable Content
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    SizedBox(height: 16.rh),
-
-                    // Package Cards
-                    _buildPackageCard(
-                      controller,
-                      labLogoPath: AppString.kNeubergLogo,
-                      rating: '4.5',
-                      packageName: 'Flip Health AHC 2025-2026',
-                      patientName: 'for Kalyan',
-                      price: '₹ 0',
-                      isSelected: controller.selectedPackageIndex.value == 0,
-                      index: 0,
-                      showOnlyHomeCollection: true,
-                    ),
-
-                    SizedBox(height: 16.rh),
-
-                    _buildPackageCard(
-                      controller,
-                      labLogoPath: AppString.kOrangeHealthLogo,
-                      rating: '4.5',
-                      packageName: 'Flip Health AHC 2025-2026',
-                      patientName: 'for Kalyan',
-                      price: '₹ 0',
-                      isSelected: controller.selectedPackageIndex.value == 1,
-                      index: 1,
-                      showOnlyHomeCollection: false,
-                    ),
-
-                    SizedBox(height: 100.rh),
-                  ],
-                ),
-              ),
-            ),
-
-            // Bottom Continue Button
-            _buildBottomButton(controller),
-          ],
-        );
-      }),
     );
   }
 
-  Widget _buildLocationHeader() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.rw, vertical: 12.rh),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        border: Border(
-          bottom: BorderSide(
-            color: AppColors.borderLight,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.location_on,
-            color: AppColors.primary,
-            size: 20.rs,
-          ),
-          SizedBox(width: 8.rw),
-          Expanded(
+  Widget _buildBody() {
+    return Obx(() {
+      if (controller.isVendorLoading.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      final pricing = controller.vendorPricing.value;
+      if (pricing == null) {
+        return Center(
+          child: FadeIn(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                CommonText(
-                  'Home',
-                  fontSize: 14.rf,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                  height: 1.3,
+                Lottie.asset(
+                  'assets/lotties/Scientist.json',
+                  width: 180.rs,
+                  height: 180.rs,
+                  repeat: true,
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: CommonText(
-                        'Isprout, 7th floor, Plot No: 25, Divyasree trinity,',
-                        fontSize: 12.rf,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w700,
-                        height: 1.3,
-                        maxLines: 1,
+                SizedBox(height: 12.rh),
+                CommonText(
+                  'No vendors available',
+                  fontSize: 15.rf,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+                SizedBox(height: 8.rh),
+                CommonText(
+                  'Try changing your address',
+                  fontSize: 13.rf,
+                  color: AppColors.textSecondary,
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
+      return SingleChildScrollView(
+        padding: EdgeInsets.all(16.rs),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (pricing.hasSelectablePathology) ...[
+              _buildSectionTitle(
+                  'Pathology Vendors', Icons.science_outlined, Colors.blue),
+              SizedBox(height: 12.rh),
+              ...pricing.pathologyVendors.asMap().entries.map((e) => FadeInUp(
+                    duration: const Duration(milliseconds: 350),
+                    delay: Duration(milliseconds: 80 * e.key),
+                    child: _VendorCard(
+                      vendor: e.value,
+                      isSelected: controller
+                              .selectedPathologyVendor.value?.id ==
+                          e.value.id,
+                      onTap: () =>
+                          controller.selectPathologyVendor(e.value),
+                    ),
+                  )),
+              SizedBox(height: 24.rh),
+            ],
+            if (pricing.hasSelectableRadiology) ...[
+              _buildSectionTitle(
+                  'Radiology Vendors', Icons.monitor_heart_outlined, Colors.orange),
+              SizedBox(height: 12.rh),
+              ...pricing.radiologyVendors.asMap().entries.map((e) => FadeInUp(
+                    duration: const Duration(milliseconds: 350),
+                    delay: Duration(milliseconds: 80 * e.key),
+                    child: _VendorCard(
+                      vendor: e.value,
+                      isSelected: controller
+                              .selectedRadiologyVendor.value?.id ==
+                          e.value.id,
+                      onTap: () =>
+                          controller.selectRadiologyVendor(e.value),
+                    ),
+                  )),
+            ],
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildSectionTitle(String title, IconData icon, Color color) {
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(8.rs),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10.rs),
+          ),
+          child: Icon(icon, color: color, size: 20.rs),
+        ),
+        SizedBox(width: 12.rw),
+        CommonText(
+          title,
+          fontSize: 16.rf,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
+      ],
+    );
+  }
+}
+
+class _VendorCard extends StatelessWidget {
+  final AhcVendor vendor;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _VendorCard({
+    required this.vendor,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        margin: EdgeInsets.only(bottom: 12.rh),
+        padding: EdgeInsets.all(16.rs),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.06)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(16.rs),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.borderLight,
+            width: isSelected ? 1.5 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Lottie.asset(
+                  'assets/lotties/Scientist.json',
+                  width: 44.rs,
+                  height: 44.rs,
+                  repeat: true,
+                ),
+                SizedBox(width: 10.rw),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CommonText(
+                        vendor.name,
+                        fontSize: 15.rf,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
+                      SizedBox(height: 4.rh),
+                      CommonText(
+                        vendor.category.capitalizeFirst ?? '',
+                        fontSize: 12.rf,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    CommonText(
+                      '₹${vendor.price.toStringAsFixed(0)}',
+                      fontSize: 18.rf,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
                     ),
-                    Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 16.rs,
+                    CommonText(
+                      'Total',
+                      fontSize: 11.rf,
                       color: AppColors.textSecondary,
                     ),
                   ],
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCollectionTypeTabs(HealthCheckupsController controller) {
-    return Container(
-      padding: EdgeInsets.all(16.rs),
-      child: Row(
-        children: [
-          Expanded(
-            child: Obx(() => _buildTabButton(
-                  iconPath: AppString.kHomeIcon,
-                  label: 'Home Collection',
-                  isSelected: controller.isHomeCollection.value,
-                  onTap: () => controller.isHomeCollection.value = true,
-                )),
-          ),
-          SizedBox(width: 12.rw),
-          Expanded(
-            child: Obx(() => _buildTabButton(
-                  iconPath: AppString.kCenterIcon,
-                  label: 'At Center',
-                  isSelected: !controller.isHomeCollection.value,
-                  onTap: () => controller.isHomeCollection.value = false,
-                )),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabButton({
-    required String iconPath,
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 8.rh),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.black : Colors.white,
-          borderRadius: BorderRadius.circular(25.rs),
-          border: Border.all(
-            color: !isSelected ? Colors.black : AppColors.borderLight,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              iconPath,
-              width: 12.rw,
-              height: 12.rh,
-              color: isSelected ? Colors.white : AppColors.textPrimary,
-            ),
-            SizedBox(width: 6.rw),
-            CommonText(
-              label,
-              fontSize: 13.rf,
-              fontWeight: FontWeight.w500,
-              color: isSelected ? Colors.white : AppColors.textPrimary,
-              height: 1.3,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPackageCard(
-    HealthCheckupsController controller, {
-    required String labLogoPath,
-    required String rating,
-    required String packageName,
-    required String patientName,
-    required String price,
-    required bool isSelected,
-    required int index,
-    required bool showOnlyHomeCollection,
-  }) {
-    return GestureDetector(
-      onTap: () => controller.selectedPackageIndex.value = index,
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 16.rw),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(16.rs),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.borderLight,
-            width: 1,
-          ),
-          
-        ),
-        child: Column(
-          children: [
-            // Lab Header
-            Padding(
-              padding: EdgeInsets.all(10.rs),
-              child: Row(
-                children: [
-                  // Lab Logo
-                  Image.asset(
-                    labLogoPath,
-                    width: 100.rw,
-                    height: 50.rh,
-                  ),
-                  SizedBox(width: 12.rw),
-
-                  // Rating
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.rw,
-                      vertical: 1.rh,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: AppColors.warning,
-                        width: 1,
-                      ),
-                      borderRadius: BorderRadius.circular(15.rs),
-                    ),
+            if (vendor.packages.isNotEmpty) ...[
+              SizedBox(height: 12.rh),
+              Divider(color: AppColors.borderLight, height: 1),
+              SizedBox(height: 10.rh),
+              ...vendor.packages.map((vp) => Padding(
+                    padding: EdgeInsets.only(bottom: 6.rh),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.star,
-                          size: 12.rs,
-                          color: AppColors.warning,
+                        Icon(Icons.person_outline,
+                            size: 14.rs, color: AppColors.textSecondary),
+                        SizedBox(width: 6.rw),
+                        Expanded(
+                          child: CommonText(
+                            '${vp.user?.name ?? ''} — ${vp.name}',
+                            fontSize: 12.rf,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        SizedBox(width: 4.rw),
-                        CommonText(
-                          rating,
-                          fontSize: 10.rf,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          height: 1.3,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Spacer(),
-
-                  // Checkbox
-                  Container(
-                    width: 20.rs,
-                    height: 20.rs,
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.black : Colors.transparent,
-                      border: Border.all(
-                        color:
-                            isSelected ? Colors.black : AppColors.borderLight,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(4.rs),
-                    ),
-                    child: isSelected
-                        ? Icon(
-                            Icons.check,
-                            size: 16.rs,
-                            color: Colors.white,
-                          )
-                        : null,
-                  ),
-                ],
-              ),
-            ),
-
-            Divider(
-                height: 1,
-                color: isSelected ? AppColors.primary : AppColors.borderLight),
-
-            // Package Details
-            Padding(
-              padding: EdgeInsets.all(12.rs),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: CommonText(
-                          packageName,
-                          fontSize: 12.rf,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          height: 1.3,
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 6.rw,
-                          vertical: 2.rh,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.success,
-                          borderRadius: BorderRadius.circular(12.rs),
-                        ),
-                        child: Row(
-                          children: [
-                            SvgPicture.asset(
-                              AppString.kIconFreeHealthCheckups,
-                              width: 10.rw,
-                              height: 10.rh,
-                              color: Colors.white,
+                        if (vp.free)
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 8.rw, vertical: 2.rh),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8.rs),
                             ),
-                            SizedBox(width: 4.rw),
-                            CommonText(
+                            child: CommonText(
                               'Free',
                               fontSize: 10.rf,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                              height: 1.3,
+                              color: AppColors.success,
                             ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 2.rh),
-                  CommonText(
-                    patientName,
-                    fontSize: 10.rf,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w700,
-                    height: 1.3,
-                  ),
-                ],
-              ),
-            ),
-            Divider(
-                height: 1,
-                color: isSelected ? AppColors.primary : AppColors.borderLight),
-// To Pay
-            Padding(
-              padding: EdgeInsets.all(12.rs),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CommonText(
-                    'To Pay',
-                    fontSize: 11.rf,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                    height: 1.3,
-                  ),
-                  CommonText(
-                    price,
-                    fontSize: 12.rf,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    height: 1.3,
-                  ),
-                ],
-              ),
-            ),
-            // Footer Buttons
-            Container(
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : Colors.black,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(14.rs),
-                  bottomRight: Radius.circular(14.rs),
-                ),
-              ),
-              padding: EdgeInsets.symmetric(vertical: 6.rh, horizontal: 16.rw),
-              child: showOnlyHomeCollection
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        SvgPicture.asset(
-                          AppString.kHomeIcon,
-                          width: 10.rw,
-                          height: 10.rh,
-                          color: Colors.white,
-                        ),
-                        SizedBox(width: 8.rw),
-                        CommonText(
-                          'Home Collection',
-                          fontSize: 10.rf,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          height: 1.3,
-                        ),
-                      ],
-                    )
-                  : Row(
-                      children: [
-                        SvgPicture.asset(
-                          AppString.kHomeIcon,
-                          width: 10.rw,
-                          height: 10.rh,
-                          color: Colors.white,
-                        ),
-                        SizedBox(width: 8.rw),
-                        CommonText(
-                          'Home Collection',
-                          fontSize: 10.rf,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          height: 1.3,
-                        ),
-                        SizedBox(width: 16.rw),
-                        SvgPicture.asset(
-                          AppString.kCenterIcon,
-                          width: 10.rw,
-                          height: 10.rh,
-                          color: Colors.white,
-                        ),
-                        SizedBox(width: 8.rw),
-                        CommonText(
-                          'At Center',
-                          fontSize: 10.rf,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          height: 1.3,
-                        ),
+                          )
+                        else if (vp.pricing != null)
+                          CommonText(
+                            '₹${vp.pricing!.b2cPrice.toStringAsFixed(0)}',
+                            fontSize: 12.rf,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
                       ],
                     ),
+                  )),
+            ],
+            SizedBox(height: 8.rh),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: double.infinity,
+              height: 3,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primary
+                    : AppColors.borderLight,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ],
         ),
@@ -496,27 +319,4 @@ class ExploreHealthPackagesPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomButton(HealthCheckupsController controller) {
-    return Container(
-      padding: EdgeInsets.all(16.rs),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        
-      
-      ),
-      child: SafeBottomPadding(
-        child: ActionButton(
-          text: "Continue",
-          onPressed: () {
-            if (controller.selectedPackageIndex.value != -1) {
-              controller.continueWithPackageSelection();
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-
-  
 }

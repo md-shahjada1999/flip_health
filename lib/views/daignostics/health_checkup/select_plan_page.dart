@@ -1,171 +1,280 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:lottie/lottie.dart';
 import 'package:flip_health/controllers/health%20checkup%20controllers/health_checkup_controller.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
-import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
-import 'package:flip_health/core/services/api%20services/api_controller.dart';
-import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
-import 'package:flip_health/data/repositories/health_checkup_repository.dart';
 import 'package:flip_health/model/heath%20checkup%20models/diagnostics_package_model.dart';
 
 class SelectPlanPage extends StatefulWidget {
-  const SelectPlanPage({Key? key}) : super(key: key);
+  const SelectPlanPage({super.key});
 
   @override
   State<SelectPlanPage> createState() => _SelectPlanPageState();
 }
 
 class _SelectPlanPageState extends State<SelectPlanPage> {
-  late final HealthCheckupsController controller;
+  final controller = Get.find<HealthCheckupsController>();
 
   @override
   void initState() {
     super.initState();
-    if (!Get.isRegistered<ApiService>()) {
-      Get.lazyPut<ApiService>(() => ApiService());
+    if (controller.selectedMembers.isNotEmpty) {
+      controller.fetchPackagesForMember(0);
     }
-    if (!Get.isRegistered<HealthCheckupRepository>()) {
-      Get.lazyPut<HealthCheckupRepository>(
-          () => HealthCheckupRepository(apiService: Get.find()));
-    }
-    controller =
-        Get.put(HealthCheckupsController(repository: Get.find()));
-    controller.fetchPackages();
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeScreenWrapper(
       bottomSafe: false,
-      appBar: CommonAppBar.build(
-        title: AppString.kHealthCheckupsTitle,
-        showBackButton: true,
-      ),
-      body: Obx(() {
-        if (controller.isLoading.value && controller.packages.isEmpty) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          );
-        }
-
-        return Column(
-          children: [
-            _buildLocationHeader(),
-            Expanded(
-              child: controller.packages.isEmpty
-                  ? Center(
-                      child: CommonText(
-                        'No packages available',
-                        fontSize: 14.rf,
-                        color: AppColors.textSecondary,
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: EdgeInsets.symmetric(vertical: 16.rh),
-                      itemCount: controller.packages.length,
-                      itemBuilder: (context, index) {
-                        final pkg = controller.packages[index];
-                        return _PackageCard(
-                          package: pkg,
-                          controller: controller,
-                          index: index,
-                        );
-                      },
-                    ),
-            ),
-            SafeBottomPadding(
-              child: _buildBottomButton(),
-            ),
-          ],
-        );
-      }),
-    );
-  }
-
-  Widget _buildLocationHeader() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.rw, vertical: 12.rh),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        border: Border(
-          bottom: BorderSide(color: AppColors.borderLight, width: 1),
-        ),
-      ),
-      child: Row(
+      appBar: CommonAppBar.build(title: 'Select Package'),
+      body: Column(
         children: [
-          Icon(Icons.location_on, color: AppColors.primary, size: 20.rs),
-          SizedBox(width: 8.rw),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CommonText(
-                  'Home',
-                  fontSize: 14.rf,
-                  color: AppColors.textPrimary,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: CommonText(
-                        'Isprout, 7th floor, Plot No: 25, Divyasree trinity,',
-                        fontSize: 12.rf,
-                        color: AppColors.textSecondary,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Icon(Icons.keyboard_arrow_down,
-                        size: 16.rs, color: AppColors.textSecondary),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          _buildMemberTabs(),
+          Expanded(child: _buildPackageList()),
+          Obx(() => ActionButton(
+                text: 'Continue',
+                onPressed: controller.allMembersHavePackage
+                    ? controller.continueToVendorSelection
+                    : null,
+              )),
         ],
       ),
     );
   }
 
-  Widget _buildBottomButton() {
-    return ActionButton(
-      text: "Continue",
-      onPressed: controller.continueWithPlanSelection,
+  Widget _buildMemberTabs() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Obx(() {
+        final members = controller.selectedMembers;
+        final activeIdx = controller.activeMemberTab.value;
+        final selMap = Map<String, int>.from(controller.memberPackageMap);
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 14.rh),
+          child: Row(
+            children: List.generate(members.length, (i) {
+              final m = members[i];
+              final isActive = i == activeIdx;
+              final hasPackage = selMap.containsKey(m.id);
+              final initial = m.name.isNotEmpty ? m.name[0].toUpperCase() : '?';
+
+              return Padding(
+                padding: EdgeInsets.only(right: 10.rw),
+                child: GestureDetector(
+                  onTap: () => controller.fetchPackagesForMember(i),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    padding: EdgeInsets.only(
+                        left: 6.rw, right: 14.rw, top: 6.rh, bottom: 6.rh),
+                    decoration: BoxDecoration(
+                      gradient: isActive
+                          ? LinearGradient(colors: [
+                              AppColors.textPrimary,
+                              AppColors.textPrimary.withValues(alpha: 0.85),
+                            ])
+                          : null,
+                      color: isActive ? null : Colors.white,
+                      borderRadius: BorderRadius.circular(28.rs),
+                      border: Border.all(
+                        color: isActive
+                            ? Colors.transparent
+                            : hasPackage
+                                ? AppColors.success.withValues(alpha: 0.5)
+                                : AppColors.borderLight,
+                        width: 1.5,
+                      ),
+                      boxShadow: isActive
+                          ? [
+                              BoxShadow(
+                                color: AppColors.textPrimary.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          width: 28.rs,
+                          height: 28.rs,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isActive
+                                ? Colors.white.withValues(alpha: 0.2)
+                                : hasPackage
+                                    ? AppColors.success.withValues(alpha: 0.1)
+                                    : AppColors.backgroundSecondary,
+                          ),
+                          child: Center(
+                            child: hasPackage && !isActive
+                                ? Icon(Icons.check,
+                                    size: 14.rs, color: AppColors.success)
+                                : CommonText(
+                                    initial,
+                                    fontSize: 12.rf,
+                                    fontWeight: FontWeight.w700,
+                                    color: isActive
+                                        ? Colors.white
+                                        : AppColors.textPrimary,
+                                  ),
+                          ),
+                        ),
+                        SizedBox(width: 8.rw),
+                        CommonText(
+                          m.firstName.isNotEmpty ? m.firstName : m.name,
+                          fontSize: 13.rf,
+                          fontWeight: FontWeight.w600,
+                          color: isActive ? Colors.white : AppColors.textPrimary,
+                        ),
+                        if (hasPackage && isActive) ...[
+                          SizedBox(width: 6.rw),
+                          Icon(Icons.check_circle,
+                              color: Colors.white, size: 15.rs),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        );
+      }),
     );
+  }
+
+  Widget _buildPackageList() {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      final packages = controller.currentPackages;
+
+      if (packages.isEmpty) {
+        return Center(
+          child: FadeIn(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Lottie.asset(
+                  'assets/lotties/Chemistry Lab.json',
+                  width: 180.rs,
+                  height: 180.rs,
+                  repeat: true,
+                ),
+                SizedBox(height: 12.rh),
+                CommonText(
+                  'No packages available',
+                  fontSize: 15.rf,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+
+      final activeMember = controller.selectedMembers.isNotEmpty
+          ? controller.selectedMembers[controller.activeMemberTab.value]
+          : null;
+
+      final selectionMap = Map<String, int>.from(controller.memberPackageMap);
+      final expandedId = controller.expandedPackageId.value;
+      final detail = controller.selectedPackageDetail.value;
+      final detailLoading = controller.isDetailLoading.value;
+
+      return ListView.builder(
+        padding: EdgeInsets.all(16.rs),
+        itemCount: packages.length,
+        itemBuilder: (context, index) {
+          final pkg = packages[index];
+          final isSelected = activeMember != null &&
+              selectionMap[activeMember.id] == pkg.id;
+          final isExpanded = expandedId == pkg.id;
+
+          return FadeInUp(
+            duration: const Duration(milliseconds: 350),
+            delay: Duration(milliseconds: 50 * index),
+            child: _PackageCard(
+              package: pkg,
+              isSelected: isSelected,
+              isExpanded: isExpanded,
+              detail: isExpanded ? detail : null,
+              isDetailLoading: detailLoading && isExpanded,
+              onTap: () {
+                if (activeMember != null) {
+                  controller.selectPackageForMember(activeMember.id, pkg.id);
+                }
+              },
+              onExpand: () => controller.fetchPackageDetail(pkg.id),
+            ),
+          );
+        },
+      );
+    });
   }
 }
 
 class _PackageCard extends StatelessWidget {
   final DiagnosticsPackage package;
-  final HealthCheckupsController controller;
-  final int index;
+  final bool isSelected;
+  final bool isExpanded;
+  final DiagnosticsPackageDetail? detail;
+  final bool isDetailLoading;
+  final VoidCallback onTap;
+  final VoidCallback onExpand;
 
   const _PackageCard({
     required this.package,
-    required this.controller,
-    required this.index,
+    required this.isSelected,
+    required this.isExpanded,
+    this.detail,
+    required this.isDetailLoading,
+    required this.onTap,
+    required this.onExpand,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final isExpanded = controller.expandedPackageId.value == package.id;
-
-      return Container(
-        margin: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 6.rh),
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        margin: EdgeInsets.only(bottom: 12.rh),
+        padding: EdgeInsets.all(16.rs),
         decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(12.rs),
-          border: Border.all(color: AppColors.border),
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.06) : Colors.white,
+          borderRadius: BorderRadius.circular(16.rs),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.borderLight,
+            width: isSelected ? 1.5 : 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.cardShadow,
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -174,353 +283,216 @@ class _PackageCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header: name + fasting badge
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 10.rh),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CommonText(
-                    package.name,
-                    fontSize: 15.rf,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                    height: 1.3,
-                  ),
-                  SizedBox(height: 6.rh),
-                  Row(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Lottie.asset(
+                  'assets/lotties/Chemistry Lab.json',
+                  width: 48.rs,
+                  height: 48.rs,
+                  repeat: true,
+                ),
+                SizedBox(width: 10.rw),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _InfoChip(
-                        icon: Icons.category_outlined,
-                        label: package.category,
+                      CommonText(
+                        package.name,
+                        fontSize: 15.rf,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(width: 8.rw),
-                      _InfoChip(
-                        icon: Icons.science_outlined,
-                        label: package.type,
+                      SizedBox(height: 6.rh),
+                      Wrap(
+                        spacing: 8.rw,
+                        runSpacing: 4.rh,
+                        children: [
+                          _infoChip(Icons.local_dining_outlined,
+                              package.fastingLabel),
+                          if (package.tatLabel.isNotEmpty)
+                            _infoChip(Icons.schedule, package.tatLabel),
+                          _categoryChip(package.category),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-
-            // "See what's included" tap area
-            GestureDetector(
-              onTap: () => controller.fetchPackageDetail(package.id),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.rw),
-                child: Row(
-                  children: [
-                    CommonText(
-                      "See what's included",
-                      fontSize: 12.rf,
-                      color: AppColors.accent,
-                      decoration: TextDecoration.underline,
-                      style: TextStyle(
-                        decorationColor: AppColors.accent,
-                        decorationThickness: 1.5,
-                      ),
-                    ),
-                    SizedBox(width: 4.rw),
-                    Icon(
-                      isExpanded
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      size: 16.rs,
-                      color: AppColors.accent,
-                    ),
-                  ],
                 ),
-              ),
-            ),
-
-            SizedBox(height: 12.rh),
-
-            // Expandable detail
-            if (isExpanded) _buildExpandedDetail(),
-
-            // Fasting info
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 14.rw),
-              height: 25.rh,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [
-                  Color(0xffF4F4F4),
-                  Color(0xff000000),
-                ]),
-                borderRadius: const BorderRadius.all(Radius.circular(15)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(1.0),
-                child: Container(
+                SizedBox(width: 8.rw),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 28.rs,
+                  height: 28.rs,
                   decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: const BorderRadius.all(Radius.circular(15)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.info_outline,
-                            color: AppColors.primary, size: 12),
-                        SizedBox(width: 4.rw),
-                        CommonText(
-                          package.fastingLabel,
-                          fontSize: 10.rf,
-                          color: AppColors.textSecondary,
-                        ),
-                      ],
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.backgroundSecondary,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.borderLight,
                     ),
                   ),
+                  child: isSelected
+                      ? Icon(Icons.check, color: Colors.white, size: 16.rs)
+                      : null,
                 ),
-              ),
+              ],
             ),
-            SizedBox(height: 12.rh),
-
-            // Feature items
-            _buildFeatureItem(
-              Icons.access_time,
-              package.tatLabel.isNotEmpty
-                  ? package.tatLabel
-                  : 'Reports within 48 hours',
-              AppColors.warning.withValues(alpha: 0.7),
-              AppString.reportsOntimeIcon,
-            ),
-            _buildFeatureItem(
-              Icons.bolt,
-              'Instant confirmation',
-              AppColors.primary,
-              null,
-            ),
-            _buildFeatureItem(
-              Icons.check,
-              'From the comfort of your home',
-              AppColors.success,
-              null,
-            ),
-
-            SizedBox(height: 4.rh),
-
-            // Home Collection footer
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 2.rh, horizontal: 17.rw),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(12.rs),
-                  bottomRight: Radius.circular(12.rs),
-                ),
-              ),
+            SizedBox(height: 10.rh),
+            GestureDetector(
+              onTap: onExpand,
               child: Row(
                 children: [
-                  SvgPicture.asset(AppString.kHomeIcon,
-                      width: 10.rw, height: 10.rh, color: Colors.white),
-                  SizedBox(width: 8.rw),
                   CommonText(
-                    'Home Collection',
-                    fontSize: 9.rf,
-                    color: Colors.white,
+                    isExpanded ? 'Hide details' : 'View details',
+                    fontSize: 12.rf,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                  SizedBox(width: 4.rw),
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 250),
+                    child: Icon(Icons.keyboard_arrow_down,
+                        size: 18.rs, color: AppColors.primary),
                   ),
                 ],
               ),
+            ),
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: _buildDetailSection(),
+              crossFadeState: isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 300),
             ),
           ],
         ),
-      );
-    });
+      ),
+    );
   }
 
-  Widget _buildFeatureItem(
-      IconData icon, String text, Color iconColor, String? svgPath) {
+  Widget _buildDetailSection() {
+    if (isDetailLoading) {
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 16.rh),
+        child: const Center(
+            child: SizedBox(
+                width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))),
+      );
+    }
+
+    if (detail == null) return const SizedBox.shrink();
+
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 4.rh),
-      child: Row(
+      padding: EdgeInsets.only(top: 12.rh),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          svgPath != null
-              ? SvgPicture.asset(
-                  svgPath,
-                  width: 10.rw,
-                  height: 10.rh,
-                  color: iconColor,
-                )
-              : Icon(icon, size: 12.rs, color: iconColor),
-          SizedBox(width: 12.rw),
-          Expanded(
-            child: CommonText(
-              text,
-              fontSize: 10.rf,
+          Divider(color: AppColors.borderLight, height: 1),
+          SizedBox(height: 12.rh),
+          if (detail!.vendor != null)
+            _detailRow('Vendor', detail!.vendor!.name),
+          _detailRow('Parameters', '${detail!.parameterCount} tests'),
+          if (detail!.b2cPrice > 0)
+            _detailRow('Price', '₹${detail!.b2cPrice.toStringAsFixed(0)}'),
+          if (detail!.details != null && detail!.details!.isNotEmpty) ...[
+            SizedBox(height: 8.rh),
+            CommonText(
+              detail!.details!,
+              fontSize: 12.rf,
               color: AppColors.textSecondary,
+              fontWeight: FontWeight.w400,
             ),
-          ),
+          ],
+          if (detail!.parameters.isNotEmpty) ...[
+            SizedBox(height: 10.rh),
+            CommonText(
+              'Included Tests',
+              fontSize: 12.rf,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+            SizedBox(height: 6.rh),
+            Wrap(
+              spacing: 6.rw,
+              runSpacing: 6.rh,
+              children: detail!.parameters
+                  .map((p) => Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 10.rw, vertical: 4.rh),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundSecondary,
+                          borderRadius: BorderRadius.circular(12.rs),
+                        ),
+                        child: CommonText(
+                          p.name,
+                          fontSize: 11.rf,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildExpandedDetail() {
-    return Obx(() {
-      final isLoading = controller.isDetailLoading.value;
-      final detail = controller.selectedPackageDetail.value;
-
-      if (isLoading) {
-        return Padding(
-          padding: EdgeInsets.symmetric(vertical: 16.rh),
-          child: const Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: AppColors.primary),
-            ),
-          ),
-        );
-      }
-
-      if (detail == null) return const SizedBox.shrink();
-
-      return Container(
-        margin: EdgeInsets.symmetric(horizontal: 12.rw),
-        padding: EdgeInsets.all(12.rs),
-        decoration: BoxDecoration(
-          color: AppColors.backgroundSecondary,
-          borderRadius: BorderRadius.circular(12.rs),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Vendor row
-            if (detail.vendor != null) ...[
-              Row(
-                children: [
-                  if (detail.vendor!.logo != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6.rs),
-                      child: Image.network(
-                        _resolveLogoUrl(detail.vendor!.logo!),
-                        width: 40.rw,
-                        height: 40.rh,
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => Icon(
-                          Icons.local_hospital,
-                          size: 28.rs,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  SizedBox(width: 10.rw),
-                  Expanded(
-                    child: CommonText(
-                      detail.vendor!.name,
-                      fontSize: 13.rf,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10.rh),
-            ],
-
-            // Price
-            Row(
-              children: [
-                CommonText(
-                  '\u20B9 ${detail.b2cPrice.toStringAsFixed(0)}',
-                  fontSize: 16.rf,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  height: 1.3,
-                ),
-                if (detail.b2cMrp > detail.b2cPrice) ...[
-                  SizedBox(width: 8.rw),
-                  CommonText(
-                    '\u20B9 ${detail.b2cMrp.toStringAsFixed(0)}',
-                    fontSize: 12.rf,
-                    color: AppColors.textSecondary,
-                    decoration: TextDecoration.lineThrough,
-                    height: 1.3,
-                  ),
-                ],
-              ],
-            ),
-
-            SizedBox(height: 10.rh),
-
-            // Parameter count
-            CommonText(
-              '${detail.parameterCount} Parameters Included',
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 6.rh),
+      child: Row(
+        children: [
+          CommonText(label, fontSize: 12.rf, color: AppColors.textSecondary),
+          const Spacer(),
+          CommonText(value,
               fontSize: 12.rf,
               fontWeight: FontWeight.w600,
-              color: AppColors.textTertiary,
-              height: 1.3,
-            ),
-            SizedBox(height: 8.rh),
-
-            // Parameters list
-            ...detail.parameters.map(
-              (p) => Padding(
-                padding: EdgeInsets.only(bottom: 4.rh),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.check_circle_outline,
-                        size: 14.rs, color: AppColors.success),
-                    SizedBox(width: 6.rw),
-                    Expanded(
-                      child: CommonText(
-                        p.name,
-                        fontSize: 11.rf,
-                        color: AppColors.textTertiary,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    });
+              color: AppColors.textPrimary),
+        ],
+      ),
+    );
   }
 
-  String _resolveLogoUrl(String logo) {
-    if (logo.startsWith('http://') || logo.startsWith('https://')) return logo;
-    return '${ApiUrl.kImageUrl}$logo';
+  Widget _infoChip(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13.rs, color: AppColors.textSecondary),
+        SizedBox(width: 4.rw),
+        CommonText(text,
+            fontSize: 11.rf,
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500),
+      ],
+    );
   }
-}
 
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
+  Widget _categoryChip(String category) {
+    final color = category == 'pathology'
+        ? Colors.blue
+        : category == 'radiology'
+            ? Colors.orange
+            : AppColors.primary;
 
-  const _InfoChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 6.rw, vertical: 2.rh),
+      padding: EdgeInsets.symmetric(horizontal: 8.rw, vertical: 2.rh),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8.rs),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 10.rs, color: AppColors.textSecondary),
-          SizedBox(width: 3.rw),
-          CommonText(
-            label,
-            fontSize: 10.rf,
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
-            height: 1.3,
-          ),
-        ],
+      child: CommonText(
+        category.capitalizeFirst ?? category,
+        fontSize: 10.rf,
+        fontWeight: FontWeight.w600,
+        color: color,
       ),
     );
   }

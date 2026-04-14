@@ -191,6 +191,8 @@ class ApiUrl {
       "/patient/diagnostics/packages/";
   static const String DIAGNOSTICS_VENDORS =
       "/patient/diagnostics/packages/pricing";
+  static const String DIAGNOSTICS_SPONSORED_PRICING =
+      "/patient/diagnostics/sponsored/pricing";
   static const String DIAGNOSTICS_SLOTS = "/patient/diagnostics/slots";
   static const String DIAGNOSTICS_BOOKING =
       "/patient/diagnostics/order/booking";
