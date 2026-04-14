@@ -62,6 +62,9 @@ class AppRoutes {
   /// Pharmacy / chronic medicine invoice detail — `arguments: { invoiceId }`
   static const String pharmacyOrderDetail = '/pharmacy-order-detail';
 
+  /// After pharmacy / chronic payment — `arguments: Map` from [buildPharmacyPaymentSuccessSummary]
+  static const String pharmacyPaymentSuccess = '/pharmacy-payment-success';
+
   /// Gym membership invoice detail — `arguments: { invoiceId }`
   static const String gymMembershipOrderDetail = '/gym-membership-order-detail';
 
@@ -75,6 +78,10 @@ class AppRoutes {
   /// Dental / vision / vaccine service request detail — `arguments: { invoiceId, service }`
   static const String serviceRequestOrderDetail =
       '/service-request-order-detail';
+
+  /// After service request payment — `arguments: Map` from [buildServiceRequestPaymentSuccessSummary]
+  static const String serviceRequestPaymentSuccess =
+      '/service-request-payment-success';
 
   /// WebRTC video call after join — `arguments: { data: Map }`
   static const String consultationVideoCall = '/consultation-video-call';

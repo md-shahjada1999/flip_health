@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flip_health/core/services/app_exception.dart';
 import 'package:flip_health/core/utils/custom_toast.dart';
+import 'package:flip_health/core/utils/pharmacy_payment_summary.dart';
 import 'package:flip_health/data/repositories/pharmacy_repository.dart';
 import 'package:flip_health/model/pharmacy%20models/pharmacy_order_invoice_model.dart';
 import 'package:flip_health/routes/app_routes.dart';
@@ -244,6 +245,8 @@ class PharmacyOrderDetailController extends GetxController {
   Future<void> confirmBookingPayment() async {
     final id = _info?['id'];
     if (id == null) return;
+    final inv = invoice.value;
+    if (inv == null) return;
     try {
       final done = await _repository.patchMedicineOrderPayment(
         invoiceId: id.toString(),
@@ -253,17 +256,26 @@ class PharmacyOrderDetailController extends GetxController {
       final needPay =
           done['isPaymentRequired'] == true || done['paymentRequired'] == true;
       if (needPay && done['razorpay_payload'] is Map) {
+        final summary = buildPharmacyPaymentSuccessSummary(
+          invoice: inv,
+          paymentQuote: paymentQuote.value,
+        );
         Get.toNamed(
           AppRoutes.razorPay,
           arguments: [
             'fromPharmacy',
             Map<String, dynamic>.from(done['razorpay_payload'] as Map),
+            summary,
           ],
         );
         return;
       }
-      ToastCustom.showSnackBar(subtitle: 'Payment completed');
-      await fetchDetail();
+      final summary = buildPharmacyPaymentSuccessSummary(
+        invoice: inv,
+        paymentQuote: paymentQuote.value,
+        confirmResponse: Map<String, dynamic>.from(done),
+      );
+      Get.offNamed(AppRoutes.pharmacyPaymentSuccess, arguments: summary);
     } on AppException catch (e) {
       ToastCustom.showSnackBar(subtitle: e.message);
     } catch (e) {

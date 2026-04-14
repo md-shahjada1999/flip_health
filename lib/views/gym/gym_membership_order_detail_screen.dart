@@ -3,11 +3,12 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:flip_health/controllers/gym_membership_order_detail_controller.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
-import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
+import 'package:flip_health/views/orders/widgets/order_patient_details_card.dart';
+import 'package:flip_health/views/orders/widgets/order_payment_details_section.dart';
 
 class GymMembershipOrderDetailScreen extends StatelessWidget {
   const GymMembershipOrderDetailScreen({super.key});
@@ -16,24 +17,54 @@ class GymMembershipOrderDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Get.find<GymMembershipOrderDetailController>();
     return Obx(() {
+      final showPayBar = c.showContinuePayment;
       return SafeScreenWrapper(
+        bottomSafe: !showPayBar,
         appBar: CommonAppBar.build(title: 'Gym membership'),
-        bottomNavigationBar: c.showContinuePayment
+        bottomNavigationBar: showPayBar
             ? SafeArea(
+                top: false,
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(12.rw, 0, 12.rw, 12.rh),
-                  child: FilledButton(
-                    onPressed: c.isSubmitting.value ? null : c.continuePayment,
-                    child: c.isSubmitting.value
-                        ? SizedBox(
-                            width: 20.rs,
-                            height: 20.rs,
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('Continue with payment'),
+                  padding: EdgeInsets.fromLTRB(12.rw, 8.rh, 12.rw, 10.rh),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 54.rh,
+                    child: Material(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(14.rs),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14.rs),
+                        onTap: c.isSubmitting.value ? null : c.continuePayment,
+                        child: Center(
+                          child: c.isSubmitting.value
+                              ? SizedBox(
+                                  width: 22.rs,
+                                  height: 22.rs,
+                                  child: const CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.payments_rounded,
+                                      size: 18.rs,
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: 8.rw),
+                                    CommonText(
+                                      'Complete payment',
+                                      fontSize: 16.rf,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               )
@@ -61,6 +92,13 @@ class GymMembershipOrderDetailScreen extends StatelessWidget {
               ? Map<String, dynamic>.from(details['info'] as Map)
               : <String, dynamic>{};
 
+          final mergedPatientInfo = Map<String, dynamic>.from(info);
+          mergedPatientInfo.addAll(memberInfo);
+          final loc = details['location'] ?? info['location'];
+          if (loc != null && loc.toString().trim().isNotEmpty) {
+            mergedPatientInfo['location'] = loc;
+          }
+
           return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(12.rw, 12.rh, 12.rw, 24.rh),
             child: Column(
@@ -72,22 +110,9 @@ class GymMembershipOrderDetailScreen extends StatelessWidget {
                   cancellationReason: info['cancellation_reason']?.toString(),
                 ),
                 SizedBox(height: 12.rh),
-                _SectionCard(
-                  title: AppString.kPatientDetails,
-                  child: Column(
-                    children: [
-                      _row('Name', memberInfo['name']?.toString() ?? '—'),
-                      _row('Email', memberInfo['email']?.toString() ?? '—'),
-                      _row('Phone', memberInfo['phone']?.toString() ?? '—'),
-                      _row(
-                        'Location',
-                        details['location']?.toString() ??
-                            info['location']?.toString() ??
-                            '—',
-                        isLast: true,
-                      ),
-                    ],
-                  ),
+                OrderPatientDetailsCard(
+                  invoiceDetail: inv.raw,
+                  infoMap: mergedPatientInfo,
                 ),
                 SizedBox(height: 12.rh),
                 _SectionCard(
@@ -123,18 +148,7 @@ class GymMembershipOrderDetailScreen extends StatelessWidget {
                 ],
                 if (inv.payments.isNotEmpty) ...[
                   SizedBox(height: 12.rh),
-                  _SectionCard(
-                    title: AppString.kPaymentDetails,
-                    child: Column(
-                      children: [
-                        for (int i = 0; i < inv.payments.length; i++)
-                          _paymentTile(
-                            inv.payments[i],
-                            isLast: i == inv.payments.length - 1,
-                          ),
-                      ],
-                    ),
-                  ),
+                  OrderPaymentDetailsSection(payments: inv.payments),
                 ],
               ],
             ),
@@ -282,47 +296,6 @@ Widget _detailLine(dynamic line, {bool isLast = false}) {
           amount == null ? '—' : _money(amount),
           fontSize: 12.rf,
           color: AppColors.textSecondary,
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _paymentTile(dynamic payment, {bool isLast = false}) {
-  if (payment is! Map) {
-    return _row('Payment', payment?.toString() ?? '—', isLast: isLast);
-  }
-  final p = Map<String, dynamic>.from(payment);
-  final mode = p['payment_mode'] ?? p['mode'] ?? p['type'] ?? '—';
-  final amount = _num(p['amount']);
-  final status = p['status']?.toString() ?? '';
-  return Padding(
-    padding: EdgeInsets.only(bottom: isLast ? 0 : 10.rh),
-    child: Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CommonText(
-                mode.toString(),
-                fontSize: 12.rf,
-                fontWeight: FontWeight.w600,
-              ),
-              if (status.isNotEmpty)
-                CommonText(
-                  status,
-                  fontSize: 11.rf,
-                  color: AppColors.textSecondary,
-                ),
-            ],
-          ),
-        ),
-        CommonText(
-          amount == null ? '—' : _money(amount),
-          fontSize: 13.rf,
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
         ),
       ],
     ),

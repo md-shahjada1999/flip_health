@@ -7,7 +7,9 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
-import 'package:flip_health/views/pharmacy/pharmacy_order_invoice_table.dart';
+import 'package:flip_health/views/orders/widgets/order_invoice_table.dart';
+import 'package:flip_health/views/orders/widgets/order_patient_details_card.dart';
+import 'package:flip_health/views/orders/widgets/order_payment_details_section.dart';
 
 class WellnessOrderDetailScreen extends StatelessWidget {
   const WellnessOrderDetailScreen({super.key});
@@ -39,6 +41,18 @@ class WellnessOrderDetailScreen extends StatelessWidget {
           final details = c.serviceDetails ?? <String, dynamic>{};
           final cancellationReason = info['cancellation_reason']?.toString();
 
+          final infoForPatient = Map<String, dynamic>.from(info);
+          final contact = details['contact_details'];
+          if (contact is Map) {
+            final cm = Map<String, dynamic>.from(contact);
+            for (final e in cm.entries) {
+              final existing = infoForPatient[e.key];
+              if (existing == null || existing.toString().trim().isEmpty) {
+                infoForPatient[e.key] = e.value;
+              }
+            }
+          }
+
           return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(12.rw, 12.rh, 12.rw, 24.rh),
             child: Column(
@@ -50,20 +64,25 @@ class WellnessOrderDetailScreen extends StatelessWidget {
                   cancellationReason: cancellationReason,
                 ),
                 SizedBox(height: 16.rh),
+                OrderPatientDetailsCard(
+                  invoiceDetail: c.invoice.value!.raw,
+                  infoMap: infoForPatient,
+                ),
+                SizedBox(height: 16.rh),
                 _SectionCard(
                   title: AppString.kServiceDetails,
                   child: _ServiceDetails(details: details),
                 ),
                 if (c.showInvoiceSection) ...[
                   SizedBox(height: 16.rh),
-                  PharmacyOrderInvoiceTable(
+                  OrderInvoiceTable(
                     lines: c.lineItems,
                     invoice: c.invoice.value!.raw,
                   ),
                 ],
                 if (c.showPaymentsSection) ...[
                   SizedBox(height: 16.rh),
-                  _PaymentSection(payments: c.paymentItems),
+                  OrderPaymentDetailsSection(payments: c.paymentItems),
                 ],
                 if (c.canCancel) ...[
                   SizedBox(height: 16.rh),
@@ -174,18 +193,12 @@ class _ServiceDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final contact = details['contact_details'];
-    final cMap = contact is Map ? Map<String, dynamic>.from(contact) : <String, dynamic>{};
     final service = details['service']?.toString() ?? '—';
     final serviceArea = details['service_area']?.toString();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _line(AppString.kPatientName, cMap['name']?.toString() ?? '—'),
-        _line(AppString.kPhone, cMap['phone']?.toString() ?? '—'),
-        _line(AppString.kEmail, cMap['email']?.toString() ?? '—'),
-        Divider(height: 18.rh, color: AppColors.divider),
         _line(AppString.kServiceType, service),
         if (service != 'Diet & Nutrition' &&
             serviceArea != null &&
@@ -217,77 +230,6 @@ class _ServiceDetails extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PaymentSection extends StatelessWidget {
-  const _PaymentSection({required this.payments});
-
-  final List<dynamic> payments;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      title: AppString.kPaymentDetails,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final p in payments)
-            if (p is Map) _PaymentTile(entry: Map<String, dynamic>.from(p)),
-        ],
-      ),
-    );
-  }
-}
-
-class _PaymentTile extends StatelessWidget {
-  const _PaymentTile({required this.entry});
-
-  final Map<String, dynamic> entry;
-
-  @override
-  Widget build(BuildContext context) {
-    final mode = entry['payment_mode'] ?? entry['mode'] ?? entry['type'];
-    final amount = entry['amount'];
-    final status = entry['status']?.toString();
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: 10.rh),
-      child: Container(
-        padding: EdgeInsets.all(12.rs),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12.rs),
-          border: Border.all(color: AppColors.borderLight),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: CommonText(
-                '${mode ?? '—'}',
-                fontSize: 13.rf,
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                CommonText(
-                  '₹$amount',
-                  fontSize: 15.rf,
-                  fontWeight: FontWeight.w700,
-                ),
-                if (status != null && status.isNotEmpty)
-                  CommonText(
-                    status,
-                    fontSize: 11.rf,
-                    color: AppColors.textSecondary,
-                  ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

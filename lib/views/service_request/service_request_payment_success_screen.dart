@@ -8,9 +8,9 @@ import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/routes/app_routes.dart';
 
-/// Shown after Razorpay verify or direct booking confirmation (online & offline).
-class ConsultationPaymentSuccessScreen extends StatelessWidget {
-  const ConsultationPaymentSuccessScreen({super.key});
+/// After service request (dental / vision / vaccine) payment.
+class ServiceRequestPaymentSuccessScreen extends StatelessWidget {
+  const ServiceRequestPaymentSuccessScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,47 +19,27 @@ class ConsultationPaymentSuccessScreen extends StatelessWidget {
         ? Map<String, dynamic>.from(args)
         : <String, dynamic>{};
 
-    final schedule = m['schedule']?.toString() ?? '—';
-    final visitType = m['visit_type']?.toString() ?? '—';
-    final doctor = m['doctor_name']?.toString();
-    final specialty = m['specialty']?.toString();
-    final hospital = m['hospital_name']?.toString();
-    final address = m['address']?.toString();
-    final purpose = m['purpose']?.toString();
-    final appointmentId = m['appointment_id']?.toString();
     final invoiceId = (m['invoice_id'] ?? '').toString().trim();
+    final orderId = (m['order_id'] ?? '').toString().trim();
+    final serviceTitle = (m['service_title'] ?? 'Service request').toString();
+    final serviceKey = (m['service'] ?? '').toString().trim();
+    final visitType = (m['visit_type'] ?? '—').toString();
+    final preferred = (m['preferred_slot'] ?? '—').toString();
     final amountDisplay =
         (m['amount_paid_display'] ?? '').toString().trim().isNotEmpty
             ? m['amount_paid_display'].toString()
             : '—';
     final paymentId = (m['payment_id'] ?? '').toString().trim();
-    final razorpayOrderId = (m['razorpay_order_id'] ?? '').toString().trim();
-
-    final isVirtual = m['is_virtual'] == true;
 
     final rows = <MapEntry<String, String>>[
-      MapEntry(AppString.kSchedule, schedule),
-      MapEntry('Visit type', visitType),
-      if (amountDisplay != '—') MapEntry('Consultation fee', amountDisplay),
-      if (appointmentId != null && appointmentId.isNotEmpty)
-        MapEntry('Appointment ID', '#$appointmentId'),
+      MapEntry('Service', serviceTitle),
+      if (orderId.isNotEmpty) MapEntry('Order ID', '#$orderId'),
       if (invoiceId.isNotEmpty) MapEntry('Invoice ID', '#$invoiceId'),
-      if (doctor != null && doctor.isNotEmpty) MapEntry('Doctor', doctor),
-      if (specialty != null && specialty.isNotEmpty)
-        MapEntry('Specialty', specialty),
-      if (hospital != null && hospital.isNotEmpty)
-        MapEntry('Hospital / clinic', hospital),
-      if (address != null && address.isNotEmpty)
-        MapEntry('Location', address),
-      if (purpose != null && purpose.isNotEmpty) MapEntry('Purpose', purpose),
+      MapEntry('Amount paid', amountDisplay),
+      MapEntry('Visit type', visitType),
+      MapEntry('Preferred slot', preferred),
       if (paymentId.isNotEmpty) MapEntry('Payment ref', paymentId),
-      if (razorpayOrderId.isNotEmpty)
-        MapEntry('Gateway order', razorpayOrderId),
     ];
-
-    final subtitle = isVirtual
-        ? 'Your payment is confirmed. Join the video call from the appointment details at the scheduled time—we’ll remind you beforehand.'
-        : 'Your payment is confirmed. Please arrive on time for your in-person visit. You can review the full details anytime from your orders.';
 
     return SafeScreenWrapper(
       bottomSafe: false,
@@ -95,7 +75,7 @@ class ConsultationPaymentSuccessScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 12.rh),
                     CommonText(
-                      subtitle,
+                      'Your payment is confirmed. You can review the full request and next steps from your order details.',
                       fontSize: 15.rf,
                       height: 1.45,
                       color: AppColors.textTertiary,
@@ -122,7 +102,7 @@ class ConsultationPaymentSuccessScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             CommonText(
-                              'Appointment details',
+                              'Request summary',
                               fontSize: 14.rf,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
@@ -149,8 +129,11 @@ class ConsultationPaymentSuccessScreen extends StatelessWidget {
                   if (invoiceId.isNotEmpty) ...[
                     OutlinedButton(
                       onPressed: () => Get.offNamed(
-                        AppRoutes.consultationOrderDetail,
-                        arguments: {'invoiceId': invoiceId},
+                        AppRoutes.serviceRequestOrderDetail,
+                        arguments: {
+                          'invoiceId': invoiceId,
+                          if (serviceKey.isNotEmpty) 'service': serviceKey,
+                        },
                       ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primary,
@@ -161,7 +144,7 @@ class ConsultationPaymentSuccessScreen extends StatelessWidget {
                         ),
                       ),
                       child: CommonText(
-                        'View appointment details',
+                        'View order details',
                         fontSize: 15.rf,
                         fontWeight: FontWeight.w600,
                         color: AppColors.primary,

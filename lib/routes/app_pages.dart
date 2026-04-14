@@ -50,8 +50,10 @@ import 'package:flip_health/views/claims/add_bank_screen.dart';
 import 'package:flip_health/views/claims/bank_list_screen.dart';
 import 'package:flip_health/views/pharmacy/pharmacy_main_screen.dart';
 import 'package:flip_health/views/pharmacy/pharmacy_order_detail_screen.dart';
+import 'package:flip_health/views/pharmacy/pharmacy_payment_success_screen.dart';
 import 'package:flip_health/views/gym/gym_membership_order_detail_screen.dart';
 import 'package:flip_health/views/service_request/service_request_order_detail_screen.dart';
+import 'package:flip_health/views/service_request/service_request_payment_success_screen.dart';
 import 'package:flip_health/views/splash/onboarding_screen.dart';
 import 'package:flip_health/views/splash/splash_screen.dart';
 import 'package:flip_health/views/vision/vision_member_selection_screen.dart';
@@ -223,6 +225,11 @@ class AppPages {
     ),
 
     GetPage(
+      name: AppRoutes.pharmacyPaymentSuccess,
+      page: () => const PharmacyPaymentSuccessScreen(),
+    ),
+
+    GetPage(
       name: AppRoutes.gymMembershipOrderDetail,
       page: () => const GymMembershipOrderDetailScreen(),
       binding: GymMembershipOrderDetailBinding(),
@@ -243,6 +250,11 @@ class AppPages {
       name: AppRoutes.serviceRequestOrderDetail,
       page: () => const ServiceRequestOrderDetailScreen(),
       binding: ServiceRequestOrderDetailBinding(),
+    ),
+
+    GetPage(
+      name: AppRoutes.serviceRequestPaymentSuccess,
+      page: () => const ServiceRequestPaymentSuccessScreen(),
     ),
 
     GetPage(

@@ -12,7 +12,9 @@ import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/common_pdf_viewer.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/controllers/pharmacy_order_detail_controller.dart';
-import 'package:flip_health/views/pharmacy/pharmacy_order_invoice_table.dart';
+import 'package:flip_health/views/orders/widgets/order_invoice_table.dart';
+import 'package:flip_health/views/orders/widgets/order_payment_details_section.dart';
+import 'package:flip_health/views/orders/widgets/order_patient_details_card.dart';
 
 class PharmacyOrderDetailScreen extends StatelessWidget {
   const PharmacyOrderDetailScreen({super.key});
@@ -123,6 +125,11 @@ class PharmacyOrderDetailScreen extends StatelessWidget {
                   cancellationReason: info['cancellation_reason']?.toString(),
                 ),
                 SizedBox(height: 12.rh),
+                OrderPatientDetailsCard(
+                  invoiceDetail: invMap,
+                  infoMap: Map<String, dynamic>.from(info),
+                ),
+                SizedBox(height: 12.rh),
                 if (visitType != 'SELF_PICKUP') ...[
                   _Section(
                     title: 'Delivery address',
@@ -155,14 +162,16 @@ class PharmacyOrderDetailScreen extends StatelessWidget {
                 ],
                 if (c.showInvoiceSection) ...[
                   SizedBox(height: 16.rh),
-                  PharmacyOrderInvoiceTable(
+                  OrderInvoiceTable(
                     lines: c.invoiceLinesForTable,
                     invoice: invMap,
                   ),
                 ],
                 if (c.showPaymentsSection) ...[
                   SizedBox(height: 16.rh),
-                  _PaymentSection(payments: c.invoice.value!.payments),
+                  OrderPaymentDetailsSection(
+                    payments: c.invoice.value!.payments,
+                  ),
                 ],
                 if (c.showCompletePaymentBar &&
                     c.invoice.value!.netAmount != null)
@@ -971,147 +980,6 @@ class _DeliveryLinks extends StatelessWidget {
     }
     return const SizedBox.shrink();
   }
-}
-
-class _PaymentSection extends StatelessWidget {
-  const _PaymentSection({required this.payments});
-
-  final List<dynamic> payments;
-
-  @override
-  Widget build(BuildContext context) {
-    return _Section(
-      title: AppString.kPaymentDetails,
-      child: payments.isEmpty
-          ? CommonText(
-              'No payment records',
-              fontSize: 12.rf,
-              color: AppColors.textSecondary,
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final p in payments)
-                  if (p is Map)
-                    _PharmacyPaymentEntryCard(
-                      entry: Map<String, dynamic>.from(p),
-                    ),
-              ],
-            ),
-    );
-  }
-}
-
-/// Mirrors [consultation_order_detail_screen] `_PaymentEntryCard`.
-class _PharmacyPaymentEntryCard extends StatelessWidget {
-  const _PharmacyPaymentEntryCard({required this.entry});
-
-  final Map<String, dynamic> entry;
-
-  Color _amountColor(String? status) {
-    final s = status?.toLowerCase() ?? '';
-    if (s == 'success' || s == 'completed') return AppColors.success;
-    if (s == 'refunded') return AppColors.warning;
-    if (s == 'failed' || s == 'failure') return AppColors.error;
-    return AppColors.textPrimary;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final id = entry['id'];
-    final mode = entry['payment_mode'] ?? entry['mode'] ?? entry['type'];
-    final src = entry['payment_src'] ?? entry['source'];
-    final amount = entry['amount'];
-    final status = entry['status']?.toString();
-    final note = entry['note']?.toString();
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.rh),
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(12.rs),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12.rs),
-          border: Border.all(color: AppColors.borderLight),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (id != null)
-                    CommonText(
-                      '#$id',
-                      fontSize: 11.rf,
-                      color: AppColors.textSecondary,
-                    ),
-                  SizedBox(height: 4.rh),
-                  _paymentDetailRow('Method', '${mode ?? '—'}'),
-                  if (src != null && '$src'.isNotEmpty)
-                    _paymentDetailRow('Source', '$src'),
-                  if (status == 'refunded' &&
-                      note != null &&
-                      note.isNotEmpty) ...[
-                    SizedBox(height: 6.rh),
-                    CommonText(
-                      'Note: $note',
-                      fontSize: 11.rf,
-                      color: AppColors.textSecondary,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                CommonText(
-                  '₹$amount',
-                  fontSize: 16.rf,
-                  fontWeight: FontWeight.w700,
-                  color: _amountColor(status),
-                ),
-                if (status != null && status.isNotEmpty)
-                  CommonText(
-                    status,
-                    fontSize: 11.rf,
-                    color: AppColors.textSecondary,
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-Widget _paymentDetailRow(String label, String value) {
-  return Padding(
-    padding: EdgeInsets.only(bottom: 4.rh),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 72.rw,
-          child: CommonText(
-            label,
-            fontSize: 11.rf,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        Expanded(
-          child: CommonText(
-            value,
-            fontSize: 12.rf,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 Future<void> _openPharmacyBookingPaymentSheet(

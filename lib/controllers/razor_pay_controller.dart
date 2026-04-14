@@ -17,6 +17,8 @@ class RazorPayController extends GetxController {
   String from = '';
   Map<String, dynamic> body = {};
   Map<String, dynamic> _consultationSuccessSummary = {};
+  Map<String, dynamic> _pharmacySuccessSummary = {};
+  Map<String, dynamic> _serviceRequestSuccessSummary = {};
 
   @override
   void onInit() {
@@ -26,7 +28,14 @@ class RazorPayController extends GetxController {
       from = a[0].toString();
       body = _normalizeRazorpayOptions(a[1]);
       if (a.length >= 3 && a[2] is Map) {
-        _consultationSuccessSummary = Map<String, dynamic>.from(a[2] as Map);
+        final extra = Map<String, dynamic>.from(a[2] as Map);
+        if (from == 'fromConsultationOrder') {
+          _consultationSuccessSummary = extra;
+        } else if (from == 'fromPharmacy') {
+          _pharmacySuccessSummary = extra;
+        } else if (from == 'fromServiceRequest') {
+          _serviceRequestSuccessSummary = extra;
+        }
       }
     }
 
@@ -63,9 +72,12 @@ class RazorPayController extends GetxController {
         final repo = Get.find<ConsultationOrderRepository>();
         final res = await repo.verifyAppointmentPayment(map);
         if (res['status'] == true) {
+          final summary = Map<String, dynamic>.from(_consultationSuccessSummary);
+          summary['payment_id'] = response.paymentId;
+          summary['razorpay_order_id'] = response.orderId;
           Get.offAllNamed(
             AppRoutes.consultationPaymentSuccess,
-            arguments: _consultationSuccessSummary,
+            arguments: summary,
           );
         } else {
           ToastCustom.showSnackBar(
@@ -98,8 +110,12 @@ class RazorPayController extends GetxController {
             res['status'] == 1 ||
             res['success'] == true;
         if (ok) {
-          ToastCustom.showSnackBar(subtitle: 'Payment successful');
-          Get.offAllNamed(AppRoutes.dashboard);
+          final summary = Map<String, dynamic>.from(_pharmacySuccessSummary);
+          summary['payment_id'] = response.paymentId;
+          Get.offAllNamed(
+            AppRoutes.pharmacyPaymentSuccess,
+            arguments: summary,
+          );
         } else {
           ToastCustom.showSnackBar(
             subtitle: res['message']?.toString() ?? 'Verification failed',
@@ -131,8 +147,12 @@ class RazorPayController extends GetxController {
             res['status'] == 1 ||
             res['success'] == true;
         if (ok) {
-          ToastCustom.showSnackBar(subtitle: 'Payment successful');
-          Get.offAllNamed(AppRoutes.dashboard);
+          final summary = Map<String, dynamic>.from(_serviceRequestSuccessSummary);
+          summary['payment_id'] = response.paymentId;
+          Get.offAllNamed(
+            AppRoutes.serviceRequestPaymentSuccess,
+            arguments: summary,
+          );
         } else {
           ToastCustom.showSnackBar(
             subtitle: res['message']?.toString() ?? 'Verification failed',

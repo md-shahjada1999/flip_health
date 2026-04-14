@@ -180,9 +180,13 @@ Map<String, dynamic> buildConsultationPaymentSuccessSummary(
   final purpose = info['purpose']?.toString().trim();
   final id = info['id']?.toString();
 
+  final invoiceId = invoiceDetail['id']?.toString();
+  final amountPaid = _consultationAmountPaid(invoiceDetail);
+
   return {
     'schedule': schedule,
     'visit_type': visitType,
+    'is_virtual': comm == 'ONLINE',
     if (doctorName != null && doctorName.isNotEmpty) 'doctor_name': doctorName,
     if (specialty != null && specialty.isNotEmpty) 'specialty': specialty,
     if (hospitalName != null && hospitalName.isNotEmpty)
@@ -190,5 +194,30 @@ Map<String, dynamic> buildConsultationPaymentSuccessSummary(
     if (address != null && address.isNotEmpty) 'address': address,
     if (purpose != null && purpose.isNotEmpty) 'purpose': purpose,
     if (id != null && id.isNotEmpty) 'appointment_id': id,
+    if (invoiceId != null && invoiceId.isNotEmpty) 'invoice_id': invoiceId,
+    if (amountPaid != null) 'amount_paid': amountPaid,
+    'amount_paid_display': _formatRupee(amountPaid),
   };
+}
+
+double? _consultationAmountPaid(Map<String, dynamic> invoiceDetail) {
+  double? n(dynamic v) {
+    if (v == null) return null;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString());
+  }
+
+  final paid = n(invoiceDetail['paid_amount']);
+  if (paid != null && paid > 0) return paid;
+  final net = n(invoiceDetail['net_amount']);
+  if (net != null && net > 0) return net;
+  final pending = n(invoiceDetail['pending_amount']);
+  if (pending != null && pending > 0) return pending;
+  return net ?? paid ?? pending;
+}
+
+String _formatRupee(double? x) {
+  if (x == null) return '—';
+  if (x % 1 == 0) return '₹${x.toInt()}';
+  return '₹${x.toStringAsFixed(2)}';
 }

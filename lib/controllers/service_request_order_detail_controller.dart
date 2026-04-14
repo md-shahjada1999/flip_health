@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flip_health/core/services/app_exception.dart';
 import 'package:flip_health/core/utils/custom_toast.dart';
+import 'package:flip_health/core/utils/service_request_order_utils.dart';
 import 'package:flip_health/data/repositories/service_request_repository.dart';
 import 'package:flip_health/model/service_request_invoice_model.dart';
 import 'package:flip_health/routes/app_routes.dart';
@@ -75,6 +76,13 @@ class ServiceRequestOrderDetailController extends GetxController {
     if (isVision) return 'Vision request';
     if (isVaccine) return 'Vaccine request';
     return 'Service request';
+  }
+
+  /// Route arg for [AppRoutes.serviceRequestOrderDetail] / success screen (`dental` / `vision` / `vaccine`).
+  String get serviceRouteKey {
+    final r = _resolvedServiceType;
+    if (r.isNotEmpty) return r;
+    return invoice.value?.transactionType?.toLowerCase() ?? '';
   }
 
   bool get showInvoiceSection =>
@@ -211,24 +219,41 @@ class ServiceRequestOrderDetailController extends GetxController {
   Future<void> confirmServiceRequestPayment() async {
     final id = info?['id']?.toString();
     if (id == null || id.isEmpty) return;
+    final inv = invoice.value;
+    if (inv == null) return;
     try {
       final res = await _repository.patchServiceRequestPayment(
         requestId: id,
         confirm: true,
         useWallet: useFlipCash.value,
       );
-      if (res['paymentRequired'] == true && res['razorpay_payload'] is Map) {
+      final needPay = res['paymentRequired'] == true ||
+          res['isPaymentRequired'] == true;
+      if (needPay && res['razorpay_payload'] is Map) {
+        final summary = buildServiceRequestPaymentSuccessSummary(
+          invoice: inv,
+          serviceTitle: screenTitle,
+          serviceRouteKey: serviceRouteKey,
+          paymentQuote: paymentQuote.value,
+        );
         Get.toNamed(
           AppRoutes.razorPay,
           arguments: <dynamic>[
             'fromServiceRequest',
             Map<String, dynamic>.from(res['razorpay_payload'] as Map),
+            summary,
           ],
         );
         return;
       }
-      ToastCustom.showSnackBar(subtitle: 'Payment completed');
-      await fetchDetail();
+      final summary = buildServiceRequestPaymentSuccessSummary(
+        invoice: inv,
+        serviceTitle: screenTitle,
+        serviceRouteKey: serviceRouteKey,
+        paymentQuote: paymentQuote.value,
+        confirmResponse: Map<String, dynamic>.from(res),
+      );
+      Get.offNamed(AppRoutes.serviceRequestPaymentSuccess, arguments: summary);
     } on AppException catch (e) {
       ToastCustom.showSnackBar(subtitle: e.message);
     } catch (e) {

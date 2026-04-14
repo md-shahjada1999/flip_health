@@ -3,9 +3,9 @@ import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 
-/// Invoice lines + totals for pharmacy / chronic orders (same math as consultation detail).
-class PharmacyOrderInvoiceTable extends StatelessWidget {
-  const PharmacyOrderInvoiceTable({
+/// Invoice lines + totals shared across order types (pharmacy, chronic, service request, wellness, etc.).
+class OrderInvoiceTable extends StatelessWidget {
+  const OrderInvoiceTable({
     super.key,
     required this.lines,
     required this.invoice,
@@ -47,7 +47,7 @@ class PharmacyOrderInvoiceTable extends StatelessWidget {
       rows.add(
         TableRow(
           children: [
-            _c(cells.description),
+            _desc(cells.description, message: cells.paymentMessage),
             _c(cells.mrp, end: true),
             _c(cells.price, end: true),
             _c(cells.qty, end: true),
@@ -92,9 +92,15 @@ class PharmacyOrderInvoiceTable extends StatelessWidget {
           SizedBox(height: 12.rh),
           Divider(height: 1, color: AppColors.divider),
           _sum('Total', _fmtRupee(summary.itemsTotal)),
-          _sum('Convenience charges', '+ ${_fmtRupee(summary.convenienceCharges)}'),
+          _sum(
+            'Convenience charges',
+            '+ ${_fmtRupee(summary.convenienceCharges)}',
+          ),
           if (_Totals._deliveryFor(invoice) > 0)
-            _sum('Delivery charges', '+ ${_fmtRupee(_Totals._deliveryFor(invoice))}'),
+            _sum(
+              'Delivery charges',
+              '+ ${_fmtRupee(_Totals._deliveryFor(invoice))}',
+            ),
           _sum('Saved', '- ${_fmtRupee(summary.saved)}'),
           SizedBox(height: 8.rh),
           Container(
@@ -152,6 +158,27 @@ class PharmacyOrderInvoiceTable extends StatelessWidget {
     );
   }
 
+  static Widget _desc(String title, {String? message}) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.rh, horizontal: 6.rw),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CommonText(title, fontSize: 11.rf, color: AppColors.textPrimary),
+          if (message != null && message.isNotEmpty) ...[
+            SizedBox(height: 2.rh),
+            CommonText(
+              message,
+              fontSize: 10.rf,
+              fontWeight: FontWeight.w500,
+              color: AppColors.warning,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   static Widget _sum(String label, String value) {
     return Padding(
       padding: EdgeInsets.only(top: 8.rh),
@@ -178,6 +205,7 @@ class _LineCells {
     required this.price,
     required this.qty,
     required this.amount,
+    this.paymentMessage,
   });
 
   final String description;
@@ -185,6 +213,7 @@ class _LineCells {
   final String price;
   final String qty;
   final String amount;
+  final String? paymentMessage;
 }
 
 _LineCells _lineCells(Map<String, dynamic> line) {
@@ -215,13 +244,57 @@ _LineCells _lineCells(Map<String, dynamic> line) {
     amountStr = _fmtRupee(qtyRaw * offerVal);
   }
 
+  final paymentMessage = _linePaymentMessage(line);
+
   return _LineCells(
     description: description,
     mrp: mrpStr,
     price: priceStr,
     qty: qtyStr,
     amount: amountStr,
+    paymentMessage: paymentMessage,
   );
+}
+
+String? _linePaymentMessage(Map<String, dynamic> line) {
+  bool? asBool(dynamic v) {
+    if (v is bool) return v;
+    if (v is num) return v != 0;
+    if (v is String) {
+      final s = v.trim().toLowerCase();
+      if (s == 'true' || s == '1' || s == 'yes') return true;
+      if (s == 'false' || s == '0' || s == 'no') return false;
+    }
+    return null;
+  }
+
+  const keys = <String>[
+    'payment_required',
+    'is_payment_required',
+    'isPaymentRequired',
+    'payment_pending',
+    'paymentPending',
+  ];
+  for (final k in keys) {
+    final b = asBool(line[k]);
+    if (b == true) return 'Payment required for this item';
+  }
+
+  final statusRaw = line['status'];
+  if (statusRaw is int && statusRaw == 4) {
+    return 'Payment required for this item';
+  }
+  if (statusRaw is String) {
+    final s = statusRaw.trim().toLowerCase();
+    if (s == 'payment_pending' ||
+        s == 'pending_payment' ||
+        s == 'unpaid' ||
+        s == 'pending') {
+      return 'Payment required for this item';
+    }
+  }
+
+  return null;
 }
 
 String _lineTitle(Map<String, dynamic> line) {
@@ -311,7 +384,9 @@ class _Totals {
     final delivery = (tt == 'PHARMACY' || tt == 'CHRONIC_MED')
         ? (n(addMap['delivery_charges']) ?? 0)
         : 0.0;
-    final collection = tt == 'LABTEST' ? (n(addMap['collection_fee']) ?? 0) : 0.0;
+    final collection = tt == 'LABTEST'
+        ? (n(addMap['collection_fee']) ?? 0)
+        : 0.0;
     final convenience = n(addMap['processing_fee']) ?? 0.0;
     final discount = n(invoice['discount']) ?? 0.0;
 

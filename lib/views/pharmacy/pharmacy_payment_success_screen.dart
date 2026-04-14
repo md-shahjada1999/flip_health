@@ -8,9 +8,9 @@ import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/routes/app_routes.dart';
 
-/// Shown after Razorpay verify or direct booking confirmation (online & offline).
-class ConsultationPaymentSuccessScreen extends StatelessWidget {
-  const ConsultationPaymentSuccessScreen({super.key});
+/// After pharmacy / chronic medicine payment (wallet or Razorpay verify).
+class PharmacyPaymentSuccessScreen extends StatelessWidget {
+  const PharmacyPaymentSuccessScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,47 +19,25 @@ class ConsultationPaymentSuccessScreen extends StatelessWidget {
         ? Map<String, dynamic>.from(args)
         : <String, dynamic>{};
 
-    final schedule = m['schedule']?.toString() ?? '—';
-    final visitType = m['visit_type']?.toString() ?? '—';
-    final doctor = m['doctor_name']?.toString();
-    final specialty = m['specialty']?.toString();
-    final hospital = m['hospital_name']?.toString();
-    final address = m['address']?.toString();
-    final purpose = m['purpose']?.toString();
-    final appointmentId = m['appointment_id']?.toString();
     final invoiceId = (m['invoice_id'] ?? '').toString().trim();
+    final orderId = (m['order_id'] ?? '').toString().trim();
+    final visitType = (m['visit_type'] ?? '—').toString();
+    final orderKind = (m['order_kind'] ?? 'Pharmacy').toString();
     final amountDisplay =
         (m['amount_paid_display'] ?? '').toString().trim().isNotEmpty
             ? m['amount_paid_display'].toString()
             : '—';
     final paymentId = (m['payment_id'] ?? '').toString().trim();
-    final razorpayOrderId = (m['razorpay_order_id'] ?? '').toString().trim();
 
-    final isVirtual = m['is_virtual'] == true;
+    final isChronic = orderKind.toLowerCase().contains('chronic');
 
     final rows = <MapEntry<String, String>>[
-      MapEntry(AppString.kSchedule, schedule),
-      MapEntry('Visit type', visitType),
-      if (amountDisplay != '—') MapEntry('Consultation fee', amountDisplay),
-      if (appointmentId != null && appointmentId.isNotEmpty)
-        MapEntry('Appointment ID', '#$appointmentId'),
+      if (orderId.isNotEmpty) MapEntry('Order ID', '#$orderId'),
       if (invoiceId.isNotEmpty) MapEntry('Invoice ID', '#$invoiceId'),
-      if (doctor != null && doctor.isNotEmpty) MapEntry('Doctor', doctor),
-      if (specialty != null && specialty.isNotEmpty)
-        MapEntry('Specialty', specialty),
-      if (hospital != null && hospital.isNotEmpty)
-        MapEntry('Hospital / clinic', hospital),
-      if (address != null && address.isNotEmpty)
-        MapEntry('Location', address),
-      if (purpose != null && purpose.isNotEmpty) MapEntry('Purpose', purpose),
+      MapEntry('Amount paid', amountDisplay),
+      MapEntry('Fulfillment', visitType),
       if (paymentId.isNotEmpty) MapEntry('Payment ref', paymentId),
-      if (razorpayOrderId.isNotEmpty)
-        MapEntry('Gateway order', razorpayOrderId),
     ];
-
-    final subtitle = isVirtual
-        ? 'Your payment is confirmed. Join the video call from the appointment details at the scheduled time—we’ll remind you beforehand.'
-        : 'Your payment is confirmed. Please arrive on time for your in-person visit. You can review the full details anytime from your orders.';
 
     return SafeScreenWrapper(
       bottomSafe: false,
@@ -80,7 +58,7 @@ class ConsultationPaymentSuccessScreen extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        Icons.medical_services_rounded,
+                        Icons.local_pharmacy_rounded,
                         color: AppColors.success,
                         size: 56.rs,
                       ),
@@ -95,7 +73,9 @@ class ConsultationPaymentSuccessScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 12.rh),
                     CommonText(
-                      subtitle,
+                      isChronic
+                          ? 'Your payment is confirmed. We will process your chronic medicine order and keep you updated on dispatch.'
+                          : 'Your payment is confirmed. Our pharmacy partner will process your order and contact you if needed.',
                       fontSize: 15.rf,
                       height: 1.45,
                       color: AppColors.textTertiary,
@@ -122,7 +102,7 @@ class ConsultationPaymentSuccessScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             CommonText(
-                              'Appointment details',
+                              orderKind,
                               fontSize: 14.rf,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
@@ -149,7 +129,7 @@ class ConsultationPaymentSuccessScreen extends StatelessWidget {
                   if (invoiceId.isNotEmpty) ...[
                     OutlinedButton(
                       onPressed: () => Get.offNamed(
-                        AppRoutes.consultationOrderDetail,
+                        AppRoutes.pharmacyOrderDetail,
                         arguments: {'invoiceId': invoiceId},
                       ),
                       style: OutlinedButton.styleFrom(
@@ -161,7 +141,7 @@ class ConsultationPaymentSuccessScreen extends StatelessWidget {
                         ),
                       ),
                       child: CommonText(
-                        'View appointment details',
+                        'View order details',
                         fontSize: 15.rf,
                         fontWeight: FontWeight.w600,
                         color: AppColors.primary,

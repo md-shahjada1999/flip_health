@@ -14,6 +14,8 @@ import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/controllers/consultation_order_detail_controller.dart';
 import 'package:flip_health/core/utils/custom_toast.dart';
 import 'package:flip_health/routes/app_routes.dart';
+import 'package:flip_health/views/orders/widgets/order_patient_details_card.dart';
+import 'package:flip_health/views/orders/widgets/order_payment_details_section.dart';
 
 class ConsultationOrderDetailScreen extends StatelessWidget {
   const ConsultationOrderDetailScreen({super.key});
@@ -22,8 +24,51 @@ class ConsultationOrderDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Get.find<ConsultationOrderDetailController>();
 
-    return SafeScreenWrapper(
+    // Scaffold gives bottomNavigationBar unbounded max height; without a fixed
+    // height, [Material] expands and can fill the screen (same fix as pharmacy).
+    return Obx(() => SafeScreenWrapper(
+      bottomSafe: !c.showPayConfirmBooking,
       appBar: CommonAppBar.build(title: AppString.kOrderDetails),
+      bottomNavigationBar: c.showPayConfirmBooking
+          ? SafeArea(
+              top: false,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(12.rw, 8.rh, 12.rw, 10.rh),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 54.rh,
+                  child: Material(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(14.rs),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14.rs),
+                      onTap: () async =>
+                          _openConsultationBookingPaymentSheet(c),
+                      child: Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.payments_rounded,
+                              size: 18.rs,
+                              color: Colors.white,
+                            ),
+                            SizedBox(width: 8.rw),
+                            CommonText(
+                              'Complete payment',
+                              fontSize: 16.rf,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            )
+          : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Obx(() {
         if (!c.showBookFollowUp) return const SizedBox.shrink();
@@ -84,12 +129,18 @@ class ConsultationOrderDetailScreen extends StatelessWidget {
         final payments = c.invoiceDetail['payments'];
         final payList = payments is List ? payments : const [];
 
+        // Only the floating "Book follow up" button overlays the body — add
+        // scroll padding so the last section isn’t hidden. "Complete payment"
+        // uses [bottomNavigationBar], which already reduces body height, so
+        // do not add large bottom inset for that (it doubled with 88.rh before).
+        final scrollBottomPad = c.showBookFollowUp ? 80.rh : 12.rh;
+
         return SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
             12.rw,
             12.rh,
             12.rw,
-            c.showBookFollowUp ? 88.rh : 12.rh,
+            scrollBottomPad,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -127,7 +178,7 @@ class ConsultationOrderDetailScreen extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 16.rh),
-              _PatientDetailsCard(
+              OrderPatientDetailsCard(
                 invoiceDetail: c.invoiceDetail,
                 infoMap: infoMap,
               ),
@@ -188,7 +239,7 @@ class ConsultationOrderDetailScreen extends StatelessWidget {
                 SizedBox(height: 16.rh),
               ],
               if (c.showPaymentsSection) ...[
-                _PaymentDetailsCard(payments: payList),
+                OrderPaymentDetailsSection(payments: payList),
                 SizedBox(height: 16.rh),
               ],
               SizedBox(height: 24.rh),
@@ -207,19 +258,11 @@ class ConsultationOrderDetailScreen extends StatelessWidget {
                   child: const Text('Cancel appointment'),
                 ),
               ],
-              if (c.showPayConfirmBooking) ...[
-                SizedBox(height: 12.rh),
-                OutlinedButton(
-                  onPressed: () async =>
-                      _openConsultationBookingPaymentSheet(c),
-                  child: const Text('Pay / confirm booking'),
-                ),
-              ],
             ],
           ),
         );
       }),
-    );
+    ));
   }
 
   static void _cancelSheet(
@@ -322,159 +365,6 @@ String _consultationStatusLabel(Map<String, dynamic> info) {
       return 'Expired';
     default:
       return 'Upcoming appointment';
-  }
-}
-
-/// Patient block aligned with [OrderDetailScreen] patient section (`_SectionCard` + label/value rows).
-class _PatientDetailsCard extends StatelessWidget {
-  final Map<String, dynamic> invoiceDetail;
-  final Map<String, dynamic> infoMap;
-
-  const _PatientDetailsCard({
-    required this.invoiceDetail,
-    required this.infoMap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final p = _PatientFields.from(invoiceDetail, infoMap);
-    final entries = p.labelValueRows;
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(16.rs),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14.rs),
-        border: Border.all(color: AppColors.borderLight),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CommonText(
-            AppString.kPatientDetails,
-            fontSize: 14.rf,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-          Divider(height: 20.rh, color: AppColors.divider),
-          for (var i = 0; i < entries.length; i++)
-            _PatientInfoRow(
-              label: entries[i].key,
-              value: entries[i].value,
-              isLast: i == entries.length - 1,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PatientFields {
-  _PatientFields._(this.labelValueRows);
-
-  final List<MapEntry<String, String>> labelValueRows;
-
-  static _PatientFields from(
-    Map<String, dynamic> inv,
-    Map<String, dynamic> info,
-  ) {
-    Map<String, dynamic> u = {};
-    Map<String, dynamic> m = {};
-    if (inv['user'] is Map) {
-      u = Map<String, dynamic>.from(inv['user'] as Map);
-    }
-    if (inv['member'] is Map) {
-      m = Map<String, dynamic>.from(inv['member'] as Map);
-    }
-
-    String? pick(List<dynamic> keys) {
-      for (final k in keys) {
-        final v = u[k] ?? m[k] ?? info[k];
-        if (v == null) continue;
-        final s = v.toString().trim();
-        if (s.isNotEmpty) return s;
-      }
-      return null;
-    }
-
-    final name = pick(['name', 'patient_name']) ?? '—';
-    final phone = pick(['phone', 'mobile']);
-    final email = pick(['email']);
-    final age = pick(['age']);
-    final gender = pick(['gender']);
-    final ageParts = <String>[
-      if (age != null && age.isNotEmpty) age,
-      if (gender != null && gender.isNotEmpty) gender,
-    ];
-    final ageGender = ageParts.join(' · ');
-    final vendor = pick([
-      'hospital_name',
-      'vendor_name',
-      'clinic_name',
-      'hospital',
-      'clinic',
-    ]);
-
-    final rows = <MapEntry<String, String>>[
-      MapEntry(AppString.kPatientName, name),
-    ];
-    if (phone != null) rows.add(MapEntry(AppString.kPhone, phone));
-    if (email != null) rows.add(MapEntry(AppString.kEmail, email));
-    if (ageGender.isNotEmpty) {
-      rows.add(MapEntry('Age / ${AppString.kGender}', ageGender));
-    }
-    if (vendor != null) rows.add(MapEntry(AppString.kVendor, vendor));
-
-    return _PatientFields._(rows);
-  }
-}
-
-class _PatientInfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool isLast;
-
-  const _PatientInfoRow({
-    required this.label,
-    required this.value,
-    this.isLast = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 10.rh),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110.rw,
-            child: CommonText(
-              label,
-              fontSize: 12.rf,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w400,
-            ),
-          ),
-          Expanded(
-            child: CommonText(
-              value,
-              fontSize: 12.rf,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -1272,144 +1162,6 @@ String _invoiceLineItemTitle(Map<String, dynamic> line) {
       'Item';
 }
 
-class _PaymentDetailsCard extends StatelessWidget {
-  final List<dynamic> payments;
-
-  const _PaymentDetailsCard({required this.payments});
-
-  @override
-  Widget build(BuildContext context) {
-    return _ConsultationSectionCard(
-      title: AppString.kPaymentDetails,
-      child: payments.isEmpty
-          ? CommonText(
-              'No payment records',
-              fontSize: 12.rf,
-              color: AppColors.textSecondary,
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final p in payments)
-                  if (p is Map)
-                    _PaymentEntryCard(entry: Map<String, dynamic>.from(p)),
-              ],
-            ),
-    );
-  }
-}
-
-class _PaymentEntryCard extends StatelessWidget {
-  final Map<String, dynamic> entry;
-
-  const _PaymentEntryCard({required this.entry});
-
-  Color _amountColor(String? status) {
-    final s = status?.toLowerCase() ?? '';
-    if (s == 'success' || s == 'completed') return AppColors.success;
-    if (s == 'refunded') return AppColors.warning;
-    if (s == 'failed' || s == 'failure') return AppColors.error;
-    return AppColors.textPrimary;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final id = entry['id'];
-    final mode = entry['payment_mode'] ?? entry['mode'] ?? entry['type'];
-    final src = entry['payment_src'] ?? entry['source'];
-    final amount = entry['amount'];
-    final status = entry['status']?.toString();
-    final note = entry['note']?.toString();
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.rh),
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.all(12.rs),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12.rs),
-          border: Border.all(color: AppColors.borderLight),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (id != null)
-                    CommonText(
-                      '#$id',
-                      fontSize: 11.rf,
-                      color: AppColors.textSecondary,
-                    ),
-                  SizedBox(height: 4.rh),
-                  _rowInline('Method', '${mode ?? '—'}'),
-                  if (src != null && '$src'.isNotEmpty)
-                    _rowInline('Source', '$src'),
-                  if (status == 'refunded' &&
-                      note != null &&
-                      note.isNotEmpty) ...[
-                    SizedBox(height: 6.rh),
-                    CommonText(
-                      'Note: $note',
-                      fontSize: 11.rf,
-                      color: AppColors.textSecondary,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                CommonText(
-                  '₹$amount',
-                  fontSize: 16.rf,
-                  fontWeight: FontWeight.w700,
-                  color: _amountColor(status),
-                ),
-                if (status != null && status.isNotEmpty)
-                  CommonText(
-                    status,
-                    fontSize: 11.rf,
-                    color: AppColors.textSecondary,
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-Widget _rowInline(String label, String value) {
-  return Padding(
-    padding: EdgeInsets.only(bottom: 4.rh),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 72.rw,
-          child: CommonText(
-            label,
-            fontSize: 11.rf,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        Expanded(
-          child: CommonText(
-            value,
-            fontSize: 12.rf,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
 Widget _row(String k, String v) {
   return Padding(
     padding: EdgeInsets.only(bottom: 6.rh),
@@ -1450,7 +1202,6 @@ class _ConsultationBookingPaymentSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).padding.bottom;
     return Container(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.92,
@@ -1466,13 +1217,16 @@ class _ConsultationBookingPaymentSheet extends StatelessWidget {
           ),
         ],
       ),
+      // Match pharmacy sheet: [SafeArea] handles the home indicator; do not add
+      // view.padding.bottom again in [Padding] (it was doubling bottom space).
       child: SafeArea(
+        top: false,
         child: Padding(
           padding: EdgeInsets.fromLTRB(
             16.rw,
             12.rh,
             16.rw,
-            12.rh + bottomInset,
+            12.rh,
           ),
           child: Obx(() {
             final data = controller.paymentQuote.value;
