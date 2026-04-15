@@ -47,11 +47,15 @@ class ConsultationSlotSelectionScreen extends GetView<ConsultationController> {
           Container(
             padding: EdgeInsets.all(16.rs),
             child: SafeBottomPadding(
-              child: ActionButton(
-                text: AppString.kConfirm,
-                onPressed: controller.isOnline
-                    ? controller.confirmOnlineSlotSelection
-                    : controller.confirmOfflineSlotSelection,
+              child: Obx(
+                () => ActionButton(
+                  text: controller.selectedSlot.value != null || controller.selectedOfflineSlot.value.isNotEmpty ? AppString.kConfirm : 'Select Slot',
+                  onPressed: controller.selectedSlot.value != null || controller.selectedOfflineSlot.value.isNotEmpty ? 
+                    controller.isOnline
+                        ? controller.confirmOnlineSlotSelection
+                        : controller.confirmOfflineSlotSelection
+                    : null,
+                ),
               ),
             ),
           ),

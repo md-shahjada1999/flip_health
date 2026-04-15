@@ -263,8 +263,13 @@ class VaccineOverviewScreen extends GetView<VaccineController> {
   }
 
   void _showSlotEditBottomSheet(BuildContext context) {
+    final prevDateIndex = controller.selectedDateIndex.value;
+    final prevTimeSlot = controller.selectedTimeSlot.value;
+    final prevDisplay = controller.selectedDateTimeDisplay.value;
+
     Get.bottomSheet(
       isScrollControlled: true,
+      isDismissible: false,
       Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -277,7 +282,12 @@ class VaccineOverviewScreen extends GetView<VaccineController> {
             Align(
               alignment: Alignment.topRight,
               child: GestureDetector(
-                onTap: () => Get.back(),
+                onTap: () {
+                  controller.selectedDateIndex.value = prevDateIndex;
+                  controller.selectedTimeSlot.value = prevTimeSlot;
+                  controller.selectedDateTimeDisplay.value = prevDisplay;
+                  Get.back();
+                },
                 child: Container(
                   width: 28.rs,
                   height: 28.rs,
@@ -313,7 +323,13 @@ class VaccineOverviewScreen extends GetView<VaccineController> {
           ],
         ),
       ),
-    );
+    ).whenComplete(() {
+      if (controller.selectedTimeSlot.value.isEmpty) {
+        controller.selectedDateIndex.value = prevDateIndex;
+        controller.selectedTimeSlot.value = prevTimeSlot;
+        controller.selectedDateTimeDisplay.value = prevDisplay;
+      }
+    });
   }
 
   Widget _buildPrescriptionSection() {

@@ -12,7 +12,7 @@ import 'package:flip_health/core/utils/custom_toast.dart';
 import 'package:flip_health/data/repositories/consultation_order_repository.dart';
 import 'package:flip_health/data/repositories/upload_repository.dart';
 import 'package:flip_health/routes/app_routes.dart';
-import 'package:flip_health/services/video_call/signaling_service.dart';
+import 'package:flip_health/core/services/video_call_webRTC/signaling_service.dart';
 import 'package:flip_health/views/consultation/widgets/consultation_call_feedback_dialog.dart';
 import 'package:flip_health/views/consultation/widgets/consultation_call_message_bubble.dart';
 import 'package:get/get.dart';

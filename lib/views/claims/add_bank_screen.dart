@@ -6,6 +6,7 @@ import 'package:flip_health/controllers/claims%20controllers/claims_controller.d
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
+import 'package:flip_health/core/utils/common_pdf_viewer.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
 import 'package:flip_health/core/utils/file_picker_helper.dart';
@@ -449,12 +450,14 @@ class AddBankScreen extends GetView<ClaimsController> {
               final isPdf = path.toLowerCase().endsWith('.pdf');
               final name = file['name'] as String? ?? '';
               return GestureDetector(
-                onTap: () => FilePreviewDialog.show(PickedFileInfo(
-                  id: 'cheque_${entry.key}',
+                onTap: () => _openChequePreview(
+                  path: path,
+                  isNetwork: isNetwork,
+                  isImage: isImage,
+                  isPdf: isPdf,
                   name: name.isNotEmpty ? name : 'Cheque ${entry.key + 1}',
-                  path: isNetwork ? '' : path,
-                  isImage: isImage && !isPdf,
-                )),
+                  index: entry.key,
+                ),
                 child: Stack(
                 children: [
                   Container(
@@ -527,6 +530,40 @@ class AddBankScreen extends GetView<ClaimsController> {
         }),
       ],
     );
+  }
+
+  void _openChequePreview({
+    required String path,
+    required bool isNetwork,
+    required bool isImage,
+    required bool isPdf,
+    required String name,
+    required int index,
+  }) {
+    if (path.isEmpty) return;
+
+    if (isNetwork) {
+      if (isPdf) {
+        Get.to(() => CommonPdfViewer(url: path, title: name));
+      } else {
+        Get.dialog(
+          _NetworkChequePreview(url: path),
+          barrierColor: Colors.black87,
+          useSafeArea: false,
+        );
+      }
+    } else {
+      if (isPdf) {
+        Get.to(() => CommonPdfViewer(url: 'file://$path', title: name));
+      } else {
+        FilePreviewDialog.show(PickedFileInfo(
+          id: 'cheque_$index',
+          name: name,
+          path: path,
+          isImage: true,
+        ));
+      }
+    }
   }
 
   Widget _fileFallback(Map<String, dynamic> file) {
@@ -608,6 +645,109 @@ class AddBankScreen extends GetView<ClaimsController> {
           ),
         );
       }),
+    );
+  }
+}
+
+class _NetworkChequePreview extends StatefulWidget {
+  final String url;
+  const _NetworkChequePreview({required this.url});
+
+  @override
+  State<_NetworkChequePreview> createState() => _NetworkChequePreviewState();
+}
+
+class _NetworkChequePreviewState extends State<_NetworkChequePreview>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animCtrl;
+  late final Animation<double> _fadeAnim;
+  final _transformCtrl = TransformationController();
+
+  @override
+  void initState() {
+    super.initState();
+    _animCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
+    _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
+    _animCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _animCtrl.dispose();
+    _transformCtrl.dispose();
+    super.dispose();
+  }
+
+  void _close() async {
+    await _animCtrl.reverse();
+    Get.back();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            GestureDetector(
+              onTap: _close,
+              child: InteractiveViewer(
+                transformationController: _transformCtrl,
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Center(
+                  child: Image.network(
+                    widget.url,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (_, child, progress) {
+                      if (progress == null) return child;
+                      return const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      );
+                    },
+                    errorBuilder: (_, __, ___) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.broken_image_rounded,
+                            size: 48.rs, color: Colors.white38),
+                        SizedBox(height: 12.rh),
+                        CommonText(
+                          'Unable to load image',
+                          fontSize: 14.rf,
+                          color: Colors.white54,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8.rh,
+              left: 12.rw,
+              child: GestureDetector(
+                onTap: _close,
+                child: Container(
+                  width: 40.rs,
+                  height: 40.rs,
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(12.rs),
+                  ),
+                  child: Icon(Icons.close_rounded,
+                      size: 22.rs, color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

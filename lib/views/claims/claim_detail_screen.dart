@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:flip_health/controllers/claims%20controllers/claims_controller.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/constants/string_define.dart';
@@ -9,6 +10,15 @@ import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/model/claims%20models/claim_model.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+String _formatClaimDate(String raw) {
+  try {
+    final dt = DateTime.parse(raw);
+    return DateFormat('dd MMM yyyy').format(dt);
+  } catch (_) {
+    return raw.split('T').first;
+  }
+}
 
 class ClaimDetailScreen extends GetView<ClaimsController> {
   const ClaimDetailScreen({Key? key}) : super(key: key);
@@ -190,8 +200,9 @@ class _ClaimSummaryHeader extends StatelessWidget {
         (data?['can_dispute'] == true ||
             data?['can_dispute'] == 1 ||
             claim.canDispute);
-    final created =
-        data?['createdAt']?.toString() ?? claim.createdAt.split('T').first;
+    final createdRaw =
+        data?['createdAt']?.toString() ?? claim.createdAt;
+    final created = _formatClaimDate(createdRaw);
     final serviceTypes = data?['service_types'];
     String serviceLabel = claim.serviceType ?? '';
     if (serviceTypes is List && serviceTypes.isNotEmpty) {
@@ -500,7 +511,7 @@ class _HistoryTab extends StatelessWidget {
         final rs = int.tryParse(step['reimbursement_status']?.toString() ?? '') ??
             statusForLabel;
         final cfg = ClaimStatusConfig.fromStatus(rs);
-        final created = step['createdAt']?.toString() ?? '';
+        final created = _formatClaimDate(step['createdAt']?.toString() ?? '');
         return IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,

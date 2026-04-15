@@ -774,11 +774,12 @@ class ClaimsController extends GetxController {
           break;
         }
       }
+      _clearBankForm();
+
       if (match != null) {
         selectBankAccount(match);
       }
 
-      _clearBankForm();
       Get.back();
       Get.snackbar(
         'Success',

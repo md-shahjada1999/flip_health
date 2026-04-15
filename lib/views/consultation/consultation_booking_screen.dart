@@ -289,11 +289,42 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
   }
 
   void _showSlotSheet(BuildContext context) {
+    final prevSlot = controller.selectedSlot.value;
+    final prevDate = controller.selectedDate.value;
+    final prevOfflineSlot = controller.selectedOfflineSlot.value;
+    final prevOfflineDate = controller.offlineSelectedDate.value;
+
     Get.bottomSheet(
-      _SlotBottomSheet(controller: controller),
+      _SlotBottomSheet(
+        controller: controller,
+        onClose: () {
+          if (controller.isOnline) {
+            controller.selectedSlot.value = prevSlot;
+            controller.selectedDate.value = prevDate;
+          } else {
+            controller.selectedOfflineSlot.value = prevOfflineSlot;
+            controller.offlineSelectedDate.value = prevOfflineDate;
+          }
+          Get.back();
+        },
+      ),
       isScrollControlled: true,
+      isDismissible: false,
       backgroundColor: Colors.transparent,
-    );
+    ).whenComplete(() {
+      final hasSlot = controller.isOnline
+          ? controller.selectedSlot.value != null
+          : controller.selectedOfflineSlot.value.isNotEmpty;
+      if (!hasSlot) {
+        if (controller.isOnline) {
+          controller.selectedSlot.value = prevSlot;
+          controller.selectedDate.value = prevDate;
+        } else {
+          controller.selectedOfflineSlot.value = prevOfflineSlot;
+          controller.offlineSelectedDate.value = prevOfflineDate;
+        }
+      }
+    });
   }
 
   Widget _buildPurposeField() {
@@ -416,7 +447,8 @@ class ConsultationBookingScreen extends GetView<ConsultationController> {
 
 class _SlotBottomSheet extends StatelessWidget {
   final ConsultationController controller;
-  const _SlotBottomSheet({required this.controller});
+  final VoidCallback onClose;
+  const _SlotBottomSheet({required this.controller, required this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -432,12 +464,38 @@ class _SlotBottomSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(height: 12.rh),
-          Container(
-            width: 40.rw,
-            height: 4.rh,
-            decoration: BoxDecoration(
-              color: AppColors.borderLight,
-              borderRadius: BorderRadius.circular(2.rs),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.rw),
+            child: Row(
+              children: [
+                const Spacer(),
+                Container(
+                  width: 40.rw,
+                  height: 4.rh,
+                  decoration: BoxDecoration(
+                    color: AppColors.borderLight,
+                    borderRadius: BorderRadius.circular(2.rs),
+                  ),
+                ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: onClose,
+                      child: Container(
+                        width: 28.rs,
+                        height: 28.rs,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.backgroundTertiary,
+                        ),
+                        child: Icon(Icons.close,
+                            size: 18.rs, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           SizedBox(height: 14.rh),
@@ -467,9 +525,9 @@ class _SlotBottomSheet extends StatelessWidget {
                   return ElevatedButton(
                     onPressed: hasSlot ? () => Get.back() : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: AppColors.textPrimary,
                       disabledBackgroundColor:
-                          AppColors.primary.withValues(alpha: 0.4),
+                          AppColors.textDisabled.withValues(alpha: 0.4),
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 14.rh),
                       shape: RoundedRectangleBorder(
