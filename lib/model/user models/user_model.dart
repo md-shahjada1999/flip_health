@@ -78,6 +78,8 @@ class UserModel {
   final int corporateId;
   final int status;
   final bool isSubscribed;
+  /// Active subscription rows from profile/login — used for `plan.dependent_add`, etc.
+  final List<Map<String, dynamic>> subscriptions;
   final CompanyModel? company;
   final HealthScoreModel? healthScore;
 
@@ -109,6 +111,7 @@ class UserModel {
     this.corporateId = 0,
     this.status = 1,
     this.isSubscribed = false,
+    this.subscriptions = const [],
     this.company,
     this.healthScore,
   });
@@ -141,6 +144,7 @@ class UserModel {
         corporateId: _toInt(json['corporate_id']),
         status: _toInt(json['status'], fallback: 1),
         isSubscribed: json['isSubscribed'] == true || json['isSubscribed'] == 1,
+        subscriptions: _subscriptionListFromJson(json['subscription'] ?? json['subscriptions']),
         company: json['company'] is Map
             ? CompanyModel.fromJson(Map<String, dynamic>.from(json['company']))
             : null,
@@ -157,6 +161,14 @@ class UserModel {
     if (v is double) return v.toInt();
     if (v is String) return int.tryParse(v) ?? fallback;
     return fallback;
+  }
+
+  static List<Map<String, dynamic>> _subscriptionListFromJson(dynamic v) {
+    if (v is! List) return [];
+    return v
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
   }
 
   Map<String, dynamic> toJson() => {
@@ -187,6 +199,7 @@ class UserModel {
         'corporate_id': corporateId,
         'status': status,
         'isSubscribed': isSubscribed,
+        'subscription': subscriptions,
         'company': company?.toJson(),
         'health_score': healthScore?.toJson(),
       };

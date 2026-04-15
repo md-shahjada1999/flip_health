@@ -149,7 +149,7 @@ class AppString {
   static const String kVaccinationServicesSubtitle =
       'Book vaccination at home/center';
 
-  static const String kVisionServices = 'Vision Servives';
+  static const String kVisionServices = 'Vision Services';
   static const String kVisionServicesSubtitle = 'Book vision services';
 
   static const String kMentalWellness = 'Mental Wellness';
@@ -199,7 +199,7 @@ class AppString {
   static const String kProfileSubtitle = 'Manage profile details';
 
   static const String kSubscriptions = 'Subscriptions';
-  static const String kSubscriptionsSubtitle = 'Manage subsriptions';
+  static const String kSubscriptionsSubtitle = 'Manage subscriptions';
 
   static const String kFamilyAccounts = 'Family Accounts';
   static const String kFamilyAccountsSubtitle = 'Manage family members';
@@ -429,21 +429,111 @@ class AppString {
   // ==============================================
 
   static const String kAddNewFamilyMemberTitle = 'Add new family member';
+  static const String kAddMemberFieldLegend =
+      '* Required  ·  (optional) = optional field';
   static const String kRelationship = 'Relationship';
   static const String kRelationshipHint = 'Select relationship';
   static const String kName = 'Name';
   static const String kNameHint = 'Enter full name';
+
+  /// Shown next to labels: required vs optional.
+  static const String kRequiredStar = ' *';
+  static const String kOptionalInParens = ' (optional)';
   static const String kDateOfBirth = 'Date of birth';
   static const String kDateOfBirthHint = 'Select date of birth';
   static const String kGender = 'Gender';
   static const String kGenderHint = 'Select gender';
   static const String kPhoneNumber = 'Phone number';
   static const String kPhoneNumberHint = 'Enter phone number';
+  static const String kPhoneNumberOptionalHint = 'Phone number (optional)';
+
+  /// patient_app `not_req_for_child`
+  static const String kPhoneNotRequiredForChildren =
+      'Not required for children';
+
   static const String kSaveAndContinue = 'Save and continue';
 
-  // Disclaimer text
+  static const String kHeight = 'Height';
+  static const String kHeightFt = 'Ft';
+  static const String kHeightIn = 'In';
+  static const String kHeightRequired = 'Please select height';
+  static const String kWeight = 'Weight';
+  static const String kWeightHint = 'Weight in kg (e.g. 70)';
+  static const String kWeightRequired = 'Please enter weight';
+  static const String kWeightInvalid = 'Enter a valid weight in kg';
+  static const String kBloodPressure = 'Blood pressure';
+  static const String kBloodPressureHint = 'Blood pressure';
+  static const String kBloodPressureRequired = 'Please select blood pressure';
+  static const String kDiabetes = 'Diabetes';
+  static const String kDiabetesHint = 'Diabetes';
+  static const String kDiabetesRequired = 'Please select diabetes';
+  static const String kNameMinThreeChars = 'Name must be at least 3 characters';
+
+  // Disclaimer / OTP (aligned with patient_app `AllStrings.verify_otp_desc`, login OTP copy)
   static const String kFamilyMemberDisclaimer =
-      'Lorem ipsum is simply dummy text of the printing and typesetting Lorem ipsum is simply dummy text of the printing and typesetting';
+      'Booking and health updates may be sent to the registered mobile number when provided.';
+
+  /// Shown under the form — matches patient_app POST `/patient/member` contract.
+  static const String kAddMemberPostNote =
+      'Submitted with POST /patient/member using the same fields as the app API.';
+
+  /// patient_app `verify_otp_desc` — shown near mobile / OTP for dependents.
+  static const String kMemberOtpNote =
+      'OTP will be sent to this number. Verify OTP before proceeding further.';
+
+  static const String kSendOtp = 'Send OTP';
+  static const String kResendOtp = 'Resend OTP';
+  static const String kOtpSentTitle = 'OTP sent';
+  static const String kOtpSentSuccess = 'OTP sent successfully';
+  static const String kEnterOtpLabel = 'Enter OTP';
+  static const String kEnterOtpHint = '6-digit OTP';
+
+  /// Hint when phone is 10 digits but OTP not sent yet (field read-only).
+  static const String kOtpHintBeforeSend = 'Send OTP to enter the code';
+  static const String kSendOtpFirst =
+      'Please send OTP to the mobile number first';
+  static const String kEnterValidOtp = 'Please enter the 6-digit OTP';
+  static const String kFamilyMemberAddedSuccess =
+      'Family member added successfully';
+
+  /// Full-screen success after POST `/patient/member` (patient_app `SuccessScreen` flow).
+  static const String kAddMemberSuccessTitle = 'Member added successfully';
+  static const String kAddMemberSuccessBody =
+      'You can activate this member on your subscription when you have a free slot — open My subscriptions to continue.';
+  static const String kContinueToSubscriptions = 'Continue to subscriptions';
+
+  /// Shown when `plan.dependent_add` is false for all plans (see [SubscriptionHelper.canUserAddDependent]).
+  static const String kDependentAddNotAllowed =
+      'Your current plan does not allow adding family members. You can review options under Subscriptions.';
+
+  static const String kMySubscriptionsTitle = 'My subscriptions';
+  static const String kMySubscriptionsIntro =
+      'See who is covered under your plan. Empty slots can be filled with people from your family list.';
+  static const String kMySubscriptionsLoading = 'Loading your subscription…';
+  static const String kNoSubscriptionsTitle = 'No active subscription';
+  static const String kNoSubscriptionsBody =
+      'You do not have an active subscription yet. Purchase a plan to assign family members to slots.';
+  static const String kNoSubscriptionsPullHint = 'Pull down to refresh';
+  static const String kSubscriptionDaysLeft = 'Days left';
+  static const String kSubscriptionValidUntil = 'Valid until';
+  static const String kSubscriptionStatusActive = 'Active';
+  static const String kSubscriptionMembersTitle = 'Who is covered';
+  static const String kSubscriptionMembersSubtitle =
+      'Filled slots show who is already on this plan. Tap an empty slot to assign someone.';
+  static const String kSubscriptionSlotsProgress = 'Slots';
+  static const String kSubscriptionAddToSlot = 'Assign family member';
+  static const String kSubscriptionEmptySlotHint =
+      'Tap to choose from your saved family members';
+  static const String kSubscriptionSlotUnavailable =
+      'Only the plan owner can assign members here';
+  static const String kAddFamilyMemberFirstShort =
+      'Add a family member in your profile first, then assign them here.';
+  static const String kMemberActivatedSuccess = 'Member activated on your plan';
+  static const String kOnlyPrimaryCanActivate =
+      'Only the primary account holder can activate members on this plan.';
+  static const String kSelectMemberForSlot = 'Who should use this slot?';
+  static const String kSelectMemberForSlotSubtitle =
+      'We will link them to this plan for benefits.';
 
   // Validation messages
   static const String kRelationshipRequired = 'Please select a relationship';

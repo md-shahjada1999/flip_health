@@ -32,6 +32,13 @@ class ApiUrl {
   // Members
   static const String GET_MEMBERS = "/patient/member";
 
+  /// Request OTP on mobile when adding a dependent — same as patient_app
+  /// `AllProviders.getOTP` → `POST /patient/otp` with `{ "key": "<10-digit>", "action": "MEMBER" }`.
+  static const String MEMBER_OTP = "/patient/otp";
+
+  /// Relationship options for dependents — `GET /patient/dependent/types` (patient_app `AllProviders.relations`).
+  static const String DEPENDENT_TYPES = "/patient/dependent/types";
+
   // Consultation — Online / Virtual
   static const String ISSUES = "/patient/issues";
   static const String SPECIALITY_DOCTORS = "/patient/speciality";
@@ -113,6 +120,12 @@ class ApiUrl {
   /// Flip Cash / app wallet (recharge flow) — patient_app `Apis.wallet`, `create_wallet`.
   static const String WALLET = "/patient/wallet";
   static const String WALLET_CREATE = "/patient/wallet/create";
+
+  /// Plans & subscriptions — patient_app `AllProviders.getSubscriptionDetails` → `GET /subscription/plans`.
+  static const String SUBSCRIPTION_PLANS = "/patient/subscription/plans";
+
+  /// Assign a dependent to a plan slot — patient_app `activatePlanFamilyMember` → `POST /subscription/activate`.
+  static const String SUBSCRIPTION_ACTIVATE = "/patient/subscription/activate";
 
   /// Mental wellness & nutrition (Trijog) — same paths as patient_app `Apis`
   static const String WELLNESS_SESSION = "/patient/wellness/session";

@@ -16,6 +16,10 @@ class AppRoutes {
   static const String allServices = '/all-services';
   static const String healthCheckups = '/health-checkups';
   static const String addFamilyMember = '/add-family-member';
+  static const String addFamilyMemberSuccess = '/add-family-member-success';
+
+  /// My subscriptions & plan slots — patient_app `MySubscriptionsView`.
+  static const String mySubscriptions = '/my-subscriptions';
 
   // Address Routes
   static const String addressBook = '/address-book';

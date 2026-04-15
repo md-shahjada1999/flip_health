@@ -53,15 +53,35 @@ class WellnessOrderDetailScreen extends StatelessWidget {
             }
           }
 
+          final orderId = info['id']?.toString();
+          final statusStyle = _wellnessStatusStyle(c.infoStatus);
+          final cancelReason = cancellationReason?.trim() ?? '';
+
           return SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(12.rw, 12.rh, 12.rw, 24.rh),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _StatusBanner(
-                  orderId: info['id']?.toString(),
-                  status: c.statusLabel,
-                  cancellationReason: cancellationReason,
+                _WellnessStatusBanner(
+                  label: c.statusLabel,
+                  style: statusStyle,
+                ),
+                SizedBox(height: 12.rh),
+                _SectionCard(
+                  title: 'Order summary',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _orderSummaryRow(
+                        'Order ID',
+                        orderId == null || orderId.isEmpty ? '—' : '#$orderId',
+                      ),
+                      if (cancelReason.isNotEmpty) ...[
+                        SizedBox(height: 8.rh),
+                        _orderSummaryRow('Reason', cancelReason),
+                      ],
+                    ],
+                  ),
                 ),
                 SizedBox(height: 16.rh),
                 OrderPatientDetailsCard(
@@ -137,53 +157,121 @@ class WellnessOrderDetailScreen extends StatelessWidget {
   }
 }
 
-class _StatusBanner extends StatelessWidget {
-  const _StatusBanner({
-    required this.orderId,
-    required this.status,
-    this.cancellationReason,
+/// Same layout as pharmacy / consultation / service-request status chip.
+class _WellnessStatusBanner extends StatelessWidget {
+  const _WellnessStatusBanner({
+    required this.label,
+    required this.style,
   });
 
-  final String? orderId;
-  final String status;
-  final String? cancellationReason;
+  final String label;
+  final _WellnessStatusStyle style;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(16.rs),
+      padding: EdgeInsets.symmetric(horizontal: 16.rw, vertical: 14.rh),
       decoration: BoxDecoration(
-        color: const Color(0xFFDFF5E7),
-        borderRadius: BorderRadius.circular(12.rs),
+        color: style.bg,
+        borderRadius: BorderRadius.circular(14.rs),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          CommonText(
-            'Order ID: ${orderId ?? '—'}',
-            fontSize: 12.rf,
-            color: AppColors.success,
-          ),
-          SizedBox(height: 8.rh),
-          CommonText(
-            'Status: $status',
-            fontSize: 13.rf,
-            fontWeight: FontWeight.w600,
-            color: AppColors.success,
-          ),
-          if (cancellationReason != null && cancellationReason!.isNotEmpty) ...[
-            SizedBox(height: 6.rh),
-            CommonText(
-              'Reason: $cancellationReason',
-              fontSize: 12.rf,
-              color: AppColors.success,
+          Icon(style.icon, color: style.fg, size: 28.rs),
+          SizedBox(width: 12.rw),
+          Expanded(
+            child: CommonText(
+              '${AppString.kStatusLabel}: $label',
+              fontSize: 16.rf,
+              fontWeight: FontWeight.w700,
+              color: style.fg,
             ),
-          ],
+          ),
         ],
       ),
     );
   }
+}
+
+class _WellnessStatusStyle {
+  const _WellnessStatusStyle({
+    required this.fg,
+    required this.bg,
+    required this.icon,
+  });
+
+  final Color fg;
+  final Color bg;
+  final IconData icon;
+}
+
+_WellnessStatusStyle _wellnessStatusStyle(int status) {
+  switch (status) {
+    case 1:
+    case 6:
+      return _WellnessStatusStyle(
+        fg: AppColors.success,
+        bg: AppColors.successLight,
+        icon: Icons.check_circle_rounded,
+      );
+    case 2:
+    case 9:
+      return _WellnessStatusStyle(
+        fg: AppColors.error,
+        bg: AppColors.errorLight,
+        icon: Icons.cancel_rounded,
+      );
+    case 4:
+      return _WellnessStatusStyle(
+        fg: AppColors.warning,
+        bg: AppColors.warningLight,
+        icon: Icons.payment_rounded,
+      );
+    case 5:
+      return _WellnessStatusStyle(
+        fg: AppColors.info,
+        bg: AppColors.infoLight,
+        icon: Icons.event_rounded,
+      );
+    case 0:
+    case 3:
+      return _WellnessStatusStyle(
+        fg: AppColors.info,
+        bg: AppColors.infoLight,
+        icon: Icons.schedule_rounded,
+      );
+    default:
+      return _WellnessStatusStyle(
+        fg: AppColors.textSecondary,
+        bg: AppColors.backgroundSecondary,
+        icon: Icons.info_outline_rounded,
+      );
+  }
+}
+
+Widget _orderSummaryRow(String label, String value) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      SizedBox(
+        width: 92.rw,
+        child: CommonText(
+          label,
+          fontSize: 12.rf,
+          color: AppColors.textSecondary,
+        ),
+      ),
+      Expanded(
+        child: CommonText(
+          value,
+          fontSize: 12.rf,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+      ),
+    ],
+  );
 }
 
 class _ServiceDetails extends StatelessWidget {

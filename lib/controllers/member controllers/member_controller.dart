@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import 'package:flip_health/core/services/api%20services/api_controller.dart';
+import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/app_toasts.dart';
+import 'package:flip_health/core/helpers/subscription_helper.dart';
 import 'package:flip_health/data/repositories/member_repository.dart';
 import 'package:flip_health/model/heath%20checkup%20models/family_member_data_model.dart';
 import 'package:flip_health/routes/app_routes.dart';
@@ -68,6 +70,13 @@ class MemberController extends GetxController {
       familyMembers.where((m) => selectedMemberIds.contains(m.id)).toList();
 
   void addNewFamilyMember() {
+    if (!SubscriptionHelper.canUserAddDependent()) {
+      AppToast.error(
+        title: 'Subscription',
+        message: AppString.kDependentAddNotAllowed,
+      );
+      return;
+    }
     Get.toNamed(AppRoutes.addFamilyMember);
   }
 

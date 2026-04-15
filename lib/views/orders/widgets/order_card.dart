@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
-import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/model/order_models.dart';
@@ -60,34 +59,46 @@ class _OrderCardState extends State<OrderCard>
     super.dispose();
   }
 
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'Completed':
-        return AppColors.success;
-      case 'Pending':
-        return AppColors.warning;
-      case 'Processing':
-        return AppColors.info;
-      case 'Cancelled':
-        return AppColors.error;
-      default:
-        return AppColors.textSecondary;
+  Color _statusFg(String status) {
+    final s = status.toLowerCase();
+    if (s.contains('completed')) return AppColors.success;
+    if (s.contains('cancelled') || s.contains('expired')) {
+      return AppColors.error;
     }
+    if (s.contains('payment pending')) return AppColors.warning;
+    if (s.contains('confirmed') || s.contains('upcoming session')) {
+      return AppColors.info;
+    }
+    if (s.contains('pending') ||
+        s.contains('awaiting') ||
+        s.contains('confirm details')) {
+      return AppColors.warning;
+    }
+    if (s.contains('progress') || s.contains('processing')) {
+      return AppColors.info;
+    }
+    return AppColors.textSecondary;
   }
 
-  Color _statusBgColor(String status) {
-    switch (status) {
-      case 'Completed':
-        return AppColors.successLight;
-      case 'Pending':
-        return AppColors.warningLight;
-      case 'Processing':
-        return AppColors.infoLight;
-      case 'Cancelled':
-        return AppColors.errorLight;
-      default:
-        return AppColors.backgroundSecondary;
+  Color _statusBg(String status) {
+    final s = status.toLowerCase();
+    if (s.contains('completed')) return AppColors.successLight;
+    if (s.contains('cancelled') || s.contains('expired')) {
+      return AppColors.errorLight;
     }
+    if (s.contains('payment pending')) return AppColors.warningLight;
+    if (s.contains('confirmed') || s.contains('upcoming session')) {
+      return AppColors.infoLight;
+    }
+    if (s.contains('pending') ||
+        s.contains('awaiting') ||
+        s.contains('confirm details')) {
+      return AppColors.warningLight;
+    }
+    if (s.contains('progress') || s.contains('processing')) {
+      return AppColors.infoLight;
+    }
+    return AppColors.backgroundSecondary;
   }
 
   @override
@@ -140,6 +151,7 @@ class _OrderCardState extends State<OrderCard>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: CommonText(
@@ -147,61 +159,68 @@ class _OrderCardState extends State<OrderCard>
                               fontSize: 14.rf,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8.rw,
-                              vertical: 3.rh,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _statusBgColor(order.status),
-                              borderRadius: BorderRadius.circular(20.rs),
-                            ),
-                            child: CommonText(
-                              order.status,
-                              fontSize: 10.rf,
-                              fontWeight: FontWeight.w600,
-                              color: _statusColor(order.status),
+                          SizedBox(width: 8.rw),
+                          Flexible(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.rw,
+                                vertical: 3.rh,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _statusBg(order.status),
+                                borderRadius: BorderRadius.circular(20.rs),
+                              ),
+                              child: CommonText(
+                                order.status,
+                                fontSize: 10.rf,
+                                fontWeight: FontWeight.w600,
+                                color: _statusFg(order.status),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.end,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 4.rh),
+                      SizedBox(height: 6.rh),
                       CommonText(
-                        '${AppString.kOrderId}: ${order.id}',
+                        '#${order.id}',
                         fontSize: 11.rf,
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w400,
                       ),
                       SizedBox(height: 4.rh),
+                      CommonText(
+                        order.patientName,
+                        fontSize: 12.rf,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: 2.rh),
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Expanded(
                             child: CommonText(
-                              '${order.patientName}  •  $dateStr',
+                              dateStr,
                               fontSize: 11.rf,
                               color: AppColors.textTertiary,
                               fontWeight: FontWeight.w400,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (order.amount > 0)
+                          if (order.shouldShowPaidAmount && order.amount > 0)
                             CommonText(
                               '₹${order.amount.toStringAsFixed(0)}',
                               fontSize: 14.rf,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
-                            ),
-                          if (order.amount == 0)
-                            CommonText(
-                              'FREE',
-                              fontSize: 12.rf,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.success,
                             ),
                         ],
                       ),

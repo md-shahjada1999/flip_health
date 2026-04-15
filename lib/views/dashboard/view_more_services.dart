@@ -551,7 +551,7 @@ class _ServicesScreenState extends State<ServicesScreen>
                     icon: AppString.kIconSubscriptions,
                     title: AppString.kSubscriptions,
                     subtitle: AppString.kSubscriptionsSubtitle,
-                    onTap: () {},
+                    onTap: () => Get.toNamed(AppRoutes.mySubscriptions),
                   ),
                 ),
                 _buildAnimatedCard(

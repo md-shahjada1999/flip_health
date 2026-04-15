@@ -27,6 +27,7 @@ import 'package:flip_health/bindings/razor_pay_binding.dart';
 import 'package:flip_health/bindings/video_call_binding.dart';
 import 'package:flip_health/bindings/dashboard%20bindings/wallet_binding.dart';
 import 'package:flip_health/bindings/profile%20bindings/profile_binding.dart';
+import 'package:flip_health/bindings/subscriptions/my_subscriptions_binding.dart';
 import 'package:flip_health/routes/app_routes.dart';
 import 'package:flip_health/views/health_score/health_score_view.dart';
 import 'package:flip_health/views/address/address_form_screen.dart';
@@ -38,6 +39,7 @@ import 'package:flip_health/views/consultation/consultation_overview_screen.dart
 import 'package:flip_health/views/dashboard/dashboard_screen.dart';
 import 'package:flip_health/views/dashboard/view_more_services.dart';
 import 'package:flip_health/views/daignostics/health_checkup/add_family_member_page.dart';
+import 'package:flip_health/views/daignostics/health_checkup/add_family_member_success_screen.dart';
 import 'package:flip_health/views/daignostics/health_checkup/health_checkup_screen.dart';
 import 'package:flip_health/views/daignostics/lab_test/lab_test_member_selection_screen.dart';
 import 'package:flip_health/views/daignostics/lab_test/lab_test_search_screen.dart';
@@ -67,6 +69,7 @@ import 'package:flip_health/views/orders/orders_screen.dart';
 import 'package:flip_health/views/razor_pay/razor_pay_screen.dart';
 import 'package:flip_health/views/dashboard/wallet/wallet_screen.dart';
 import 'package:flip_health/views/profile/profile_screen.dart';
+import 'package:flip_health/views/subscriptions/my_subscriptions_screen.dart';
 
 class AppPages {
   static final AppPages _singleton = AppPages._internal();
@@ -123,6 +126,15 @@ class AppPages {
       name: AppRoutes.addFamilyMember,
       page: () => AddFamilyMemberScreen(),
       binding: AddFamilyMemberBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.addFamilyMemberSuccess,
+      page: () => const AddFamilyMemberSuccessScreen(),
+    ),
+    GetPage(
+      name: AppRoutes.mySubscriptions,
+      page: () => const MySubscriptionsScreen(),
+      binding: MySubscriptionsBinding(),
     ),
     GetPage(
       name: AppRoutes.labTests,

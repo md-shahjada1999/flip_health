@@ -50,6 +50,7 @@ class Order {
     final patientName = _patientName(json, info);
     final vendorName = _vendorName(info);
     final items = _buildLineItems(json, info, amount, tx);
+    final status = _mapStatus(json, info, tx);
 
     return Order(
       id: id.isEmpty ? '—' : id,
@@ -57,11 +58,26 @@ class Order {
       patientName: patientName,
       date: date,
       amount: amount,
-      status: _mapStatus(json, info, tx),
+      status: status,
       vendorName: vendorName.isEmpty ? '—' : vendorName,
       items: items,
       rawJson: Map<String, dynamic>.from(json),
     );
+  }
+
+  /// Show list price only once the order is in a paid / confirmed state (not pending quotes).
+  bool get shouldShowPaidAmount {
+    final s = status.toLowerCase();
+    if (s.contains('cancelled') ||
+        s.contains('expired') ||
+        s.contains('refund') ||
+        s.contains('failed')) {
+      return false;
+    }
+    return s.contains('completed') ||
+        s.contains('confirmed') ||
+        s.contains('booked') ||
+        s.contains('upcoming session');
   }
 }
 
@@ -135,19 +151,45 @@ double _parseAmount(Map<String, dynamic> json) {
   return 0;
 }
 
+String? _trimName(String? s) {
+  if (s == null) return null;
+  final t = s.trim();
+  return t.isEmpty ? null : t;
+}
+
 String _patientName(Map<String, dynamic> json, Map<String, dynamic> info) {
   final u = _asMap(json['user']);
   final m = _asMap(json['member']);
-  final candidates = [
-    u['name']?.toString(),
-    m['name']?.toString(),
-    json['patient_name']?.toString(),
-    json['patientName']?.toString(),
-    info['patient_name']?.toString(),
-    info['member_name']?.toString(),
+  final iu = _asMap(info['user']);
+  final im = _asMap(info['member']);
+  final patientObj = _asMap(info['patient']);
+  if (patientObj.isEmpty) {
+    // `patient` may be a string in some payloads
+    final pRaw = info['patient'];
+    if (pRaw is String && pRaw.trim().isNotEmpty) return pRaw.trim();
+  }
+  final details = _asMap(info['details']);
+  final add = _asMap(info['additional_info']);
+
+  final candidates = <String?>[
+    _trimName(u['name']?.toString()),
+    _trimName(iu['name']?.toString()),
+    _trimName(m['name']?.toString()),
+    _trimName(im['name']?.toString()),
+    _trimName(patientObj['name']?.toString()),
+    _trimName(patientObj['full_name']?.toString()),
+    _trimName(details['patient_name']?.toString()),
+    _trimName(_asMap(details['patient'])['name']?.toString()),
+    _trimName(add['patient_name']?.toString()),
+    _trimName(json['patient_name']?.toString()),
+    _trimName(json['patientName']?.toString()),
+    _trimName(info['patient_name']?.toString()),
+    _trimName(info['member_name']?.toString()),
+    _trimName(info['name']?.toString()),
+    _trimName(json['name']?.toString()),
   ];
   for (final c in candidates) {
-    if (c != null && c.trim().isNotEmpty) return c.trim();
+    if (c != null) return c;
   }
   return '—';
 }
@@ -215,22 +257,47 @@ String _mapStatus(
   String tx,
 ) {
   final payment = json['status']?.toString().toLowerCase() ?? '';
-  if (['cancelled', 'failed', 'refunded'].contains(payment)) {
+  if (['cancelled', 'canceled', 'failed', 'refunded'].contains(payment)) {
     return 'Cancelled';
   }
-  if (['success', 'paid', 'completed'].contains(payment)) {
+  if (['success', 'paid', 'completed', 'complete'].contains(payment)) {
     return 'Completed';
   }
-  if (['pending', 'created'].contains(payment)) {
-    return 'Pending';
+  if (['pending', 'created', 'processing'].contains(payment)) {
+    return payment == 'processing' ? 'Processing' : 'Pending';
   }
 
   final st = info['status'];
   if (st is int) {
-    if (st == 1) return 'Completed';
-    if (st == 2) return 'Cancelled';
-    if (st == 6) return 'Processing';
-    if ([0, 3, 4, 5, 7, 8].contains(st)) return 'Pending';
+    switch (st) {
+      case 1:
+        return 'Completed';
+      case 2:
+        return 'Cancelled';
+      case 9:
+        return 'Expired';
+      case 4:
+        return 'Payment pending';
+      case 5:
+        return 'Confirmed';
+      case 3:
+        return 'Confirm details';
+      case 0:
+        return 'Awaiting confirmation';
+      case 6:
+        return 'In progress';
+      case 7:
+      case 8:
+        return 'Processing';
+      default:
+        break;
+    }
+  }
+
+  final stStr = info['status']?.toString().toLowerCase() ?? '';
+  if (stStr.contains('cancel')) return 'Cancelled';
+  if (stStr.contains('complete') || stStr.contains('paid')) {
+    return 'Completed';
   }
 
   if (tx == 'CONSULTATION' && info['date'] == null) {
