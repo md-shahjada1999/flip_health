@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 // ---------------------------------------------------------------------------
 // DiagnosticsPackage — from GET /diagnostics/packages?type=special
 // ---------------------------------------------------------------------------
@@ -235,16 +237,33 @@ class AhcVendorPricingResponse {
     return AhcVendorPricingResponse(
       pathologyVendors: _parseVendors(rawPath),
       radiologyVendors: _parseVendors(rawRad),
-      pathologyCategoryExists: rawPath is List && rawPath.isNotEmpty,
-      radiologyCategoryExists: rawRad is List && rawRad.isNotEmpty,
+      pathologyCategoryExists: _vendorPayloadExists(rawPath),
+      radiologyCategoryExists: _vendorPayloadExists(rawRad),
     );
   }
 
+  /// Sponsored pricing may return a single vendor [Map] or a [List] (patient_app `ahcVendorDetails`).
+  static bool _vendorPayloadExists(dynamic raw) {
+    if (raw is List) return raw.isNotEmpty;
+    if (raw is Map) return raw.isNotEmpty;
+    return false;
+  }
+
   static List<AhcVendor> _parseVendors(dynamic raw) {
-    if (raw is! List) return [];
-    return raw
-        .whereType<Map<String, dynamic>>()
-        .map((e) => AhcVendor.fromJson(e))
+    final maps = <Map<String, dynamic>>[];
+    if (raw is List) {
+      for (final e in raw) {
+        if (e is Map<String, dynamic>) {
+          maps.add(e);
+        } else if (e is Map) {
+          maps.add(Map<String, dynamic>.from(e));
+        }
+      }
+    } else if (raw is Map && raw.isNotEmpty) {
+      maps.add(Map<String, dynamic>.from(raw));
+    }
+    return maps
+        .map(AhcVendor.fromJson)
         .where((v) => v.code != 'unknown')
         .toList();
   }
@@ -278,18 +297,26 @@ class AhcVendor {
   });
 
   factory AhcVendor.fromJson(Map<String, dynamic> json) {
+    final rawList = json['packages'] as List<dynamic>?;
+    final packages = <AhcVendorPackage>[];
+    if (rawList != null) {
+      for (final e in rawList) {
+        if (e is Map<String, dynamic>) {
+          packages.add(AhcVendorPackage.fromJson(e));
+        } else if (e is Map) {
+          packages.add(
+              AhcVendorPackage.fromJson(Map<String, dynamic>.from(e)));
+        }
+      }
+    }
     return AhcVendor(
-      id: json['id'] as int? ?? 0,
+      id: AhcVendorPackage._parseInt(json['id']),
       name: json['name'] as String? ?? '',
       code: json['code'] as String? ?? '',
-      logo: json['logo'] as String?,
+      logo: json['logo']?.toString(),
       category: json['category'] as String? ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0,
-      packages: (json['packages'] as List<dynamic>?)
-              ?.whereType<Map<String, dynamic>>()
-              .map((e) => AhcVendorPackage.fromJson(e))
-              .toList() ??
-          [],
+      packages: packages,
     );
   }
 }
@@ -313,19 +340,63 @@ class AhcVendorPackage {
     this.pricing,
   });
 
+  /// Display name for UI — API may use `name`, `package_name`, nested `package`, or `title`.
+  static String _parsePackageName(Map<String, dynamic> json) {
+    String? trimStr(dynamic v) {
+      if (v == null) return null;
+      final s = v.toString().trim();
+      return s.isEmpty ? null : s;
+    }
+
+    final direct = trimStr(json['name']);
+    if (direct != null) return direct;
+    final packageName = trimStr(json['package_name']);
+    if (packageName != null) return packageName;
+    final title = trimStr(json['title']);
+    if (title != null) return title;
+
+    final pkg = json['package'];
+    if (pkg is Map) {
+      final m = Map<String, dynamic>.from(pkg);
+      final n = trimStr(m['name']) ?? trimStr(m['title']);
+      if (n != null) return n;
+    }
+    final info = json['info'];
+    if (info is Map) {
+      final m = Map<String, dynamic>.from(info);
+      final n = trimStr(m['name']);
+      if (n != null) return n;
+    }
+    return '';
+  }
+
+  static int _parseInt(dynamic v, [int fallback = 0]) {
+    if (v == null) return fallback;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v.trim()) ?? fallback;
+    return fallback;
+  }
+
   factory AhcVendorPackage.fromJson(Map<String, dynamic> json) {
     return AhcVendorPackage(
-      id: json['id'] as int? ?? 0,
-      name: json['name'] as String? ?? '',
+      id: _parseInt(json['id']),
+      name: _parsePackageName(json),
       category: json['category'] as String? ?? '',
       free: json['free'] == true,
-      qty: json['qty'] as int? ?? 1,
+      qty: _parseInt(json['qty'], 1),
       user: json['user'] is Map<String, dynamic>
           ? AhcVendorUser.fromJson(json['user'])
-          : null,
+          : json['user'] is Map
+              ? AhcVendorUser.fromJson(
+                  Map<String, dynamic>.from(json['user'] as Map))
+              : null,
       pricing: json['pricing'] is Map<String, dynamic>
           ? AhcVendorItemPricing.fromJson(json['pricing'])
-          : null,
+          : json['pricing'] is Map
+              ? AhcVendorItemPricing.fromJson(
+                  Map<String, dynamic>.from(json['pricing'] as Map))
+              : null,
     );
   }
 }
@@ -426,6 +497,43 @@ class AhcSlot {
       };
 
   String get displayTime => '$startTime - $endTime';
+
+  /// e.g. "Tuesday, 15 April 2025"
+  String get formattedScheduleDate {
+    if (slotDate.isEmpty) return '—';
+    try {
+      final d = DateTime.parse(slotDate);
+      return DateFormat('EEEE, d MMMM y').format(d);
+    } catch (_) {
+      return slotDate;
+    }
+  }
+
+  /// e.g. "9:00 AM – 10:00 AM"
+  String get formattedScheduleTimeRange {
+    final s = _parseClock(startTime);
+    final e = _parseClock(endTime);
+    if (s != null && e != null) {
+      final ds = DateTime(1970, 1, 1, s.$1, s.$2, s.$3);
+      final de = DateTime(1970, 1, 1, e.$1, e.$2, e.$3);
+      return '${DateFormat.jm().format(ds)} – ${DateFormat.jm().format(de)}';
+    }
+    return displayTime;
+  }
+
+  static (int, int, int)? _parseClock(String raw) {
+    final t = raw.trim();
+    if (t.isEmpty) return null;
+    final parts = t.split(':');
+    if (parts.length < 2) return null;
+    final h = int.tryParse(parts[0].replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    final m = int.tryParse(parts[1]) ?? 0;
+    var sec = 0;
+    if (parts.length > 2) {
+      sec = int.tryParse(parts[2].replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    }
+    return (h, m, sec);
+  }
 }
 
 class AhcSlotsResponse {

@@ -15,6 +15,8 @@ class FamilyMember {
   final bool hasPackages;
   final int corporateId;
   final bool isSubscribed;
+  /// From members API `AHCAvailable` — eligible for sponsored annual health checkup.
+  final bool ahcAvailable;
 
   FamilyMember({
     required this.id,
@@ -33,6 +35,7 @@ class FamilyMember {
     this.hasPackages = false,
     this.corporateId = 0,
     this.isSubscribed = false,
+    this.ahcAvailable = false,
   });
 factory FamilyMember.fromJson(Map<String, dynamic> json) {
   final rel = (json['relationship'] ?? '').toString().trim();
@@ -55,6 +58,7 @@ factory FamilyMember.fromJson(Map<String, dynamic> json) {
     hasPackages: subscribed || json['canActivate'] == 1,
     corporateId: _safeInt(json['corporate_id']),
     isSubscribed: subscribed,
+    ahcAvailable: json['AHCAvailable'] == true,
   );
 }
 
@@ -81,6 +85,7 @@ static int _safeInt(dynamic v) {
         'hasPackages': hasPackages,
         'corporate_id': corporateId,
         'isSubscribed': isSubscribed,
+        'AHCAvailable': ahcAvailable,
       };
 
 static List<FamilyMember> fromMembersResponse(Map<String, dynamic> json) {

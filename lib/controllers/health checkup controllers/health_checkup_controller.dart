@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:flip_health/controllers/address%20controllers/address_controller.dart';
@@ -6,20 +7,91 @@ import 'package:flip_health/core/utils/print_log.dart';
 import 'package:flip_health/data/repositories/health_checkup_repository.dart';
 import 'package:flip_health/model/heath%20checkup%20models/diagnostics_package_model.dart';
 import 'package:flip_health/model/heath%20checkup%20models/family_member_data_model.dart';
+import 'package:flip_health/model/heath%20checkup%20models/lab_test_model.dart';
+import 'package:flip_health/routes/app_routes.dart';
 import 'package:flip_health/views/daignostics/health_checkup/explore_health_packages_page.dart';
 import 'package:flip_health/views/daignostics/health_checkup/health_checkup_overview_page.dart';
+import 'package:flip_health/views/daignostics/health_checkup/health_checkup_booking_success_screen.dart';
 import 'package:flip_health/views/daignostics/health_checkup/health_selection_slot_page.dart';
+import 'package:flip_health/views/daignostics/health_checkup/package_inclusions_screen.dart';
 import 'package:flip_health/views/daignostics/health_checkup/select_plan_page.dart';
 
 class HealthCheckupsController extends GetxController {
   final HealthCheckupRepository _repository;
 
   HealthCheckupsController({required HealthCheckupRepository repository})
-      : _repository = repository;
+    : _repository = repository;
+
+  // -------------------------------------------------------------------------
+  // Entry (dashboard AHC → `Get.arguments['sponsored'] == true`)
+  // -------------------------------------------------------------------------
+
+  final RxBool sponsoredHealthCheckup = false.obs;
+  final RxBool filterAhcMembersOnly = false.obs;
+
+  static bool _routeBoolFlag(Map<dynamic, dynamic>? map, String key) {
+    if (map == null || !map.containsKey(key)) return false;
+    final v = map[key];
+    if (v == true) return true;
+    if (v == false || v == null) return false;
+    if (v is num) return v != 0;
+    final s = v.toString().trim().toLowerCase();
+    return s == 'true' || s == '1' || s == 'yes';
+  }
+
+  /// Call when opening [HealthCheckupsScreen] (sponsored / `ahc` from dashboard sets filters + sponsored APIs).
+  void applyEntryArguments(dynamic args) {
+    _resetBookingFlow();
+    final map = args is Map ? Map<dynamic, dynamic>.from(args) : null;
+    final flow =
+        map != null &&
+        (_routeBoolFlag(map, 'sponsored') || _routeBoolFlag(map, 'ahc'));
+    sponsoredHealthCheckup.value = flow;
+    filterAhcMembersOnly.value = flow;
+  }
+
+  /// Sponsored or AHC entry — hide add-member on the family picker.
+  bool get hideAddFamilyMemberOnPicker =>
+      sponsoredHealthCheckup.value || filterAhcMembersOnly.value;
+
+  void _resetBookingFlow() {
+    selectedMembers.clear();
+    memberPackageMap.clear();
+    _packagesCache.clear();
+    activeMemberTab.value = 0;
+    currentPackages.clear();
+    vendorPricing.value = null;
+    selectedPathologyVendor.value = null;
+    selectedRadiologyVendor.value = null;
+    pathologySlotsResponse.value = null;
+    radiologySlotsResponse.value = null;
+    selectedPathologySlot.value = null;
+    selectedRadiologySlot.value = null;
+    pathologyTimeSlot.value = '';
+    radiologyTimeSlot.value = '';
+    currentSlotCategory.value = 'pathology';
+    pathologyDateIndex.value = 0;
+    radiologyDateIndex.value = 0;
+    bookingPreview.value = null;
+    lastFinalizeResult.value = null;
+    altPhoneController.clear();
+    useAppWalletForBooking.value = false;
+  }
 
   // -------------------------------------------------------------------------
   // State
   // -------------------------------------------------------------------------
+
+  /// API-driven booking summary after slots (`overview=yes` preview).
+  final Rxn<BookingOverviewResponse> bookingPreview =
+      Rxn<BookingOverviewResponse>();
+  final Rxn<DiagnosticsBookingApiResult> lastFinalizeResult =
+      Rxn<DiagnosticsBookingApiResult>();
+  final RxBool isBookingPreviewLoading = false.obs;
+  final RxBool isPlacingOrder = false.obs;
+  final RxBool useAppWalletForBooking = false.obs;
+
+  final TextEditingController altPhoneController = TextEditingController();
 
   final RxBool isLoading = false.obs;
   final RxBool isVendorLoading = false.obs;
@@ -79,7 +151,8 @@ class HealthCheckupsController extends GetxController {
   bool get hasOnlyRadiology => !containsPathology && containsRadiology;
 
   // Slot selection — pathology
-  final RxList<Map<String, String>> pathologyDates = <Map<String, String>>[].obs;
+  final RxList<Map<String, String>> pathologyDates =
+      <Map<String, String>>[].obs;
   final RxInt pathologyDateIndex = 0.obs;
   final RxString pathologyTimeSlot = ''.obs;
   final Rxn<AhcSlot> selectedPathologySlot = Rxn<AhcSlot>();
@@ -87,7 +160,8 @@ class HealthCheckupsController extends GetxController {
   final RxString pathologyMonthYear = ''.obs;
 
   // Slot selection — radiology
-  final RxList<Map<String, String>> radiologyDates = <Map<String, String>>[].obs;
+  final RxList<Map<String, String>> radiologyDates =
+      <Map<String, String>>[].obs;
   final RxInt radiologyDateIndex = 0.obs;
   final RxString radiologyTimeSlot = ''.obs;
   final Rxn<AhcSlot> selectedRadiologySlot = Rxn<AhcSlot>();
@@ -96,12 +170,6 @@ class HealthCheckupsController extends GetxController {
 
   // Current slot category being selected
   final RxString currentSlotCategory = 'pathology'.obs;
-
-  // Package detail (for expand)
-  final Rxn<DiagnosticsPackageDetail> selectedPackageDetail =
-      Rxn<DiagnosticsPackageDetail>();
-  final RxInt expandedPackageId = (-1).obs;
-  final RxBool isDetailLoading = false.obs;
 
   // -------------------------------------------------------------------------
   // Navigation
@@ -119,9 +187,11 @@ class HealthCheckupsController extends GetxController {
     Get.to(() => const SelectPlanPage());
   }
 
-  void continueToVendorSelection() {
+  /// Loads pricing first; if only unknown vendors, goes straight to slots (no vendor UI flash).
+  Future<void> continueToVendorSelection() async {
     final allSelected = selectedMembers.every(
-        (m) => memberPackageMap.containsKey(m.id));
+      (m) => memberPackageMap.containsKey(m.id),
+    );
     if (!allSelected) {
       AppToast.error(
         title: 'Incomplete',
@@ -129,21 +199,38 @@ class HealthCheckupsController extends GetxController {
       );
       return;
     }
+
+    await fetchVendorPricing();
+
+    final vp = vendorPricing.value;
+    if (vp == null) return;
+
+    if (!vp.hasSelectablePathology && !vp.hasSelectableRadiology) {
+      _navigateToSlots();
+      return;
+    }
+
     Get.to(() => const ExploreHealthPackagesPage());
   }
 
   void continueToSlotSelection() {
     final vp = vendorPricing.value;
-    if (vp != null && vp.hasSelectablePathology &&
+    if (vp != null &&
+        vp.hasSelectablePathology &&
         selectedPathologyVendor.value == null) {
       AppToast.error(
-          title: 'Error', message: 'Please select a pathology vendor');
+        title: 'Error',
+        message: 'Please select a pathology vendor',
+      );
       return;
     }
-    if (vp != null && vp.hasSelectableRadiology &&
+    if (vp != null &&
+        vp.hasSelectableRadiology &&
         selectedRadiologyVendor.value == null) {
       AppToast.error(
-          title: 'Error', message: 'Please select a radiology vendor');
+        title: 'Error',
+        message: 'Please select a radiology vendor',
+      );
       return;
     }
 
@@ -164,7 +251,7 @@ class HealthCheckupsController extends GetxController {
     Get.to(() => const HealthCheckUpSlotSelectionPage());
   }
 
-  void confirmCurrentSlot() {
+  Future<void> confirmCurrentSlot() async {
     final cat = currentSlotCategory.value;
 
     if (cat == 'pathology') {
@@ -187,7 +274,158 @@ class HealthCheckupsController extends GetxController {
       }
     }
 
-    Get.to(() => const HealthCheckupOverviewScreen());
+    await _loadBookingPreviewAndOpenOverview();
+  }
+
+  Map<String, dynamic> buildHealthCheckupBookingBody() {
+    final ac = Get.find<AddressController>();
+    final addressId = ac.selectedAddress.value?.id ?? '';
+
+    final users = memberPackageMap.entries
+        .map(
+          (e) => {
+            'user_id': int.tryParse(e.key) ?? 0,
+            'packages': [e.value],
+          },
+        )
+        .toList();
+
+    final body = <String, dynamic>{
+      'booking_type': 'special',
+      'sponsored': sponsoredHealthCheckup.value,
+      'address_id': addressId,
+      'alternative_phone': altPhoneController.text.trim(),
+      'users': users,
+    };
+
+    if (containsPathology && selectedPathologySlot.value != null) {
+      final s = selectedPathologySlot.value!;
+      body['pathology_slot'] = {
+        'slot_id': s.slotId,
+        'vendor_code': s.vendorCode,
+        'slot_date': s.slotDate,
+        'start_time': s.startTime,
+        'end_time': s.endTime,
+      };
+    }
+    if (containsRadiology && selectedRadiologySlot.value != null) {
+      final s = selectedRadiologySlot.value!;
+      body['radiology_slot'] = {
+        'slot_id': s.slotId,
+        'vendor_code': s.vendorCode,
+        'slot_date': s.slotDate,
+        'start_time': s.startTime,
+        'end_time': s.endTime,
+      };
+    }
+
+    return body;
+  }
+
+  Future<void> _loadBookingPreviewAndOpenOverview() async {
+    isBookingPreviewLoading.value = true;
+    bookingPreview.value = null;
+    try {
+      final res = await _repository.postDiagnosticsOrder(
+        body: buildHealthCheckupBookingBody(),
+        preview: true,
+        useAppWallet: 'no',
+      );
+      bookingPreview.value = res.overview;
+      final alt = res.overview.alternativePhone;
+      if (alt.isNotEmpty) {
+        altPhoneController.text = alt;
+      }
+      Get.to(() => const HealthCheckupOverviewScreen());
+    } catch (e) {
+      AppToast.error(title: 'Error', message: '$e');
+    } finally {
+      isBookingPreviewLoading.value = false;
+    }
+  }
+
+  /// Reload preview after failed load or when returning to this screen.
+  Future<void> refreshBookingPreview() async {
+    isBookingPreviewLoading.value = true;
+    try {
+      final res = await _repository.postDiagnosticsOrder(
+        body: buildHealthCheckupBookingBody(),
+        preview: true,
+        useAppWallet: 'no',
+      );
+      bookingPreview.value = res.overview;
+      final alt = res.overview.alternativePhone;
+      if (alt.isNotEmpty && altPhoneController.text.isEmpty) {
+        altPhoneController.text = alt;
+      }
+    } catch (e) {
+      AppToast.error(title: 'Error', message: '$e');
+    } finally {
+      isBookingPreviewLoading.value = false;
+    }
+  }
+
+  /// Called from overview payment sheet — `overview=no`, optional wallet.
+  Future<void> finalizeHealthCheckupBooking() async {
+    final wallet = useAppWalletForBooking.value ? 'yes' : 'no';
+    isPlacingOrder.value = true;
+    try {
+      final res = await _repository.postDiagnosticsOrder(
+        body: buildHealthCheckupBookingBody(),
+        preview: false,
+        useAppWallet: wallet,
+      );
+      lastFinalizeResult.value = res;
+
+      final rp = res.razorpayPayload;
+      if (rp != null && rp.isNotEmpty) {
+        final inv = res.overview.invoiceId ?? '';
+        Get.toNamed(
+          AppRoutes.razorPay,
+          arguments: [
+            'fromHealthCheckup',
+            Map<String, dynamic>.from(rp),
+            <String, dynamic>{
+              'invoice_id': inv,
+              'title': 'Health checkup booking',
+              'subtitle': _successSubtitle(res.overview),
+            },
+          ],
+        );
+        return;
+      }
+
+      _navigateToBookingSuccess(res.overview);
+    } catch (e) {
+      AppToast.error(title: 'Booking', message: '$e');
+    } finally {
+      isPlacingOrder.value = false;
+    }
+  }
+
+  String _successSubtitle(BookingOverviewResponse o) {
+    final parts = <String>[];
+    if ((o.invoiceId ?? '').isNotEmpty) {
+      parts.add('Invoice ${o.invoiceId}');
+    }
+    final n = o.items.length;
+    if (n > 0) parts.add('$n package${n == 1 ? '' : 's'}');
+    return parts.isEmpty ? 'Your health checkup is booked.' : parts.join(' · ');
+  }
+
+  void _navigateToBookingSuccess(BookingOverviewResponse o) {
+    Get.offAll(
+      () => HealthCheckupBookingSuccessScreen(
+        invoiceId: o.invoiceId,
+        summaryLine: _successSubtitle(o),
+      ),
+    );
+  }
+
+  @override
+  void onClose() {
+    altPhoneController.dispose();
+    super.onClose();
   }
 
   // -------------------------------------------------------------------------
@@ -206,7 +444,10 @@ class HealthCheckupsController extends GetxController {
     isLoading.value = true;
     try {
       final userId = int.tryParse(member.id) ?? 0;
-      final result = await _repository.getPackages(userId: userId);
+      final result = await _repository.getPackages(
+        userId: userId,
+        sponsored: sponsoredHealthCheckup.value,
+      );
       _packagesCache[member.id] = result;
       currentPackages.assignAll(result);
     } catch (e) {
@@ -228,27 +469,17 @@ class HealthCheckupsController extends GetxController {
       selectedMembers.every((m) => memberPackageMap.containsKey(m.id));
 
   // -------------------------------------------------------------------------
-  // Package detail expand
+  // Package inclusions (full screen)
   // -------------------------------------------------------------------------
 
-  Future<void> fetchPackageDetail(int id) async {
-    if (expandedPackageId.value == id) {
-      expandedPackageId.value = -1;
-      selectedPackageDetail.value = null;
-      return;
-    }
-
-    isDetailLoading.value = true;
-    expandedPackageId.value = id;
-    selectedPackageDetail.value = null;
-
+  /// Opens full-screen inclusions for the **pricing** id (not package id) — matches patient_app `getPackageInclusions(pricing.id)`.
+  Future<void> openPackageInclusions(int pricingId) async {
+    if (pricingId <= 0) return;
     try {
-      selectedPackageDetail.value = await _repository.getPackageDetail(id);
+      final items = await _repository.getPackageInclusions(pricingId);
+      await Get.to<void>(() => PackageInclusionsScreen(items: items));
     } catch (e) {
       AppToast.error(title: 'Error', message: '$e');
-      expandedPackageId.value = -1;
-    } finally {
-      isDetailLoading.value = false;
     }
   }
 
@@ -269,42 +500,35 @@ class HealthCheckupsController extends GetxController {
     selectedRadiologyVendor.value = null;
 
     try {
-      final users = memberPackageMap.entries.map((e) => {
-            'user_id': int.tryParse(e.key) ?? 0,
-            'packages': [e.value],
-          }).toList();
+      final users = memberPackageMap.entries
+          .map(
+            (e) => {
+              'user_id': int.tryParse(e.key) ?? 0,
+              'packages': [e.value],
+            },
+          )
+          .toList();
 
       vendorPricing.value = await _repository.getVendorPricing(
         addressId: addressId,
-        sponsored: false,
+        sponsored: sponsoredHealthCheckup.value,
         users: users,
       );
 
       final vp = vendorPricing.value;
-      if (vp != null &&
-          !vp.hasSelectablePathology &&
-          !vp.hasSelectableRadiology) {
-        _skipToSlotsWithUnknownVendor();
+      if (vp != null && sponsoredHealthCheckup.value) {
+        if (vp.pathologyVendors.length == 1) {
+          selectedPathologyVendor.value = vp.pathologyVendors.first;
+        }
+        if (vp.radiologyVendors.length == 1) {
+          selectedRadiologyVendor.value = vp.radiologyVendors.first;
+        }
       }
     } catch (e) {
       AppToast.error(title: 'Error', message: '$e');
     } finally {
       isVendorLoading.value = false;
     }
-  }
-
-  void _skipToSlotsWithUnknownVendor() {
-    final firstCategory = containsPathology ? 'pathology' : 'radiology';
-    currentSlotCategory.value = firstCategory;
-
-    if (firstCategory == 'pathology') {
-      _initDates(pathologyDates, pathologyMonthYear);
-    } else {
-      _initDates(radiologyDates, radiologyMonthYear);
-    }
-    _fetchSlotsForCategory(firstCategory);
-
-    Get.off(() => const HealthCheckUpSlotSelectionPage());
   }
 
   void selectPathologyVendor(AhcVendor vendor) {
@@ -319,17 +543,18 @@ class HealthCheckupsController extends GetxController {
   // Slots
   // -------------------------------------------------------------------------
 
-  void _initDates(
-      RxList<Map<String, String>> dates, RxString monthYear) {
+  void _initDates(RxList<Map<String, String>> dates, RxString monthYear) {
     final now = DateTime.now();
     final dayFmt = DateFormat('dd');
     final weekFmt = DateFormat('EEE');
     final monthFmt = DateFormat('MMM yyyy');
 
-    dates.assignAll(List.generate(7, (i) {
-      final d = now.add(Duration(days: i + 1));
-      return {'day': dayFmt.format(d), 'weekday': weekFmt.format(d)};
-    }));
+    dates.assignAll(
+      List.generate(7, (i) {
+        final d = now.add(Duration(days: i + 1));
+        return {'day': dayFmt.format(d), 'weekday': weekFmt.format(d)};
+      }),
+    );
 
     monthYear.value = '${monthFmt.format(now)} (IST)';
   }
@@ -344,13 +569,13 @@ class HealthCheckupsController extends GetxController {
         : (selectedRadiologyVendor.value?.code ?? 'unknown');
 
     final dates = category == 'pathology' ? pathologyDates : radiologyDates;
-    final dateIdx =
-        category == 'pathology' ? pathologyDateIndex.value : radiologyDateIndex.value;
+    final dateIdx = category == 'pathology'
+        ? pathologyDateIndex.value
+        : radiologyDateIndex.value;
     if (dates.isEmpty) return;
 
     final now = DateTime.now();
-    final selectedDate =
-        now.add(Duration(days: dateIdx + 1));
+    final selectedDate = now.add(Duration(days: dateIdx + 1));
     final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
 
     isSlotsLoading.value = true;
@@ -388,7 +613,11 @@ class HealthCheckupsController extends GetxController {
     _fetchSlotsForCategory(category);
   }
 
-  void onTimeSlotSelected(String category, String time, AhcSlotsResponse slots) {
+  void onTimeSlotSelected(
+    String category,
+    String time,
+    AhcSlotsResponse slots,
+  ) {
     final allSlots = [...slots.morning, ...slots.afternoon, ...slots.evening];
     final slot = allSlots.firstWhereOrNull((s) => s.displayTime == time);
 

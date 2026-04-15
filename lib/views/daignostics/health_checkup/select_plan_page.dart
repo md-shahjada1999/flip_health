@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flip_health/controllers/health%20checkup%20controllers/health_checkup_controller.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
+import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
@@ -40,8 +41,10 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
           Expanded(child: _buildPackageList()),
           Obx(() => ActionButton(
                 text: 'Continue',
-                onPressed: controller.allMembersHavePackage
-                    ? controller.continueToVendorSelection
+                isLoading: controller.isVendorLoading.value,
+                onPressed: controller.allMembersHavePackage &&
+                        !controller.isVendorLoading.value
+                    ? () => controller.continueToVendorSelection()
                     : null,
               )),
         ],
@@ -202,9 +205,6 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
           : null;
 
       final selectionMap = Map<String, int>.from(controller.memberPackageMap);
-      final expandedId = controller.expandedPackageId.value;
-      final detail = controller.selectedPackageDetail.value;
-      final detailLoading = controller.isDetailLoading.value;
 
       return ListView.builder(
         padding: EdgeInsets.all(16.rs),
@@ -213,7 +213,6 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
           final pkg = packages[index];
           final isSelected = activeMember != null &&
               selectionMap[activeMember.id] == pkg.id;
-          final isExpanded = expandedId == pkg.id;
 
           return FadeInUp(
             duration: const Duration(milliseconds: 350),
@@ -221,15 +220,14 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
             child: _PackageCard(
               package: pkg,
               isSelected: isSelected,
-              isExpanded: isExpanded,
-              detail: isExpanded ? detail : null,
-              isDetailLoading: detailLoading && isExpanded,
               onTap: () {
                 if (activeMember != null) {
                   controller.selectPackageForMember(activeMember.id, pkg.id);
                 }
               },
-              onExpand: () => controller.fetchPackageDetail(pkg.id),
+              onSeeInclusions: pkg.pricing != null && pkg.pricing!.id > 0
+                  ? () => controller.openPackageInclusions(pkg.pricing!.id)
+                  : null,
             ),
           );
         },
@@ -241,49 +239,44 @@ class _SelectPlanPageState extends State<SelectPlanPage> {
 class _PackageCard extends StatelessWidget {
   final DiagnosticsPackage package;
   final bool isSelected;
-  final bool isExpanded;
-  final DiagnosticsPackageDetail? detail;
-  final bool isDetailLoading;
   final VoidCallback onTap;
-  final VoidCallback onExpand;
+  final VoidCallback? onSeeInclusions;
 
   const _PackageCard({
     required this.package,
     required this.isSelected,
-    required this.isExpanded,
-    this.detail,
-    required this.isDetailLoading,
     required this.onTap,
-    required this.onExpand,
+    this.onSeeInclusions,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        margin: EdgeInsets.only(bottom: 12.rh),
-        padding: EdgeInsets.all(16.rs),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withValues(alpha: 0.06) : Colors.white,
-          borderRadius: BorderRadius.circular(16.rs),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.borderLight,
-            width: isSelected ? 1.5 : 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      margin: EdgeInsets.only(bottom: 12.rh),
+      padding: EdgeInsets.all(16.rs),
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.primary.withValues(alpha: 0.06) : Colors.white,
+        borderRadius: BorderRadius.circular(16.rs),
+        border: Border.all(
+          color: isSelected ? AppColors.primary : AppColors.borderLight,
+          width: isSelected ? 1.5 : 1,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: onTap,
+            behavior: HitTestBehavior.opaque,
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Lottie.asset(
@@ -342,120 +335,30 @@ class _PackageCard extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 10.rh),
+          ),
+          if (onSeeInclusions != null) ...[
+            SizedBox(height: 12.rh),
             GestureDetector(
-              onTap: onExpand,
+              onTap: onSeeInclusions,
+              behavior: HitTestBehavior.opaque,
               child: Row(
                 children: [
                   CommonText(
-                    isExpanded ? 'Hide details' : 'View details',
-                    fontSize: 12.rf,
+                    AppString.kSeeWhatsIncluded,
+                    fontSize: 13.rf,
                     fontWeight: FontWeight.w600,
                     color: AppColors.primary,
                   ),
                   SizedBox(width: 4.rw),
-                  AnimatedRotation(
-                    turns: isExpanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 250),
-                    child: Icon(Icons.keyboard_arrow_down,
-                        size: 18.rs, color: AppColors.primary),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20.rs,
+                    color: AppColors.primary,
                   ),
                 ],
               ),
             ),
-            AnimatedCrossFade(
-              firstChild: const SizedBox.shrink(),
-              secondChild: _buildDetailSection(),
-              crossFadeState: isExpanded
-                  ? CrossFadeState.showSecond
-                  : CrossFadeState.showFirst,
-              duration: const Duration(milliseconds: 300),
-            ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailSection() {
-    if (isDetailLoading) {
-      return Padding(
-        padding: EdgeInsets.symmetric(vertical: 16.rh),
-        child: const Center(
-            child: SizedBox(
-                width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))),
-      );
-    }
-
-    if (detail == null) return const SizedBox.shrink();
-
-    return Padding(
-      padding: EdgeInsets.only(top: 12.rh),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Divider(color: AppColors.borderLight, height: 1),
-          SizedBox(height: 12.rh),
-          if (detail!.vendor != null)
-            _detailRow('Vendor', detail!.vendor!.name),
-          _detailRow('Parameters', '${detail!.parameterCount} tests'),
-          if (detail!.b2cPrice > 0)
-            _detailRow('Price', '₹${detail!.b2cPrice.toStringAsFixed(0)}'),
-          if (detail!.details != null && detail!.details!.isNotEmpty) ...[
-            SizedBox(height: 8.rh),
-            CommonText(
-              detail!.details!,
-              fontSize: 12.rf,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w400,
-            ),
-          ],
-          if (detail!.parameters.isNotEmpty) ...[
-            SizedBox(height: 10.rh),
-            CommonText(
-              'Included Tests',
-              fontSize: 12.rf,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
-            SizedBox(height: 6.rh),
-            Wrap(
-              spacing: 6.rw,
-              runSpacing: 6.rh,
-              children: detail!.parameters
-                  .map((p) => Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 10.rw, vertical: 4.rh),
-                        decoration: BoxDecoration(
-                          color: AppColors.backgroundSecondary,
-                          borderRadius: BorderRadius.circular(12.rs),
-                        ),
-                        child: CommonText(
-                          p.name,
-                          fontSize: 11.rf,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ))
-                  .toList(),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _detailRow(String label, String value) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 6.rh),
-      child: Row(
-        children: [
-          CommonText(label, fontSize: 12.rf, color: AppColors.textSecondary),
-          const Spacer(),
-          CommonText(value,
-              fontSize: 12.rf,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary),
         ],
       ),
     );

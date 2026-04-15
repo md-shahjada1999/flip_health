@@ -339,6 +339,26 @@ class LabCartResponse {
   int get itemCount => items.length;
 }
 
+// Booking APIs may return numeric fields as JSON strings — avoid `as int` casts.
+int _parseBookingInt(dynamic v, [int fallback = 0]) {
+  if (v == null) return fallback;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  if (v is String) {
+    final p = int.tryParse(v.trim());
+    if (p != null) return p;
+  }
+  return fallback;
+}
+
+int? _parseBookingIntOrNull(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v.trim());
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Booking Overview / Order (POST /diagnostics/order/booking)
 // ---------------------------------------------------------------------------
@@ -387,7 +407,7 @@ class BookingItemVendor {
 
   factory BookingItemVendor.fromJson(Map<String, dynamic> json) {
     return BookingItemVendor(
-      id: json['id'] as int,
+      id: _parseBookingInt(json['id']),
       name: json['name'] as String? ?? '',
       logo: json['logo'] as String?,
       code: json['code'] as String? ?? '',
@@ -414,8 +434,8 @@ class BookingItemPricing {
 
   factory BookingItemPricing.fromJson(Map<String, dynamic> json) {
     return BookingItemPricing(
-      id: json['id'] as int? ?? 0,
-      parameterCount: json['parameter_count'] as int? ?? 0,
+      id: _parseBookingInt(json['id']),
+      parameterCount: _parseBookingInt(json['parameter_count']),
       b2cPrice: (json['b2c_price'] as num?)?.toDouble() ?? 0,
       offerPrice: (json['offer_price'] as num?)?.toDouble() ?? 0,
       saved: (json['saved'] as num?)?.toDouble() ?? 0,
@@ -445,12 +465,12 @@ class BookingItemUser {
 
   factory BookingItemUser.fromJson(Map<String, dynamic> json) {
     return BookingItemUser(
-      id: json['id'] as int,
+      id: _parseBookingInt(json['id']),
       name: json['name'] as String? ?? '',
       email: json['email'] as String?,
-      phone: json['phone'] as int?,
+      phone: _parseBookingIntOrNull(json['phone']),
       gender: json['gender'] as String?,
-      age: json['age'] as int?,
+      age: _parseBookingIntOrNull(json['age']),
     );
   }
 }
@@ -482,16 +502,16 @@ class BookingItem {
 
   factory BookingItem.fromJson(Map<String, dynamic> json) {
     return BookingItem(
-      id: json['id'] as int,
+      id: _parseBookingInt(json['id']),
       name: json['name'] as String? ?? '',
       type: json['type'] as String? ?? '',
       category: json['category'] as String? ?? '',
-      fastingTime: json['fasting_time'] as int? ?? 0,
-      tat: json['tat'] as int? ?? 0,
+      fastingTime: _parseBookingInt(json['fasting_time']),
+      tat: _parseBookingInt(json['tat']),
       pricing: json['pricing'] != null
           ? BookingItemPricing.fromJson(json['pricing'] as Map<String, dynamic>)
           : null,
-      qty: json['qty'] as int? ?? 1,
+      qty: _parseBookingInt(json['qty'], 1),
       user: json['user'] != null
           ? BookingItemUser.fromJson(json['user'] as Map<String, dynamic>)
           : null,
@@ -597,9 +617,9 @@ class BookingUser {
 
   factory BookingUser.fromJson(Map<String, dynamic> json) {
     return BookingUser(
-      userId: json['user_id'] as int,
+      userId: _parseBookingInt(json['user_id']),
       userName: json['user_name'] as String? ?? '',
-      userPhone: json['user_phone'] as int?,
+      userPhone: _parseBookingIntOrNull(json['user_phone']),
       userEmail: json['user_email'] as String?,
     );
   }
@@ -645,7 +665,34 @@ class BookingOverviewResponse {
       user: data['user'] != null
           ? BookingUser.fromJson(data['user'] as Map<String, dynamic>)
           : null,
-      invoiceId: data['invoice_id'] as String?,
+      invoiceId: data['invoice_id']?.toString(),
+    );
+  }
+}
+
+/// Result of `POST /patient/diagnostics/order/booking` (`overview=yes` preview / `overview=no` finalize).
+class DiagnosticsBookingApiResult {
+  final BookingOverviewResponse overview;
+  final bool verify;
+  final Map<String, dynamic>? razorpayPayload;
+  final bool paymentRequired;
+
+  const DiagnosticsBookingApiResult({
+    required this.overview,
+    this.verify = false,
+    this.razorpayPayload,
+    this.paymentRequired = false,
+  });
+
+  factory DiagnosticsBookingApiResult.fromJson(Map<String, dynamic> root) {
+    return DiagnosticsBookingApiResult(
+      overview: BookingOverviewResponse.fromJson(root),
+      verify: root['verify'] == true,
+      razorpayPayload: root['razorpay_payload'] is Map
+          ? Map<String, dynamic>.from(root['razorpay_payload'] as Map)
+          : null,
+      paymentRequired: root['paymentRequired'] == true ||
+          root['isPaymentRequired'] == true,
     );
   }
 }

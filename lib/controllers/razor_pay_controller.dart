@@ -4,8 +4,10 @@ import 'package:flip_health/core/services/api%20services/api_controller.dart';
 import 'package:flip_health/core/utils/custom_toast.dart';
 import 'package:flip_health/data/repositories/consultation_order_repository.dart';
 import 'package:flip_health/data/repositories/gym_repository.dart';
+import 'package:flip_health/data/repositories/health_checkup_repository.dart';
 import 'package:flip_health/data/repositories/pharmacy_repository.dart';
 import 'package:flip_health/data/repositories/service_request_repository.dart';
+import 'package:flip_health/views/daignostics/health_checkup/health_checkup_booking_success_screen.dart';
 import 'package:flip_health/model/gym%20models/gym_membership_invoice_model.dart';
 import 'package:flip_health/routes/app_routes.dart';
 import 'package:get/get.dart';
@@ -152,6 +154,49 @@ class RazorPayController extends GetxController {
           Get.offAllNamed(
             AppRoutes.serviceRequestPaymentSuccess,
             arguments: summary,
+          );
+        } else {
+          ToastCustom.showSnackBar(
+            subtitle: res['message']?.toString() ?? 'Verification failed',
+          );
+        }
+      } catch (e) {
+        ToastCustom.showSnackBar(subtitle: e.toString());
+      }
+    } else if (from == 'fromHealthCheckup') {
+      final a = Get.arguments;
+      final summary = a is List && a.length >= 3 && a[2] is Map
+          ? Map<String, dynamic>.from(a[2] as Map)
+          : <String, dynamic>{};
+      final invoiceId = summary['invoice_id']?.toString() ?? '';
+      final map = <String, dynamic>{
+        'src': 'razorpay',
+        'order_id': response.orderId,
+        'payment_id': response.paymentId,
+        'signature': response.signature,
+        'invoice_id': invoiceId,
+      };
+      try {
+        if (!Get.isRegistered<HealthCheckupRepository>()) {
+          if (!Get.isRegistered<ApiService>()) {
+            Get.lazyPut<ApiService>(() => ApiService());
+          }
+          Get.lazyPut<HealthCheckupRepository>(
+            () => HealthCheckupRepository(apiService: Get.find()),
+          );
+        }
+        final repo = Get.find<HealthCheckupRepository>();
+        final res = await repo.postDiagnosticsOrderConfirm(map);
+        final ok = res['status'] == true ||
+            res['status'] == 1 ||
+            res['success'] == true;
+        if (ok) {
+          Get.offAll(
+            () => HealthCheckupBookingSuccessScreen(
+              invoiceId: invoiceId.isNotEmpty ? invoiceId : null,
+              summaryLine: summary['subtitle']?.toString() ??
+                  'Payment successful. Your health checkup is booked.',
+            ),
           );
         } else {
           ToastCustom.showSnackBar(

@@ -1,10 +1,12 @@
 import 'package:animate_do/animate_do.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flip_health/controllers/health%20checkup%20controllers/health_checkup_controller.dart';
 import 'package:flip_health/core/constants/app_colors.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
+import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
 import 'package:flip_health/core/utils/common_text.dart';
@@ -22,12 +24,6 @@ class ExploreHealthPackagesPage extends StatefulWidget {
 
 class _ExploreHealthPackagesPageState extends State<ExploreHealthPackagesPage> {
   final controller = Get.find<HealthCheckupsController>();
-
-  @override
-  void initState() {
-    super.initState();
-    controller.fetchVendorPricing();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -207,12 +203,7 @@ class _VendorCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Lottie.asset(
-                  'assets/lotties/Scientist.json',
-                  width: 44.rs,
-                  height: 44.rs,
-                  repeat: true,
-                ),
+                _VendorLogo(logo: vendor.logo, name: vendor.name),
                 SizedBox(width: 10.rw),
                 Expanded(
                   child: Column(
@@ -259,44 +250,61 @@ class _VendorCard extends StatelessWidget {
               Divider(color: AppColors.borderLight, height: 1),
               SizedBox(height: 10.rh),
               ...vendor.packages.map((vp) => Padding(
-                    padding: EdgeInsets.only(bottom: 6.rh),
-                    child: Row(
+                    padding: EdgeInsets.only(bottom: 10.rh),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.person_outline,
-                            size: 14.rs, color: AppColors.textSecondary),
-                        SizedBox(width: 6.rw),
-                        Expanded(
-                          child: CommonText(
-                            '${vp.user?.name ?? ''} — ${vp.name}',
-                            fontSize: 12.rf,
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w500,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: CommonText(
+                                vp.name.isNotEmpty
+                                    ? vp.name
+                                    : 'Health package',
+                                fontSize: 13.rf,
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w500,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            SizedBox(width: 8.rw),
+                            if (vp.free)
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 8.rw, vertical: 2.rh),
+                                decoration: BoxDecoration(
+                                  color: AppColors.success
+                                      .withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8.rs),
+                                ),
+                                child: CommonText(
+                                  'Free',
+                                  fontSize: 10.rf,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.success,
+                                ),
+                              )
+                            else if (vp.pricing != null)
+                              CommonText(
+                                '₹${vp.pricing!.b2cPrice.toStringAsFixed(0)}',
+                                fontSize: 14.rf,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                          ],
                         ),
-                        if (vp.free)
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 8.rw, vertical: 2.rh),
-                            decoration: BoxDecoration(
-                              color: AppColors.success.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8.rs),
-                            ),
-                            child: CommonText(
-                              'Free',
-                              fontSize: 10.rf,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.success,
-                            ),
-                          )
-                        else if (vp.pricing != null)
+                        if (vp.user != null &&
+                            (vp.user!.name).trim().isNotEmpty) ...[
+                          SizedBox(height: 4.rh),
                           CommonText(
-                            '₹${vp.pricing!.b2cPrice.toStringAsFixed(0)}',
-                            fontSize: 12.rf,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            'for ${vp.user!.name}',
+                            fontSize: 11.rf,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w400,
                           ),
+                        ],
                       ],
                     ),
                   )),
@@ -319,4 +327,74 @@ class _VendorCard extends StatelessWidget {
     );
   }
 
+}
+
+/// Vendor logo from API path (resolved with [ApiUrl.publicFileUrl]) or placeholder.
+class _VendorLogo extends StatelessWidget {
+  final String? logo;
+  final String name;
+
+  const _VendorLogo({required this.logo, required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    final url = ApiUrl.publicFileUrl(logo);
+    if (url == null || url.isEmpty) {
+      return Container(
+        width: 44.rs,
+        height: 44.rs,
+        decoration: BoxDecoration(
+          color: AppColors.backgroundTertiary,
+          borderRadius: BorderRadius.circular(10.rs),
+        ),
+        child: Center(
+          child: CommonText(
+            name.isNotEmpty ? name[0].toUpperCase() : 'V',
+            fontSize: 18.rf,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textTertiary,
+          ),
+        ),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10.rs),
+      child: CachedNetworkImage(
+        imageUrl: url,
+        width: 44.rs,
+        height: 44.rs,
+        fit: BoxFit.contain,
+        placeholder: (_, __) => Container(
+          width: 44.rs,
+          height: 44.rs,
+          color: AppColors.backgroundTertiary,
+          alignment: Alignment.center,
+          child: SizedBox(
+            width: 18.rs,
+            height: 18.rs,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.primary.withValues(alpha: 0.5),
+            ),
+          ),
+        ),
+        errorWidget: (_, __, ___) => Container(
+          width: 44.rs,
+          height: 44.rs,
+          decoration: BoxDecoration(
+            color: AppColors.backgroundTertiary,
+            borderRadius: BorderRadius.circular(10.rs),
+          ),
+          child: Center(
+            child: CommonText(
+              name.isNotEmpty ? name[0].toUpperCase() : 'V',
+              fontSize: 18.rf,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textTertiary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

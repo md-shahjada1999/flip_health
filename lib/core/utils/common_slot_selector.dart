@@ -21,6 +21,12 @@ class CommonSlotSelector extends StatelessWidget {
   final List<Map<String, dynamic>> afternoonSlots;
   final List<Map<String, dynamic>> eveningSlots;
 
+  /// When `>= 2`, time chips use fixed width so multiple columns fit (e.g. health checkup).
+  final int slotsPerRow;
+
+  /// Optional smaller label for dense two-column layout.
+  final double? slotTimeFontSize;
+
   const CommonSlotSelector({
     Key? key,
     required this.monthYearLabel,
@@ -32,6 +38,8 @@ class CommonSlotSelector extends StatelessWidget {
     required this.morningSlots,
     required this.afternoonSlots,
     this.eveningSlots = const <Map<String, dynamic>>[],
+    this.slotsPerRow = 1,
+    this.slotTimeFontSize,
   }) : super(key: key);
 
   @override
@@ -158,7 +166,54 @@ class CommonSlotSelector extends StatelessWidget {
     IconData icon,
     List<Map<String, dynamic>> slots,
   ) {
-    return slots.isNotEmpty ? Padding(
+    if (slots.isEmpty) return const SizedBox.shrink();
+
+    final fs = slotTimeFontSize ?? 12.rf;
+    final dense = slotsPerRow >= 2;
+    final hPad = dense ? 10.rw : 18.rw;
+    final vPad = dense ? 6.rh : 8.rh;
+
+    Widget slotChip(Map<String, dynamic> slot) {
+      final isSelected = selectedTimeSlot == slot['time'];
+      final isDisabled = slot['isDisabled'] ?? false;
+      return FadeIn(
+        duration: const Duration(milliseconds: 300),
+        child: GestureDetector(
+          onTap: isDisabled ? null : () => onTimeSlotSelected(slot['time']),
+          child: Container(
+            padding:
+                EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? Colors.black
+                  : isDisabled
+                      ? AppColors.backgroundTertiary
+                      : Colors.white,
+              borderRadius: BorderRadius.circular(25.rs),
+              border: Border.all(
+                color: isSelected ? Colors.black : AppColors.borderLight,
+              ),
+            ),
+            child: CommonText(
+              '${slot['time']}',
+              fontSize: fs,
+              fontWeight: FontWeight.w500,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              color: isSelected
+                  ? Colors.white
+                  : isDisabled
+                      ? AppColors.textSecondary
+                      : AppColors.textPrimary,
+              height: 1.2,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.rw),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,52 +232,35 @@ class CommonSlotSelector extends StatelessWidget {
             ],
           ),
           SizedBox(height: 12.rh),
-          Wrap(
-            spacing: 12.rw,
-            runSpacing: 12.rh,
-            children: slots.map((slot) {
-              final isSelected = selectedTimeSlot == slot['time'];
-              final isDisabled = slot['isDisabled'] ?? false;
-
-              return FadeIn(
-                duration: const Duration(milliseconds: 300),
-                child: GestureDetector(
-                  onTap:
-                      isDisabled ? null : () => onTimeSlotSelected(slot['time']),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 18.rw, vertical: 8.rh),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Colors.black
-                          : isDisabled
-                              ? AppColors.backgroundTertiary
-                              : Colors.white,
-                      borderRadius: BorderRadius.circular(25.rs),
-                      border: Border.all(
-                        color: isSelected
-                            ? Colors.black
-                            : AppColors.borderLight,
-                      ),
-                    ),
-                    child: CommonText(
-                      '${slot['time']}',
-                      fontSize: 12.rf,
-                      fontWeight: FontWeight.w500,
-                      color: isSelected
-                          ? Colors.white
-                          : isDisabled
-                              ? AppColors.textSecondary
-                              : AppColors.textPrimary,
-                      height: 1.3,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
+          if (dense)
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final n = slotsPerRow.clamp(2, 8);
+                final gap = 10.rw;
+                final w =
+                    (constraints.maxWidth - gap * (n - 1)) / n;
+                return Wrap(
+                  spacing: gap,
+                  runSpacing: 10.rh,
+                  children: slots
+                      .map(
+                        (slot) => SizedBox(
+                          width: w,
+                          child: Center(child: slotChip(slot)),
+                        ),
+                      )
+                      .toList(),
+                );
+              },
+            )
+          else
+            Wrap(
+              spacing: 12.rw,
+              runSpacing: 12.rh,
+              children: slots.map(slotChip).toList(),
+            ),
         ],
       ),
-    ) : const SizedBox.shrink();
+    );
   }
 }

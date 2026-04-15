@@ -6,6 +6,7 @@ import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
+import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/model/heath%20checkup%20models/family_member_data_model.dart';
 import 'package:flip_health/views/daignostics/widgets/add_family_member_button.dart';
@@ -15,6 +16,10 @@ import 'package:flip_health/views/daignostics/widgets/user_card.dart';
 class CommonMemberSelectionScreen extends StatelessWidget {
   final String title;
   final bool allowMultiSelect;
+  /// When true (sponsored AHC from dashboard), only members with [FamilyMember.ahcAvailable] are listed.
+  final bool filterAhcEligibleOnly;
+  /// When false, [AddFamilyMemberButton] is hidden (e.g. sponsored / AHC health checkup flow).
+  final bool showAddFamilyMember;
   final void Function(List<FamilyMember> selected) onContinue;
   final Widget? headerWidget;
 
@@ -22,6 +27,8 @@ class CommonMemberSelectionScreen extends StatelessWidget {
     super.key,
     required this.title,
     this.allowMultiSelect = false,
+    this.filterAhcEligibleOnly = false,
+    this.showAddFamilyMember = true,
     required this.onContinue,
     this.headerWidget,
   });
@@ -40,11 +47,29 @@ class CommonMemberSelectionScreen extends StatelessWidget {
           );
         }
 
+        final displayMembers = filterAhcEligibleOnly
+            ? mc.familyMembers.where((m) => m.ahcAvailable).toList()
+            : mc.familyMembers;
+
         return Column(
           children: [
             if (headerWidget != null) headerWidget!,
             Expanded(
-              child: SingleChildScrollView(
+              child: displayMembers.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.rs),
+                        child: CommonText(
+                          filterAhcEligibleOnly
+                              ? AppString.kNoAhcEligibleMembers
+                              : AppString.kNoFamilyMembers,
+                          fontSize: 14.rf,
+                          color: AppColors.textSecondary,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    )
+                  : SingleChildScrollView(
                 child: Padding(
                   padding: EdgeInsets.all(20.rs),
                   child: Column(
@@ -55,7 +80,7 @@ class CommonMemberSelectionScreen extends StatelessWidget {
                         subtitle: 'Select the family member for the service',
                       ),
                       SizedBox(height: 16.rh),
-                      ...mc.familyMembers.map(
+                      ...displayMembers.map(
                         (member) => Obx(
                           () => UserCard(
                             name: member.name,
@@ -72,9 +97,11 @@ class CommonMemberSelectionScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      AddFamilyMemberButton(
-                        onTap: mc.addNewFamilyMember,
-                      ),
+                      if (showAddFamilyMember) ...[
+                        AddFamilyMemberButton(
+                          onTap: mc.addNewFamilyMember,
+                        ),
+                      ],
                       SizedBox(height: 80.rh),
                     ],
                   ),

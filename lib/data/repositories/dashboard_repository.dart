@@ -20,6 +20,15 @@ Map<String, dynamic> _unwrapPayload(Map<String, dynamic> root) {
   return root;
 }
 
+/// Dashboard flags often arrive as `1`/`0` or strings; normalize for UI checks.
+bool _parseBoolFlag(dynamic v) {
+  if (v == true) return true;
+  if (v == false || v == null) return false;
+  if (v is num) return v != 0;
+  final s = v.toString().trim().toLowerCase();
+  return s == 'true' || s == '1' || s == 'yes';
+}
+
 class DashboardRepository {
   final ApiService apiService;
 
@@ -56,7 +65,7 @@ class DashboardRepository {
       }
 
       return {
-        'ahc': payload['ahc'] ?? false,
+        'ahc': _parseBoolFlag(payload['ahc']),
         'gym': payload['gym'] ?? {},
         'notificationCount': payload['notificationCount'] ?? 0,
         'moodReceived': (payload['mood'] ?? 1) != 0,

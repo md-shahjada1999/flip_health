@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flip_health/controllers/address%20controllers/address_controller.dart';
 import 'package:flip_health/controllers/dashboard%20controllers/dashboard_controller.dart';
+import 'package:flip_health/core/constants/app_colors.dart';
+import 'package:flip_health/core/constants/string_define.dart';
 import 'package:flip_health/controllers/search%20controllers/search_controller.dart';
 import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/utils/address_selection_sheet.dart';
@@ -11,6 +13,7 @@ import 'package:flip_health/views/dashboard/widgets/dash_board_searchbar.dart';
 import 'package:flip_health/views/dashboard/widgets/dashboard_banner.dart';
 import 'package:flip_health/views/dashboard/widgets/dashboard_header.dart';
 import 'package:flip_health/views/dashboard/widgets/search_overlay.dart';
+import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/views/dashboard/widgets/service_grid.dart';
 import 'package:flip_health/views/dashboard/widgets/view_more_button.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
@@ -106,6 +109,81 @@ class _DashboardHomeScreenState extends State<DashboardHomeScreen> {
                             child: SingleChildScrollView(
                               child: Column(
                                 children: [
+                                  Obx(() {
+                                    if (!_dashboardController
+                                        .showAhcDashboardCard) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return Padding(
+                                      padding: EdgeInsets.only(bottom: 12.rh),
+                                      child: Material(
+                                        color: Colors.transparent,
+                                        child: InkWell(
+                                          onTap: _dashboardController
+                                              .openSponsoredHealthCheckup,
+                                          borderRadius: BorderRadius.circular(
+                                            16.rs,
+                                          ),
+                                          child: Container(
+                                            width: double.infinity,
+                                            padding: EdgeInsets.all(16.rs),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  AppColors.primary.withValues(
+                                                    alpha: 0.12,
+                                                  ),
+                                                  AppColors.primary.withValues(
+                                                    alpha: 0.04,
+                                                  ),
+                                                ],
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(16.rs),
+                                              border: Border.all(
+                                                color: AppColors.primary
+                                                    .withValues(alpha: 0.25),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      CommonText(
+                                                        AppString
+                                                            .kDashboardAhcCardTitle,
+                                                        fontSize: 16.rf,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                        color: AppColors
+                                                            .textPrimary,
+                                                      ),
+                                                      SizedBox(height: 4.rh),
+                                                      CommonText(
+                                                        AppString
+                                                            .kDashboardAhcCardSubtitle,
+                                                        fontSize: 13.rf,
+                                                        color: AppColors
+                                                            .textSecondary,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Icon(
+                                                  Icons.chevron_right_rounded,
+                                                  color: AppColors.primary,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }),
                                   ServicesGrid(
                                     services: _dashboardController.services,
                                   ),

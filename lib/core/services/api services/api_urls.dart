@@ -210,6 +210,10 @@ class ApiUrl {
   static const String DIAGNOSTICS_BOOKING =
       "/patient/diagnostics/order/booking";
 
+  /// After Razorpay — `POST /patient/diagnostics/order/confirm` (patient_app `order_booking_confirm`).
+  static const String DIAGNOSTICS_ORDER_CONFIRM =
+      "/patient/diagnostics/order/confirm";
+
   // Cart
   static const String CART_LAB = "/patient/cart/lab";
   static const String CART_ADD = "/patient/cart/add";

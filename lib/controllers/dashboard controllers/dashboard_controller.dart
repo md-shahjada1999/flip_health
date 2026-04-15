@@ -75,6 +75,17 @@ class DashboardController extends GetxController {
 
   Future<void> refreshWalletPreview() => _loadWalletPreview();
 
+  /// `GET /patient/dashboard` → `ahc` (normalized bool in [DashboardRepository]).
+  bool get showAhcDashboardCard =>
+      dashboardLoaded.value && dashboardData['ahc'] == true;
+
+  void openSponsoredHealthCheckup() {
+    Get.toNamed(AppRoutes.healthCheckups, arguments: {
+      'sponsored': true,
+      'ahc': true,
+    });
+  }
+
 //all text editing controllers
   final TextEditingController _searchController = TextEditingController();
   TextEditingController get searchController => _searchController;

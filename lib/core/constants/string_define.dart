@@ -204,6 +204,9 @@ class AppString {
   static const String kFamilyAccounts = 'Family Accounts';
   static const String kFamilyAccountsSubtitle = 'Manage family members';
   static const String kSelectFamilyMember = 'Select family member';
+  static const String kNoFamilyMembers = 'No family members found.';
+  static const String kNoAhcEligibleMembers =
+      'No members are eligible for the sponsored health checkup yet.';
   static const String kOrderingFor = 'Ordering for';
 
   static const String kAddressBook = 'Address Book';
@@ -399,6 +402,17 @@ class AppString {
   // ==============================================
 
   static const String kHealthCheckupsTitle = 'Health Checkups';
+
+  /// Dashboard banner when `GET /patient/dashboard` returns `ahc: true` (mirrors patient_app `isAHCAvialable`).
+  static const String kDashboardAhcCardTitle = 'Annual Health Checkup';
+  static const String kDashboardAhcCardSubtitle =
+      'Book your sponsored health checkup';
+
+  /// Diagnostics package card — `GET /patient/diagnostics/packages/{pricingId}` inclusions (patient_app `packageInclusions`).
+  static const String kSeeWhatsIncluded = 'See what\'s included';
+  static const String kWhatsIncludedTitle = 'What\'s included';
+  static const String kNoPackageInclusions =
+      'No inclusion list is available for this package yet.';
 
   // Section Headers
   static const String kForYou = 'For you';
@@ -688,7 +702,6 @@ class AppString {
   static const String kReportsWithin48Hours = 'Reports within 48 hours';
   static const String kInstantConfirmation = 'Instant confirmation';
   static const String kFromComfortOfHome = 'From the comfort of your home';
-  static const String kSeeWhatsIncluded = "See what's included";
   static const String kAddToCart = 'Add to cart';
   static const String kTopSearches = 'Top Searches';
   static const String kSearchResults = 'Search Results';

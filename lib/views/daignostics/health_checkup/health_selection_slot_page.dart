@@ -25,12 +25,25 @@ class HealthCheckUpSlotSelectionPage extends StatelessWidget {
         appBar: CommonAppBar.build(
           title: cat == 'pathology' ? 'Pathology Slot' : 'Radiology Slot',
         ),
-        body: Column(
+        body: Stack(
           children: [
-            const LocationHeaderBar(),
-            _buildCategoryIndicator(controller),
-            Expanded(child: _buildSlotContent(controller)),
-            _buildBottomButton(controller),
+            Column(
+              children: [
+                const LocationHeaderBar(),
+                _buildCategoryIndicator(controller),
+                Expanded(child: _buildSlotContent(controller)),
+                _buildBottomButton(controller),
+              ],
+            ),
+            Obx(() => controller.isBookingPreviewLoading.value
+                ? Container(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    alignment: Alignment.center,
+                    child: const CircularProgressIndicator(
+                      color: AppColors.primary,
+                    ),
+                  )
+                : const SizedBox.shrink()),
           ],
         ),
       );
@@ -181,6 +194,8 @@ class HealthCheckUpSlotSelectionPage extends StatelessWidget {
             morningSlots: controller.morningSlotMaps(slotsResp),
             afternoonSlots: controller.afternoonSlotMaps(slotsResp),
             eveningSlots: controller.eveningSlotMaps(slotsResp),
+            slotsPerRow: 2,
+            slotTimeFontSize: 10.5.rf,
           ),
         ),
       );
@@ -200,7 +215,10 @@ class HealthCheckUpSlotSelectionPage extends StatelessWidget {
 
       return ActionButton(
         text: label,
-        onPressed: hasSlot ? controller.confirmCurrentSlot : null,
+        isLoading: controller.isBookingPreviewLoading.value,
+        onPressed: hasSlot && !controller.isBookingPreviewLoading.value
+            ? () async => controller.confirmCurrentSlot()
+            : null,
       );
     });
   }
