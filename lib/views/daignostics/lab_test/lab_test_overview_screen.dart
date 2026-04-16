@@ -8,12 +8,10 @@ import 'package:flip_health/core/helpers/responsive_helpers.dart';
 import 'package:flip_health/core/services/api%20services/api_urls.dart';
 import 'package:flip_health/core/utils/action_button.dart';
 import 'package:flip_health/core/utils/common_app_bar.dart';
-import 'package:flip_health/core/utils/common_dialog.dart';
 import 'package:flip_health/core/utils/common_text.dart';
 import 'package:flip_health/core/utils/custom_textfeild.dart';
 import 'package:flip_health/core/utils/safe_screen_wrapper.dart';
 import 'package:flip_health/model/heath%20checkup%20models/lab_test_model.dart';
-import 'package:flip_health/views/daignostics/widgets/my_orders_button.dart';
 
 class LabTestOverviewScreen extends GetView<LabTestController> {
   const LabTestOverviewScreen({super.key});
@@ -25,7 +23,6 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
       appBar: CommonAppBar.build(
         title: 'Review Booking',
         showBackButton: true,
-        actions: [const MyOrdersButton()],
       ),
       body: Obx(() {
         if (controller.isOverviewLoading.value) {
@@ -92,21 +89,14 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
                       icon: Icons.phone_outlined,
                       title: 'Alternative Phone (Optional)',
                       child: CustomTextField(
-                        label: '',
-                        hint: 'Enter alternative phone number',
+                        label: '+91',
+                        hint: '10-digit mobile number',
                         controller: controller.altPhoneController,
                         keyboardType: TextInputType.phone,
                         maxLength: 10,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                         ],
-                        prefixIcon: Padding(
-                          padding: EdgeInsets.only(left: 12.rw, right: 4.rw),
-                          child: CommonText('+91',
-                              fontSize: 14.rf,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary),
-                        ),
                       ),
                     ),
                   ),
@@ -136,16 +126,22 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
                     FadeInUp(
                       duration: const Duration(milliseconds: 200),
                       delay: const Duration(milliseconds: 200),
-                      child: _buildPricingCard(overview.pricingDetails!),
+                      child: _buildCard(
+                        icon: Icons.payments_outlined,
+                        title: 'Payment',
+                        child: _buildPricingSummary(overview.pricingDetails!),
+                      ),
                     ),
                 ],
               ),
             ),
             Obx(() => SafeBottomPadding(
                   child: ActionButton(
-                    text: 'Place Order',
+                    text: 'Continue',
                     isLoading: controller.isPlacingOrder.value,
-                    onPressed: () => _confirmAndBook(),
+                    onPressed: controller.isPlacingOrder.value
+                        ? null
+                        : () => _showPaymentBottomSheet(),
                   ),
                 )),
           ],
@@ -276,27 +272,21 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
   // -----------------------------------------------------------------------
 
   Widget _buildSlotInfo(BookingSlotInfo slot) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 10.rw, vertical: 6.rh),
-          decoration: BoxDecoration(
-            color: AppColors.backgroundTertiary,
-            borderRadius: BorderRadius.circular(8.rs),
-          ),
-          child: CommonText(
-            slot.slotDate,
-            fontSize: 12.rf,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        SizedBox(width: 10.rw),
         CommonText(
-          slot.displayTime,
+          slot.formattedScheduleDate,
+          fontSize: 13.rf,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+        SizedBox(height: 4.rh),
+        CommonText(
+          slot.formattedScheduleTimeRange,
           fontSize: 13.rf,
           fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
+          color: AppColors.textSecondary,
         ),
       ],
     );
@@ -457,133 +447,218 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
   }
 
   // -----------------------------------------------------------------------
-  // Pricing
+  // Pricing (aligned with package / health checkup overview)
   // -----------------------------------------------------------------------
 
-  Widget _buildPricingCard(BookingPricingDetails pricing) {
-    return Container(
-      padding: EdgeInsets.all(14.rs),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14.rs),
-        border: Border.all(color: AppColors.borderLight),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CommonText('Payment Summary',
-              fontSize: 12.rf,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary),
-          SizedBox(height: 10.rh),
-          _pricingRow('Subtotal',
-              '\u20B9${pricing.totalGross.toStringAsFixed(0)}'),
-          if (pricing.saved > 0)
-            _pricingRow(
-              'Discount',
-              '- \u20B9${pricing.saved.toStringAsFixed(0)}',
-              valueColor: AppColors.success,
+  void _showPaymentBottomSheet() {
+    final o = controller.bookingOverview.value;
+    if (o == null) return;
+
+    Get.bottomSheet<void>(
+      SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(12.rs, 0, 12.rs, 12.rh),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.rs),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, -4),
+                ),
+              ],
             ),
-          if (pricing.collectionCharges > 0)
-            _pricingRow('Collection Charges',
-                '\u20B9${pricing.collectionCharges.toStringAsFixed(0)}'),
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.rh),
-            child: const Divider(height: 1, color: AppColors.borderLight),
-          ),
-          _pricingRow(
-            'Net Amount',
-            '\u20B9${pricing.netAmount.toStringAsFixed(0)}',
-            bold: true,
-          ),
-          if (pricing.opdWallet != null) ...[
-            SizedBox(height: 6.rh),
-            Container(
-              padding: EdgeInsets.all(10.rs),
-              decoration: BoxDecoration(
-                color: AppColors.backgroundTertiary,
-                borderRadius: BorderRadius.circular(8.rs),
-              ),
-              child: Column(
+            padding: EdgeInsets.fromLTRB(18.rs, 12.rh, 18.rs, 18.rh),
+            child: Obx(
+              () => Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _pricingRow(
-                    'OPD Wallet Balance',
-                    '\u20B9${pricing.opdWallet!.available.toStringAsFixed(0)}',
-                    valueColor: AppColors.success,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CommonText(
+                        'Confirm booking',
+                        fontSize: 17.rf,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                      IconButton(
+                        onPressed: () => Get.back(),
+                        icon:
+                            Icon(Icons.close, color: AppColors.textSecondary),
+                      ),
+                    ],
                   ),
-                  _pricingRow(
-                    'Paid from Wallet',
-                    '\u20B9${pricing.opdWallet!.paidAmount.toStringAsFixed(0)}',
+                  SizedBox(height: 8.rh),
+                  if (o.pricingDetails != null)
+                    _buildPricingSummary(o.pricingDetails!),
+                  if (o.pricingDetails != null &&
+                      (o.pricingDetails!.amountToPay) > 0) ...[
+                    SizedBox(height: 8.rh),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: CommonText(
+                        'Use Flip wallet (OPD)',
+                        fontSize: 13.rf,
+                        color: AppColors.textPrimary,
+                      ),
+                      value: controller.useAppWalletForBooking.value,
+                      activeThumbColor: AppColors.primary,
+                      onChanged: (v) =>
+                          controller.useAppWalletForBooking.value = v,
+                    ),
+                  ],
+                  SizedBox(height: 12.rh),
+                  ActionButton(
+                    text: _confirmButtonLabel(o),
+                    isLoading: controller.isPlacingOrder.value,
+                    onPressed: controller.isPlacingOrder.value
+                        ? null
+                        : () {
+                            Get.back();
+                            controller.placeOrder();
+                          },
                   ),
                 ],
               ),
             ),
-          ],
-          if (pricing.amountToPay == 0) ...[
-            SizedBox(height: 10.rh),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 10.rh),
-              decoration: BoxDecoration(
-                color: AppColors.successLight,
-                borderRadius: BorderRadius.circular(8.rs),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check_circle_rounded,
-                      size: 14.rs, color: AppColors.success),
-                  SizedBox(width: 6.rw),
-                  CommonText(
-                    'Covered by wallet - No payment needed',
-                    fontSize: 11.rf,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.success,
-                  ),
-                ],
-              ),
-            ),
-          ] else ...[
-            SizedBox(height: 10.rh),
-            _pricingRow(
-              'Amount to Pay',
-              '\u20B9${pricing.amountToPay.toStringAsFixed(0)}',
-              bold: true,
-              valueColor: AppColors.primary,
-            ),
-          ],
-        ],
+          ),
+        ),
       ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
     );
   }
 
-  Widget _pricingRow(String label, String value,
+  String _confirmButtonLabel(BookingOverviewResponse o) {
+    final p = o.pricingDetails;
+    if (p == null) return 'Confirm booking';
+    if (p.amountToPay <= 0) return 'Confirm booking';
+    return 'Pay ₹${p.amountToPay.toStringAsFixed(0)}';
+  }
+
+  Widget _buildPricingSummary(BookingPricingDetails pricing) {
+    final opd = pricing.opdWallet;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _prRow('Subtotal', '₹${pricing.totalGross.toStringAsFixed(0)}'),
+        if (pricing.saved > 0)
+          _prRow(
+            'Discount',
+            '- ₹${pricing.saved.toStringAsFixed(0)}',
+            valueColor: AppColors.success,
+          ),
+        if (pricing.collectionCharges > 0)
+          _prRow(
+            'Collection',
+            '₹${pricing.collectionCharges.toStringAsFixed(0)}',
+          ),
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: 8.rh),
+          child: const Divider(height: 1, color: AppColors.borderLight),
+        ),
+        _prRow(
+          'Net amount',
+          '₹${pricing.netAmount.toStringAsFixed(0)}',
+          bold: true,
+        ),
+        if (opd != null) ...[
+          SizedBox(height: 8.rh),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(10.rs),
+            decoration: BoxDecoration(
+              color: AppColors.backgroundTertiary,
+              borderRadius: BorderRadius.circular(8.rs),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CommonText(
+                  'Flip wallet (OPD)',
+                  fontSize: 11.rf,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
+                ),
+                SizedBox(height: 6.rh),
+                _prRow(
+                  'Available balance',
+                  '₹${opd.available.toStringAsFixed(0)}',
+                  valueColor: AppColors.success,
+                ),
+                _prRow(
+                  'Paid from wallet',
+                  '₹${opd.paidAmount.toStringAsFixed(0)}',
+                ),
+              ],
+            ),
+          ),
+        ],
+        if (pricing.amountToPay == 0) ...[
+          SizedBox(height: 10.rh),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 10.rh, horizontal: 10.rw),
+            decoration: BoxDecoration(
+              color: AppColors.successLight,
+              borderRadius: BorderRadius.circular(8.rs),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.check_circle_rounded,
+                    size: 14.rs, color: AppColors.success),
+                SizedBox(width: 6.rw),
+                Expanded(
+                  child: CommonText(
+                    'Covered by wallet — no payment needed',
+                    fontSize: 11.rf,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.success,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ] else ...[
+          SizedBox(height: 10.rh),
+          _prRow(
+            'Pay from pocket',
+            '₹${pricing.amountToPay.toStringAsFixed(0)}',
+            bold: true,
+            valueColor: AppColors.primary,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _prRow(String label, String value,
       {Color? valueColor, bool bold = false}) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 3.rh),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          CommonText(label,
-              fontSize: 12.rf,
-              color: AppColors.textSecondary,
-              fontWeight: bold ? FontWeight.w600 : FontWeight.w400),
-          CommonText(value,
-              fontSize: bold ? 14.rf : 12.rf,
-              fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
-              color: valueColor ?? AppColors.textPrimary),
+          CommonText(
+            label,
+            fontSize: 12.rf,
+            color: AppColors.textSecondary,
+            fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
+          ),
+          CommonText(
+            value,
+            fontSize: bold ? 14.rf : 12.rf,
+            fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
+            color: valueColor ?? AppColors.textPrimary,
+          ),
         ],
       ),
     );
-  }
-
-  Future<void> _confirmAndBook() async {
-    final confirmed = await CommonDialog.confirm(
-      title: 'Confirm Order',
-      message: 'Are you sure you want to place this lab test order?',
-      confirmText: 'Place Order',
-      cancelText: 'Go Back',
-    );
-    if (confirmed == true) controller.placeOrder();
   }
 }

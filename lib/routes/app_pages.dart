@@ -21,6 +21,7 @@ import 'package:flip_health/bindings/consultation_order_detail_binding.dart';
 import 'package:flip_health/bindings/pharmacy_order_detail_binding.dart';
 import 'package:flip_health/bindings/gym_membership_order_detail_binding.dart';
 import 'package:flip_health/bindings/wellness_order_detail_binding.dart';
+import 'package:flip_health/bindings/lab_order_detail_binding.dart';
 import 'package:flip_health/bindings/service_request_order_detail_binding.dart';
 import 'package:flip_health/bindings/orders%20bindings/orders_binding.dart';
 import 'package:flip_health/bindings/razor_pay_binding.dart';
@@ -65,6 +66,7 @@ import 'package:flip_health/views/gym/gym_membership_payment_success_screen.dart
 import 'package:flip_health/views/consultation/consultation_order_detail_screen.dart';
 import 'package:flip_health/views/consultation/consultation_payment_success_screen.dart';
 import 'package:flip_health/views/consultation/video_call_screen.dart';
+import 'package:flip_health/views/orders/lab_order_detail_screen.dart';
 import 'package:flip_health/views/orders/orders_screen.dart';
 import 'package:flip_health/views/razor_pay/razor_pay_screen.dart';
 import 'package:flip_health/views/dashboard/wallet/wallet_screen.dart';
@@ -256,6 +258,12 @@ class AppPages {
       name: AppRoutes.wellnessOrderDetail,
       page: () => const WellnessOrderDetailScreen(),
       binding: WellnessOrderDetailBinding(),
+    ),
+
+    GetPage(
+      name: AppRoutes.labOrderDetail,
+      page: () => const LabOrderDetailScreen(),
+      binding: LabOrderDetailBinding(),
     ),
 
     GetPage(

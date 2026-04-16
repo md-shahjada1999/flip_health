@@ -79,6 +79,9 @@ class AppRoutes {
   /// Mental wellness / nutrition / yoga invoice detail — `arguments: { invoiceId }`
   static const String wellnessOrderDetail = '/wellness-order-detail';
 
+  /// Lab / diagnostics invoice detail — `arguments: { invoiceId }`
+  static const String labOrderDetail = '/lab-order-detail';
+
   /// Dental / vision / vaccine service request detail — `arguments: { invoiceId, service }`
   static const String serviceRequestOrderDetail =
       '/service-request-order-detail';

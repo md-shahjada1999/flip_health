@@ -692,6 +692,7 @@ class AppString {
   static const String kFlipCoinIcon = "assets/svg/flip_coin.svg";
 
   // Lab Tests
+  static const String kLabOrderDetails = 'Lab test details';
   static const String kLabTestsTitle = 'Lab Tests';
   static const String kSearchAndBookLabTests = 'Search and book lab tests';
   static const String kPopularLabTests = 'Popular Lab Tests';

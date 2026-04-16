@@ -366,6 +366,9 @@ class HealthCheckupsController extends GetxController {
   }
 
   /// Called from overview payment sheet — `overview=no`, optional wallet.
+  /// Matches patient_app [bookingOrderOverviewForTests] when `forOverView == "no"`:
+  /// `verify` + `razorpay_payload` → Razorpay; `verify` + no payload → confirm API;
+  /// `!verify` → success without confirm.
   Future<void> finalizeHealthCheckupBooking() async {
     final wallet = useAppWalletForBooking.value ? 'yes' : 'no';
     isPlacingOrder.value = true;
@@ -377,21 +380,29 @@ class HealthCheckupsController extends GetxController {
       );
       lastFinalizeResult.value = res;
 
-      final rp = res.razorpayPayload;
-      if (rp != null && rp.isNotEmpty) {
-        final inv = res.overview.invoiceId ?? '';
-        Get.toNamed(
-          AppRoutes.razorPay,
-          arguments: [
-            'fromHealthCheckup',
-            Map<String, dynamic>.from(rp),
-            <String, dynamic>{
-              'invoice_id': inv,
-              'title': 'Health checkup booking',
-              'subtitle': _successSubtitle(res.overview),
-            },
-          ],
-        );
+      if (res.verify) {
+        final rp = res.razorpayPayload;
+        if (rp != null && rp.isNotEmpty) {
+          final inv = res.overview.invoiceId ?? '';
+          Get.toNamed(
+            AppRoutes.razorPay,
+            arguments: [
+              'fromHealthCheckup',
+              Map<String, dynamic>.from(rp),
+              <String, dynamic>{
+                'invoice_id': inv,
+                'title': 'Health checkup booking',
+                'subtitle': _successSubtitle(res.overview),
+              },
+            ],
+          );
+          return;
+        }
+        await _repository.postDiagnosticsOrderConfirm({
+          'invoice_id': res.overview.invoiceId ?? '',
+          'payment_id': '',
+        });
+        _navigateToBookingSuccess(res.overview);
         return;
       }
 

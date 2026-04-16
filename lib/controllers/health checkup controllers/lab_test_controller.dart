@@ -7,6 +7,7 @@ import 'package:flip_health/controllers/address%20controllers/address_controller
 import 'package:flip_health/controllers/member%20controllers/member_controller.dart';
 import 'package:flip_health/core/helpers/app_toasts.dart';
 import 'package:flip_health/core/utils/payment_success_screen.dart';
+import 'package:flip_health/routes/app_routes.dart';
 import 'package:flip_health/data/repositories/lab_test_repository.dart';
 import 'package:flip_health/model/heath%20checkup%20models/lab_test_model.dart';
 import 'package:flip_health/views/daignostics/lab_test/lab_selection_screen.dart';
@@ -76,6 +77,7 @@ class LabTestController extends GetxController {
       Rxn<BookingOverviewResponse>();
   final RxBool isOverviewLoading = false.obs;
   final RxBool isPlacingOrder = false.obs;
+  final RxBool useAppWalletForBooking = false.obs;
   final TextEditingController altPhoneController = TextEditingController();
 
   // -----------------------------------------------------------------------
@@ -441,6 +443,7 @@ class LabTestController extends GetxController {
   Future<void> fetchBookingOverview() async {
     isOverviewLoading.value = true;
     bookingOverview.value = null;
+    useAppWalletForBooking.value = false;
 
     try {
       bookingOverview.value = await _repository.getBookingOverview(
@@ -457,25 +460,65 @@ class LabTestController extends GetxController {
   // Place order (overview=no)
   // -----------------------------------------------------------------------
 
+  /// Matches patient_app [bookingOrderOverviewForTests] when `forOverView == "no"`:
+  /// `verify` + `razorpay_payload` → Razorpay; `verify` + no payload → confirm API;
+  /// `!verify` → success without confirm.
   Future<void> placeOrder() async {
     isPlacingOrder.value = true;
-
     try {
-      final result = await _repository.placeOrder(
+      final wallet = useAppWalletForBooking.value ? 'yes' : 'no';
+      final res = await _repository.placeOrder(
         body: _buildBookingBody(),
+        useAppWallet: wallet,
       );
 
-      isPlacingOrder.value = false;
-
-      Get.offAll(() => PaymentSuccessScreen(
+      if (res.verify) {
+        final rp = res.razorpayPayload;
+        if (rp != null && rp.isNotEmpty) {
+          final inv = res.overview.invoiceId ?? '';
+          Get.toNamed(
+            AppRoutes.razorPay,
+            arguments: [
+              'fromLabTest',
+              Map<String, dynamic>.from(rp),
+              <String, dynamic>{
+                'invoice_id': inv,
+                'title': 'Booking Confirmed!',
+                'subtitle': inv.isNotEmpty
+                    ? 'Invoice: $inv'
+                    : 'Your lab test has been booked successfully.',
+              },
+            ],
+          );
+          return;
+        }
+        await _repository.postDiagnosticsOrderConfirm({
+          'invoice_id': res.overview.invoiceId ?? '',
+          'payment_id': '',
+        });
+        Get.offAll(
+          () => PaymentSuccessScreen(
             title: 'Booking Confirmed!',
-            subtitle: result.invoiceId != null
-                ? 'Invoice: ${result.invoiceId}'
+            subtitle: res.overview.invoiceId != null
+                ? 'Invoice: ${res.overview.invoiceId}'
                 : 'Your lab test has been booked successfully.',
-          ));
+          ),
+        );
+        return;
+      }
+
+      Get.offAll(
+        () => PaymentSuccessScreen(
+          title: 'Booking Confirmed!',
+          subtitle: res.overview.invoiceId != null
+              ? 'Invoice: ${res.overview.invoiceId}'
+              : 'Your lab test has been booked successfully.',
+        ),
+      );
     } catch (e) {
-      isPlacingOrder.value = false;
       AppToast.error(title: 'Booking Failed', message: '$e');
+    } finally {
+      isPlacingOrder.value = false;
     }
   }
 

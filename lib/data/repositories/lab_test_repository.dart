@@ -203,10 +203,11 @@ class LabTestRepository {
 
   Future<BookingOverviewResponse> getBookingOverview({
     required Map<String, dynamic> body,
+    String useAppWallet = 'no',
   }) async {
     try {
       final response = await apiService.post(
-        '${ApiUrl.DIAGNOSTICS_BOOKING}?overview=yes&useAppWallet=no',
+        '${ApiUrl.DIAGNOSTICS_BOOKING}?overview=yes&useAppWallet=$useAppWallet',
         data: body,
       );
 
@@ -217,8 +218,15 @@ class LabTestRepository {
         );
       }
 
-      return BookingOverviewResponse.fromJson(
-          response.data as Map<String, dynamic>);
+      final root = response.data as Map<String, dynamic>;
+      if (root['status'] == false) {
+        throw AppException(
+          message: root['message']?.toString() ?? 'Overview failed',
+          statusCode: response.statusCode,
+        );
+      }
+
+      return BookingOverviewResponse.fromJson(root);
     } on AppException {
       rethrow;
     } catch (e) {
@@ -227,12 +235,14 @@ class LabTestRepository {
     }
   }
 
-  Future<BookingOverviewResponse> placeOrder({
+  /// Finalize lab booking — `overview=no` (same contract as [HealthCheckupRepository.postDiagnosticsOrder]).
+  Future<DiagnosticsBookingApiResult> placeOrder({
     required Map<String, dynamic> body,
+    String useAppWallet = 'no',
   }) async {
     try {
       final response = await apiService.post(
-        '${ApiUrl.DIAGNOSTICS_BOOKING}?overview=no&useAppWallet=no',
+        '${ApiUrl.DIAGNOSTICS_BOOKING}?overview=no&useAppWallet=$useAppWallet',
         data: body,
       );
 
@@ -243,13 +253,52 @@ class LabTestRepository {
         );
       }
 
-      return BookingOverviewResponse.fromJson(
-          response.data as Map<String, dynamic>);
+      final root = response.data as Map<String, dynamic>;
+      if (root['status'] == false) {
+        throw AppException(
+          message: root['message']?.toString() ?? 'Booking failed',
+          statusCode: response.statusCode,
+        );
+      }
+
+      return DiagnosticsBookingApiResult.fromJson(root);
     } on AppException {
       rethrow;
     } catch (e) {
       PrintLog.printLog('placeOrder error: $e');
       throw AppException(message: 'Failed to place order: $e');
+    }
+  }
+
+  /// Wallet / Razorpay success — `POST` [ApiUrl.DIAGNOSTICS_ORDER_CONFIRM] (patient_app `confirmBookingApi`).
+  Future<Map<String, dynamic>> postDiagnosticsOrderConfirm(
+    Map<String, dynamic> body,
+  ) async {
+    try {
+      final response = await apiService.post(
+        ApiUrl.DIAGNOSTICS_ORDER_CONFIRM,
+        data: body,
+      );
+
+      if (response.statusCode != 200 || response.data is! Map) {
+        throw AppException(
+          message: 'Could not confirm booking',
+          statusCode: response.statusCode,
+        );
+      }
+
+      final root = response.data as Map<String, dynamic>;
+      if (root['status'] == false) {
+        throw AppException(
+          message: root['message']?.toString() ?? 'Confirmation failed',
+        );
+      }
+      return root;
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      PrintLog.printLog('postDiagnosticsOrderConfirm error: $e');
+      throw AppException(message: 'Confirmation failed: $e');
     }
   }
 }

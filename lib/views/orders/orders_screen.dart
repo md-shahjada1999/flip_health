@@ -120,6 +120,13 @@ class OrdersScreen extends StatelessWidget {
                           );
                           return;
                         }
+                        if (tx == 'LABTEST' || order.type == 'Lab Test') {
+                          Get.toNamed(
+                            AppRoutes.labOrderDetail,
+                            arguments: {'invoiceId': invId},
+                          );
+                          return;
+                        }
                         if (order.type == 'Consultation') {
                           Get.toNamed(
                             AppRoutes.consultationOrderDetail,

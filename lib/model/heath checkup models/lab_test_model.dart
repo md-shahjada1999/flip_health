@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 // ---------------------------------------------------------------------------
 // Lab Test / Package (from GET /diagnostics/packages)
 // ---------------------------------------------------------------------------
@@ -600,6 +602,43 @@ class BookingSlotInfo {
   }
 
   String get displayTime => '$startTime - $endTime';
+
+  /// e.g. "Tuesday, 15 April 2025" — same pattern as [AhcSlot.formattedScheduleDate].
+  String get formattedScheduleDate {
+    if (slotDate.isEmpty) return '—';
+    try {
+      final d = DateTime.parse(slotDate);
+      return DateFormat('EEEE, d MMMM y').format(d);
+    } catch (_) {
+      return slotDate;
+    }
+  }
+
+  /// e.g. "9:00 AM – 10:00 AM" — same pattern as [AhcSlot.formattedScheduleTimeRange].
+  String get formattedScheduleTimeRange {
+    final s = _parseBookingSlotClock(startTime);
+    final e = _parseBookingSlotClock(endTime);
+    if (s != null && e != null) {
+      final ds = DateTime(1970, 1, 1, s.$1, s.$2, s.$3);
+      final de = DateTime(1970, 1, 1, e.$1, e.$2, e.$3);
+      return '${DateFormat.jm().format(ds)} – ${DateFormat.jm().format(de)}';
+    }
+    return displayTime;
+  }
+}
+
+(int, int, int)? _parseBookingSlotClock(String raw) {
+  final t = raw.trim();
+  if (t.isEmpty) return null;
+  final parts = t.split(':');
+  if (parts.length < 2) return null;
+  final h = int.tryParse(parts[0].replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+  final m = int.tryParse(parts[1]) ?? 0;
+  var sec = 0;
+  if (parts.length > 2) {
+    sec = int.tryParse(parts[2].replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+  }
+  return (h, m, sec);
 }
 
 class BookingUser {

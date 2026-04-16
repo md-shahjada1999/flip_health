@@ -89,8 +89,6 @@ class _LabTestCartScreenState extends State<LabTestCartScreen> {
                       ),
                     );
                   }),
-                  SizedBox(height: 20.rh),
-                  if (cart.pricing != null) _PricingSummary(pricing: cart.pricing!),
                 ],
               ),
             ),
@@ -264,92 +262,6 @@ class _CartItemCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _PricingSummary extends StatelessWidget {
-  final CartPricing pricing;
-  const _PricingSummary({required this.pricing});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16.rs),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14.rs),
-        border: Border.all(color: AppColors.borderLight),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CommonText(
-            'Price Summary',
-            fontSize: 13.rf,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-          SizedBox(height: 12.rh),
-          if (pricing.price != null)
-            _row('Subtotal', '\u20B9 ${pricing.price!.toStringAsFixed(0)}'),
-          if (pricing.collectionFee > 0)
-            _row('Collection Fee', '\u20B9 ${pricing.collectionFee.toStringAsFixed(0)}'),
-          if (pricing.wallet != null) ...[
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.rh),
-              child: const Divider(height: 1, color: AppColors.borderLight),
-            ),
-            _row(
-              'Wallet Balance',
-              '\u20B9 ${pricing.wallet!.available.toStringAsFixed(0)}',
-              valueColor: AppColors.success,
-            ),
-          ],
-          if (!pricing.isPaymentRequired) ...[
-            SizedBox(height: 12.rh),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(vertical: 10.rh),
-              decoration: BoxDecoration(
-                color: AppColors.successLight,
-                borderRadius: BorderRadius.circular(8.rs),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.check_circle_rounded, size: 14.rs, color: AppColors.success),
-                  SizedBox(width: 6.rw),
-                  CommonText(
-                    'Covered by wallet - No payment needed',
-                    fontSize: 11.rf,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.success,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _row(String label, String value, {Color? valueColor}) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 3.rh),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          CommonText(label, fontSize: 12.rf, color: AppColors.textSecondary),
-          CommonText(
-            value,
-            fontSize: 12.rf,
-            fontWeight: FontWeight.w600,
-            color: valueColor ?? AppColors.textPrimary,
-          ),
-        ],
       ),
     );
   }
