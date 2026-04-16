@@ -223,14 +223,58 @@ class LabTestController extends GetxController {
 
   bool isInCart(int testId) => _cartProductIds.contains(testId);
 
-  Future<void> addToCart(int productId) async {
+  /// Normalizes API category for pathology vs radiology mix rules.
+  String? _labCategoryBucket(String? raw) {
+    final s = (raw ?? '').trim().toLowerCase();
+    if (s.contains('pathology')) return 'pathology';
+    if (s.contains('radiology')) return 'radiology';
+    return null;
+  }
+
+  String? _categoryForProductId(int productId) {
+    for (final t in labTests) {
+      if (t.id == productId) return t.category;
+    }
+    for (final t in searchResults) {
+      if (t.id == productId) return t.category;
+    }
+    return null;
+  }
+
+  /// True when cart already has one of pathology/radiology and [productId] is the other.
+  bool _labCartMixConflict(int productId) {
+    final newBucket = _labCategoryBucket(_categoryForProductId(productId));
+    if (newBucket == null) return false;
+
+    for (final item in cart.value?.items ?? const <LabCartItem>[]) {
+      final existingBucket = _labCategoryBucket(item.product?.category);
+      if (existingBucket == null) continue;
+      if (existingBucket != newBucket) return true;
+    }
+    return false;
+  }
+
+  /// Returns `true` if the item was added. Returns `false` if blocked, failed, or removed.
+  Future<bool> addToCart(int productId) async {
+    if (_labCartMixConflict(productId)) {
+      AppToast.error(
+        title: 'Cannot add',
+        message:
+            'Pathology and radiology tests cannot be booked together. '
+            'Remove items from your cart to add a different type.',
+      );
+      return false;
+    }
+
     _cartProductIds.add(productId);
     try {
       await _repository.addToCart(productId);
       await fetchCart();
+      return true;
     } catch (e) {
       _cartProductIds.remove(productId);
       AppToast.error(title: 'Error', message: '$e');
+      return false;
     }
   }
 
@@ -281,7 +325,20 @@ class LabTestController extends GetxController {
     selectedVendorIndex.value = -1;
 
     try {
-      vendors.value = await _repository.getVendors(addressId: _addressId);
+      final list = await _repository.getVendors(addressId: _addressId);
+      if (list.isEmpty) {
+        // patient_app fallback: when vendors are empty, use `vendor_code: unknown`.
+        vendors.value = const [
+          LabVendor(
+            id: -1,
+            name: 'Auto-assigned lab',
+            code: 'unknown',
+            packages: [],
+          ),
+        ];
+      } else {
+        vendors.value = list;
+      }
     } catch (e) {
       AppToast.error(title: 'Error', message: '$e');
     } finally {
@@ -298,7 +355,8 @@ class LabTestController extends GetxController {
   void _generateDates() {
     final now = DateTime.now();
     final dates = <Map<String, String>>[];
-    for (int i = 0; i < 7; i++) {
+    // Keep aligned with patient_app pathology-style slot window (5 days).
+    for (int i = 0; i < 5; i++) {
       final d = now.add(Duration(days: i));
       dates.add({
         'day': DateFormat('dd').format(d),
@@ -316,7 +374,10 @@ class LabTestController extends GetxController {
   }
 
   Future<void> fetchSlots() async {
-    if (_addressId.isEmpty || selectedVendor == null) return;
+    if (_addressId.isEmpty) return;
+    final vendorCode = selectedVendor?.code ?? 'unknown';
+    final hasKnownVendor = vendorCode != 'unknown';
+
     isSlotsLoading.value = true;
     selectedSlotId.value = '';
     selectedSlotDisplay.value = '';
@@ -325,7 +386,9 @@ class LabTestController extends GetxController {
       slotsResponse.value = await _repository.getSlots(
         addressId: _addressId,
         date: _selectedDateFull,
-        vendorCode: selectedVendor!.code,
+        vendorCode: vendorCode,
+        package: hasKnownVendor ? 'special' : 'test',
+        category: hasKnownVendor ? 'pathology' : null,
       );
     } catch (e) {
       AppToast.error(title: 'Error', message: '$e');
@@ -368,30 +431,51 @@ class LabTestController extends GetxController {
 
   void continueWithMemberSelection() {
     final mc = Get.find<MemberController>();
-    if (mc.selectedUserId.value.isEmpty) {
-      AppToast.error(title: 'Failed', message: 'Please select a family member');
+    if (mc.selectedMemberIds.isEmpty) {
+      AppToast.error(
+        title: 'Failed',
+        message: 'Please select at least one family member',
+      );
       return;
     }
     Get.to(() => const LabTestScreen());
   }
 
+  /// Lab booking API expects `[{ user_id }, ...]` for all selected members.
+  List<Map<String, dynamic>> _labBookingUsersPayload(MemberController mc) {
+    if (mc.selectedMemberIds.isNotEmpty) {
+      return mc.selectedMemberIds
+          .map((id) => {'user_id': int.tryParse(id) ?? 0})
+          .where((e) => (e['user_id'] as int) != 0)
+          .toList();
+    }
+    final single = int.tryParse(mc.selectedUserId.value) ?? 0;
+    if (single != 0) return [{'user_id': single}];
+    return [];
+  }
+
   void goToCart() => Get.to(() => const LabTestCartScreen());
 
-  void goToVendorSelection() {
+  Future<void> goToVendorSelection() async {
     if (cartItemCount == 0) {
       AppToast.error(title: 'Error', message: 'Please add tests to cart');
       return;
     }
-    fetchVendors();
+    await fetchVendors();
+    if (vendors.length == 1 && vendors.first.code == 'unknown') {
+      selectedVendorIndex.value = 0;
+      await goToSlotSelection();
+      return;
+    }
     Get.to(() => const LabSelectionScreen());
   }
 
-  void goToSlotSelection() {
+  Future<void> goToSlotSelection() async {
     if (vendors.isNotEmpty && selectedVendorIndex.value == -1) {
       AppToast.error(title: 'Error', message: 'Please select a lab');
       return;
     }
-    fetchSlots();
+    await fetchSlots();
     Get.to(() => const LabTestSlotSelectionPage());
   }
 
@@ -430,9 +514,7 @@ class LabTestController extends GetxController {
         'start_time': slot?.startTime ?? '',
         'end_time': slot?.endTime ?? '',
       },
-      'users': [
-        {'user_id': int.tryParse(mc.selectedUserId.value) ?? 0},
-      ],
+      'users': _labBookingUsersPayload(mc),
     };
   }
 

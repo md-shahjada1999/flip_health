@@ -214,6 +214,12 @@ class ApiUrl {
   static const String DIAGNOSTICS_ORDER_CONFIRM =
       "/patient/diagnostics/order/confirm";
 
+  /// Sub-order center confirm (reschedule/reassign) — patient_app `PATCH /lab/order/confirm/{id}`.
+  static const String LAB_SUB_ORDER_CONFIRM = "/patient/lab/order/confirm";
+  static const String LAB_ORDER_PAYMENT = "/patient/lab/order/payment";
+  static const String LAB_ORDER_CANCEL = "/patient/lab/cancel";
+  static const String LAB_ORDER_RESCHEDULE = "/patient/lab/order/reschedule";
+
   // Cart
   static const String CART_LAB = "/patient/cart/lab";
   static const String CART_ADD = "/patient/cart/add";

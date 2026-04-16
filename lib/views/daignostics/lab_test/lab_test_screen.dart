@@ -56,11 +56,14 @@ class _LabTestScreenState extends State<LabTestScreen>
   // Fly-to-cart animation
   // -------------------------------------------------------------------------
 
-  void _flyToCart(int productId, Offset startGlobal) {
+  Future<void> _flyToCart(int productId, Offset startGlobal) async {
+    final added = await controller.addToCart(productId);
+    if (!added) return;
+    if (!mounted) return;
+
     final cartRender =
         _cartBarKey.currentContext?.findRenderObject() as RenderBox?;
     if (cartRender == null || !cartRender.attached) {
-      controller.addToCart(productId);
       return;
     }
 
@@ -84,7 +87,6 @@ class _LabTestScreenState extends State<LabTestScreen>
     );
 
     overlay.insert(entry);
-    controller.addToCart(productId);
 
     flyCtrl.forward().then((_) {
       entry.remove();

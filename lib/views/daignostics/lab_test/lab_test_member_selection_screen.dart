@@ -14,8 +14,13 @@ class LabTestMemberSelectionScreen extends GetView<LabTestController> {
 
     return CommonMemberSelectionScreen(
       title: AppString.kLabTestsTitle,
+      allowMultiSelect: true,
       onContinue: (selected) {
         if (selected.isEmpty) return;
+        mc.selectedMemberIds.clear();
+        for (final m in selected) {
+          mc.selectedMemberIds.add(m.id);
+        }
         mc.selectUser(selected.first.id);
         controller.continueWithMemberSelection();
       },

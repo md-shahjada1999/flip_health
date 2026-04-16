@@ -61,15 +61,14 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
               child: ListView(
                 padding: EdgeInsets.fromLTRB(16.rs, 12.rh, 16.rs, 16.rh),
                 children: [
-                  if (overview.user != null)
-                    FadeInUp(
-                      duration: const Duration(milliseconds: 200),
-                      child: _buildCard(
-                        icon: Icons.person_outline_rounded,
-                        title: 'Patient',
-                        child: _buildPatientInfo(overview.user!),
-                      ),
+                  FadeInUp(
+                    duration: const Duration(milliseconds: 200),
+                    child: _buildCard(
+                      icon: Icons.person_outline_rounded,
+                      title: 'Contact & users',
+                      child: _buildContactAndUsers(overview),
                     ),
+                  ),
                   SizedBox(height: 12.rh),
                   if (overview.address != null)
                     FadeInUp(
@@ -117,8 +116,11 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
                     delay: const Duration(milliseconds: 170),
                     child: _buildCard(
                       icon: Icons.science_outlined,
-                      title: 'Tests (${overview.items.length})',
-                      child: _buildItemsList(overview.items),
+                      title:
+                          'Tests & amounts (${overview.items.length})',
+                      subtitle:
+                          'Grouped by user. Each block lists that user\'s tests and a subtotal; the Payment card shows the full order total.',
+                      child: _buildItemsGroupedByUser(overview.items),
                     ),
                   ),
                   SizedBox(height: 12.rh),
@@ -157,6 +159,7 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
   Widget _buildCard({
     required IconData icon,
     required String title,
+    String? subtitle,
     required Widget child,
   }) {
     return Container(
@@ -180,11 +183,27 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
                 child: Icon(icon, size: 16.rs, color: AppColors.primary),
               ),
               SizedBox(width: 10.rw),
-              CommonText(
-                title,
-                fontSize: 12.rf,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSecondary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CommonText(
+                      title,
+                      fontSize: 12.rf,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textSecondary,
+                    ),
+                    if (subtitle != null) ...[
+                      SizedBox(height: 4.rh),
+                      CommonText(
+                        subtitle,
+                        fontSize: 10.rf,
+                        color: AppColors.textTertiary,
+                        height: 1.35,
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -196,31 +215,163 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
   }
 
   // -----------------------------------------------------------------------
-  // Patient
+  // Account contact & users in booking
   // -----------------------------------------------------------------------
 
-  Widget _buildPatientInfo(BookingUser user) {
+  List<BookingItemUser> _distinctItemUsers(List<BookingItem> items) {
+    final seen = <int>{};
+    final out = <BookingItemUser>[];
+    for (final i in items) {
+      final u = i.user;
+      if (u == null) continue;
+      if (seen.add(u.id)) out.add(u);
+    }
+    return out;
+  }
+
+  String _capitalizeWord(String? s) {
+    if (s == null || s.trim().isEmpty) return '';
+    final t = s.trim();
+    return '${t[0].toUpperCase()}${t.length > 1 ? t.substring(1).toLowerCase() : ''}';
+  }
+
+  Widget _buildContactAndUsers(BookingOverviewResponse overview) {
+    final fromItems = _distinctItemUsers(overview.items);
+    final primary = overview.user;
+    final primaryEmail = primary?.userEmail;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CommonText(
-          user.userName,
-          fontSize: 13.rf,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
-        ),
-        if (user.userPhone != null) ...[
-          SizedBox(height: 2.rh),
+        if (fromItems.length > 1) ...[
           CommonText(
-            '+91 ${user.userPhone}',
-            fontSize: 12.rf,
+            'Users included in this booking:',
+            fontSize: 11.rf,
+            fontWeight: FontWeight.w600,
             color: AppColors.textSecondary,
           ),
-        ],
-        if (user.userEmail != null && user.userEmail!.isNotEmpty) ...[
-          SizedBox(height: 1.rh),
+          SizedBox(height: 6.rh),
+          Wrap(
+            spacing: 8.rw,
+            runSpacing: 6.rh,
+            children: fromItems
+                .map(
+                  (u) => Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 8.rw,
+                      vertical: 4.rh,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundTertiary,
+                      borderRadius: BorderRadius.circular(20.rs),
+                      border: Border.all(color: AppColors.borderLight),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CommonText(
+                          u.name,
+                          fontSize: 11.rf,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
+                        ),
+                        if (u.gender != null && u.gender!.isNotEmpty) ...[
+                          SizedBox(width: 6.rw),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6.rw,
+                              vertical: 2.rh,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12.rs),
+                              border: Border.all(
+                                color: AppColors.primary.withValues(alpha: 0.45),
+                              ),
+                            ),
+                            child: CommonText(
+                              _capitalizeWord(u.gender),
+                              fontSize: 9.rf,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+          SizedBox(height: 12.rh),
+        ] else if (fromItems.length == 1) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: CommonText(
+                  fromItems.single.name,
+                  fontSize: 13.rf,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              if (fromItems.single.gender != null &&
+                  fromItems.single.gender!.isNotEmpty)
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 6.rw,
+                    vertical: 2.rh,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12.rs),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.45),
+                    ),
+                  ),
+                  child: CommonText(
+                    _capitalizeWord(fromItems.single.gender),
+                    fontSize: 9.rf,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+            ],
+          ),
+          SizedBox(height: 8.rh),
+        ] else if (primary != null) ...[
           CommonText(
-            user.userEmail!,
+            primary.userName,
+            fontSize: 13.rf,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+          SizedBox(height: 4.rh),
+        ],
+        if (primary != null) ...[
+          CommonText(
+            'Phone number',
+            fontSize: 11.rf,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+          ),
+          SizedBox(height: 2.rh),
+          CommonText(
+            primary.userPhone != null
+                ? '+91 ${primary.userPhone}'
+                : '—',
+            fontSize: 12.rf,
+            color: AppColors.textPrimary,
+          ),
+          SizedBox(height: 4.rh),
+          CommonText(
+            'Booking related updates will be sent on this number',
+            fontSize: 10.rf,
+            color: AppColors.textTertiary,
+            height: 1.35,
+          ),
+        ],
+        if (primaryEmail != null && primaryEmail.isNotEmpty) ...[
+          SizedBox(height: 8.rh),
+          CommonText(
+            primaryEmail,
             fontSize: 12.rf,
             color: AppColors.textSecondary,
           ),
@@ -293,105 +444,270 @@ class LabTestOverviewScreen extends GetView<LabTestController> {
   }
 
   // -----------------------------------------------------------------------
-  // Test items
+  // Tests grouped by user (clear who pays for which tests)
   // -----------------------------------------------------------------------
 
-  Widget _buildItemsList(List<BookingItem> items) {
+  /// Preserves API order while grouping consecutive user buckets.
+  List<MapEntry<BookingItemUser?, List<BookingItem>>> _groupItemsByUser(
+    List<BookingItem> items,
+  ) {
+    final order = <int>[];
+    final map = <int, List<BookingItem>>{};
+    for (final item in items) {
+      final id = item.user?.id ?? -1;
+      if (!map.containsKey(id)) {
+        order.add(id);
+        map[id] = [];
+      }
+      map[id]!.add(item);
+    }
+    return order.map((id) {
+      final list = map[id]!;
+      return MapEntry(list.first.user, list);
+    }).toList();
+  }
+
+  double _sumOfferPrices(List<BookingItem> list) => list.fold<double>(
+        0,
+        (a, i) => a + (i.pricing?.offerPrice ?? 0),
+      );
+
+  Widget _buildItemsGroupedByUser(List<BookingItem> items) {
+    final groups = _groupItemsByUser(items);
+    final hasNamedUsers = groups.any((g) => g.key != null);
+
     return Column(
-      children: items.map((item) {
-        return Container(
-          margin: EdgeInsets.only(bottom: 8.rh),
-          padding: EdgeInsets.all(10.rs),
-          decoration: BoxDecoration(
-            color: AppColors.backgroundTertiary,
-            borderRadius: BorderRadius.circular(10.rs),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < groups.length; i++) ...[
+          if (i > 0) SizedBox(height: 14.rh),
+          _buildUserTestSection(
+            user: groups[i].key,
+            userItems: groups[i].value,
+            showUserHeader: hasNamedUsers || groups.length > 1,
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (item.pricing?.vendor != null) ...[
-                _buildVendorLogo(item.pricing!.vendor!),
-                SizedBox(width: 10.rw),
-              ],
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CommonText(
-                      item.name,
-                      fontSize: 12.rf,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      height: 1.3,
-                    ),
-                    SizedBox(height: 3.rh),
-                    Wrap(
-                      spacing: 8.rw,
-                      runSpacing: 2.rh,
-                      children: [
-                        if (item.pricing?.vendor != null)
-                          CommonText(
-                            item.pricing!.vendor!.name,
-                            fontSize: 10.rf,
-                            color: AppColors.textTertiary,
-                          ),
-                        CommonText(
-                          item.category,
-                          fontSize: 10.rf,
-                          color: AppColors.textTertiary,
-                        ),
-                        if (item.user != null)
-                          CommonText(
-                            'for ${item.user!.name}',
-                            fontSize: 10.rf,
-                            color: AppColors.textTertiary,
-                          ),
-                      ],
-                    ),
-                  ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildUserTestSection({
+    required BookingItemUser? user,
+    required List<BookingItem> userItems,
+    required bool showUserHeader,
+  }) {
+    final subtotal = _sumOfferPrices(userItems);
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(12.rs),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundTertiary,
+        borderRadius: BorderRadius.circular(12.rs),
+        border: Border.all(color: AppColors.borderLight),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showUserHeader && user != null) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.person_pin_outlined,
+                  size: 18.rs,
+                  color: AppColors.primary,
                 ),
-              ),
-              SizedBox(width: 8.rw),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (item.pricing != null)
-                    CommonText(
-                      '\u20B9${item.pricing!.offerPrice.toStringAsFixed(0)}',
-                      fontSize: 13.rf,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  if (item.free)
-                    Container(
-                      margin: EdgeInsets.only(top: 2.rh),
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 5.rw, vertical: 1.rh),
-                      decoration: BoxDecoration(
-                        color: AppColors.successLight,
-                        borderRadius: BorderRadius.circular(4.rs),
+                SizedBox(width: 8.rw),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CommonText(
+                        'User',
+                        fontSize: 10.rf,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textTertiary,
                       ),
-                      child: CommonText('FREE',
-                          fontSize: 9.rf,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.success),
-                    ),
-                  if (item.pricing != null && item.pricing!.saved > 0) ...[
-                    SizedBox(height: 2.rh),
-                    CommonText(
-                      'saved \u20B9${item.pricing!.saved.toStringAsFixed(0)}',
-                      fontSize: 9.rf,
-                      color: AppColors.success,
-                    ),
-                  ],
-                ],
+                      SizedBox(height: 2.rh),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: CommonText(
+                              user.name,
+                              fontSize: 14.rf,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          if (user.gender != null && user.gender!.isNotEmpty)
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.rw,
+                                vertical: 3.rh,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12.rs),
+                                border: Border.all(
+                                  color: AppColors.primary
+                                      .withValues(alpha: 0.35),
+                                ),
+                              ),
+                              child: CommonText(
+                                _capitalizeWord(user.gender),
+                                fontSize: 10.rf,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 10.rh),
+              child: Divider(height: 1, color: AppColors.borderLight),
+            ),
+          ] else if (showUserHeader && user == null) ...[
+            Row(
+              children: [
+                Icon(Icons.list_alt_rounded,
+                    size: 18.rs, color: AppColors.textTertiary),
+                SizedBox(width: 8.rw),
+                Expanded(
+                  child: CommonText(
+                    'Tests (user not specified on item)',
+                    fontSize: 12.rf,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 10.rh),
+              child: Divider(height: 1, color: AppColors.borderLight),
+            ),
+          ],
+          ...userItems.asMap().entries.map((e) {
+            final last = e.key == userItems.length - 1;
+            return Padding(
+              padding: EdgeInsets.only(bottom: last ? 10.rh : 12.rh),
+              child: _buildTestLine(e.value),
+            );
+          }),
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 8.rh, horizontal: 10.rw),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8.rs),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.12),
               ),
-            ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: CommonText(
+                    user != null
+                        ? 'Subtotal for ${user.name}'
+                        : 'Subtotal for these tests',
+                    fontSize: 11.rf,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                    maxLines: 2,
+                  ),
+                ),
+                CommonText(
+                  '\u20B9${subtotal.toStringAsFixed(0)}',
+                  fontSize: 15.rf,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary,
+                ),
+              ],
+            ),
           ),
-        );
-      }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTestLine(BookingItem item) {
+    final price = item.pricing?.offerPrice;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (item.pricing?.vendor != null) ...[
+              _buildVendorLogo(item.pricing!.vendor!),
+              SizedBox(width: 10.rw),
+            ],
+            Expanded(
+              child: CommonText(
+                item.name,
+                fontSize: 13.rf,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                height: 1.3,
+              ),
+            ),
+            if (price != null)
+              CommonText(
+                '\u20B9${price.toStringAsFixed(0)}',
+                fontSize: 14.rf,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+          ],
+        ),
+        if (item.category.isNotEmpty || item.pricing?.vendor != null) ...[
+          SizedBox(height: 4.rh),
+          CommonText(
+            [
+              if (item.category.isNotEmpty) item.category,
+              if (item.pricing?.vendor != null) item.pricing!.vendor!.name,
+            ].join(' · '),
+            fontSize: 10.rf,
+            color: AppColors.textTertiary,
+          ),
+        ],
+        if (item.free)
+          Padding(
+            padding: EdgeInsets.only(top: 4.rh),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 6.rw, vertical: 2.rh),
+              decoration: BoxDecoration(
+                color: AppColors.successLight,
+                borderRadius: BorderRadius.circular(4.rs),
+              ),
+              child: CommonText(
+                'FREE',
+                fontSize: 9.rf,
+                fontWeight: FontWeight.w700,
+                color: AppColors.success,
+              ),
+            ),
+          ),
+        if (item.pricing != null && item.pricing!.saved > 0)
+          Padding(
+            padding: EdgeInsets.only(top: 2.rh),
+            child: CommonText(
+              'Saved \u20B9${item.pricing!.saved.toStringAsFixed(0)}',
+              fontSize: 9.rf,
+              color: AppColors.success,
+            ),
+          ),
+      ],
     );
   }
 

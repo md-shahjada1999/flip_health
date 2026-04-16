@@ -85,6 +85,7 @@ class LabTestRepository {
     required String date,
     required String vendorCode,
     String package = 'test',
+    String? category,
   }) async {
     try {
       final response = await apiService.post(
@@ -94,6 +95,7 @@ class LabTestRepository {
           'date': date,
           'vendor_code': vendorCode,
           'package': package,
+          if (category != null && category.isNotEmpty) 'category': category,
         },
       );
 
@@ -138,6 +140,22 @@ class LabTestRepository {
     }
   }
 
+  String? _errorMessageFromBody(dynamic data) {
+    if (data is! Map) return null;
+    final m = data as Map<String, dynamic>;
+    final msg = m['message'];
+    if (msg != null) return msg.toString();
+    final err = m['error'];
+    if (err != null) return err.toString();
+    final errors = m['errors'];
+    if (errors is Map && errors.isNotEmpty) {
+      final first = errors.values.first;
+      if (first is List && first.isNotEmpty) return first.first.toString();
+      return first.toString();
+    }
+    return null;
+  }
+
   Future<void> addToCart(int productId) async {
     try {
       final response = await apiService.post(
@@ -146,9 +164,11 @@ class LabTestRepository {
       );
 
       if (response.statusCode != 200 && response.statusCode != 201) {
+        final detail = _errorMessageFromBody(response.data);
         throw AppException(
-          message: 'Failed to add item to cart',
+          message: detail ?? 'Failed to add item to cart',
           statusCode: response.statusCode,
+          data: response.data,
         );
       }
     } on AppException {

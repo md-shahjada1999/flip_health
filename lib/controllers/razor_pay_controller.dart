@@ -6,6 +6,7 @@ import 'package:flip_health/core/utils/payment_success_screen.dart';
 import 'package:flip_health/data/repositories/consultation_order_repository.dart';
 import 'package:flip_health/data/repositories/gym_repository.dart';
 import 'package:flip_health/data/repositories/health_checkup_repository.dart';
+import 'package:flip_health/data/repositories/lab_order_detail_repository.dart';
 import 'package:flip_health/data/repositories/lab_test_repository.dart';
 import 'package:flip_health/data/repositories/pharmacy_repository.dart';
 import 'package:flip_health/data/repositories/service_request_repository.dart';
@@ -245,6 +246,48 @@ class RazorPayController extends GetxController {
               subtitle: subRaw.isNotEmpty
                   ? subRaw
                   : 'Your lab test has been booked successfully.',
+            ),
+          );
+        } else {
+          ToastCustom.showSnackBar(
+            subtitle: res['message']?.toString() ?? 'Verification failed',
+          );
+        }
+      } catch (e) {
+        ToastCustom.showSnackBar(subtitle: e.toString());
+      }
+    } else if (from == 'fromLabOrderDetail') {
+      final a = Get.arguments;
+      final summary = a is List && a.length >= 3 && a[2] is Map
+          ? Map<String, dynamic>.from(a[2] as Map)
+          : <String, dynamic>{};
+      final invoiceId = summary['invoice_id']?.toString() ?? '';
+      final map = <String, dynamic>{
+        'src': 'razorpay',
+        'order_id': response.orderId,
+        'payment_id': response.paymentId,
+        'invoice_id': invoiceId,
+      };
+      try {
+        if (!Get.isRegistered<LabOrderDetailRepository>()) {
+          if (!Get.isRegistered<ApiService>()) {
+            Get.lazyPut<ApiService>(() => ApiService());
+          }
+          Get.lazyPut<LabOrderDetailRepository>(
+            () => LabOrderDetailRepository(apiService: Get.find()),
+          );
+        }
+        final repo = Get.find<LabOrderDetailRepository>();
+        final res = await repo.postDiagnosticsOrderConfirm(map);
+        final ok = res['status'] == true ||
+            res['status'] == 1 ||
+            res['success'] == true;
+        if (ok) {
+          Get.offAll(
+            () => PaymentSuccessScreen(
+              title: 'Lab Test Booked Successfully',
+              subtitle:
+                  'We will notify you once the phlebotomist is assigned.',
             ),
           );
         } else {
